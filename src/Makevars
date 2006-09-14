@@ -1,0 +1,3 @@
+PKG_CPPFLAGS = -I/usr/local/lib/jags/include 
+PKG_LIBS = -L/usr/local/lib/jags/lib -ljags 
+JAGS_HOME = /usr/local/lib/jags
