@@ -1,8 +1,11 @@
 #include <map>
 #include <sstream>
 #include <algorithm>
+#include <vector>
 
 #include <Console.h>
+/* For JAGS_NA */
+#include <sarray/nainf.h>
 
 /* Workaround length being remapped to Rf_length
    by the preprocessor */
@@ -24,6 +27,7 @@ long min2(long a, long b)
 using std::string;
 using std::map;
 using std::pair;
+using std::vector;
 
 std::ostringstream jags_out; //Output stream
 std::ostringstream jags_err; //Error stream
@@ -125,15 +129,13 @@ static void writeDataTable(SEXP data, map<string,SArray> &table)
     int ndim = length(dim);
     if (ndim == 0) {
       // Scalar or vector entry
-      Index idim(1);
-      idim[0] = length(e2);
-      SArray sarray(idim);
+      SArray sarray(vector<unsigned int>(1, length(e2)));
       sarray.setValue(NUMERIC_POINTER(e2), length(e2));
       table.insert(pair<string,SArray>(ename, sarray));
     }
     else {
       // Array entry
-      Index idim(ndim);
+      vector<unsigned int> idim(ndim);
       SEXP dim2;
       PROTECT(dim2 = AS_INTEGER(dim));
       for (int j = 0; j < ndim; ++j) {
@@ -180,7 +182,7 @@ static SEXP readDataTable(map<string,SArray> const &table)
     
 	if (p->second.ndim(false) > 1) {
 	    //Assign dim attribute
-	    Index idim = p->second.dim(false);
+	    vector<unsigned int> const &idim = p->second.dim(false);
 	    unsigned int ndim = idim.size();
 	    SEXP dim;
 	    PROTECT(dim = allocVector(INTSXP, ndim));
