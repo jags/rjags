@@ -350,14 +350,14 @@ extern "C" {
   SEXP set_monitor(SEXP ptr, SEXP name, SEXP thin)
   {
     bool status = ptrArg(ptr)->setMonitor(stringArg(name), Range(), 
-					  intArg(thin));
+					  intArg(thin), "trace");
     printMessages(status);
     return R_NilValue;
   }
 
   SEXP clear_monitor(SEXP ptr, SEXP name)
   {
-    bool status = ptrArg(ptr)->clearMonitor(stringArg(name), Range());
+    bool status = ptrArg(ptr)->clearMonitor(stringArg(name), Range(), "trace");
     printMessages(status);
     return R_NilValue;
   }
@@ -365,7 +365,9 @@ extern "C" {
   SEXP get_monitored_values(SEXP ptr, SEXP chain)
   {
     map<string,SArray> data_table;
-    bool status = ptrArg(ptr)->getMonitoredValues(data_table, intArg(chain));
+    map<string,unsigned int> weight_table;
+    bool status = ptrArg(ptr)->dumpMonitors(data_table, weight_table,
+					    "trace", intArg(chain));
     printMessages(status);
     return readDataTable(data_table);
   }
