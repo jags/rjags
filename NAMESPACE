@@ -1,0 +1,6 @@
+export ( 
+  jags.model,
+  model.samples,
+  read.jagsdata
+)
+S3method(print,jags)
