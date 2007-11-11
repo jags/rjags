@@ -1,4 +1,4 @@
-.First.lib <- function(lib, pkg)
+.onLoad <- function(lib, pkg)
 {
   ## Default location of JAGS is set at build time. The user can override
   ## this by setting the environment variable JAGS_HOME, or by setting

@@ -14,6 +14,12 @@ jags.model <- function(file, data, inits, nchain = 1)
   }
   p <- .Call("make_console", PACKAGE="rjags") 
   .Call("check_model", p, file, PACKAGE="rjags")
+
+  if (is.environment(data)) {
+    ##Get a list of numeric objects from the supplied environment
+    varnames <- .Call("get_variable_names", p, PACKAGE="rjags")
+    data <- mget(varnames, envir=data, mode="numeric", ifnotfound=list(NULL))
+  }
   .Call("compile", p, data, as.integer(nchain), TRUE, PACKAGE="rjags")
 
 

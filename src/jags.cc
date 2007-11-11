@@ -98,6 +98,13 @@ static void printMessages(bool status)
   }
 }
 
+static void setSArrayValue(SArray &sarray, SEXP e)
+{
+    vector<double> v(length(e));
+    std::copy(NUMERIC_POINTER(e), NUMERIC_POINTER(e) + length(e), v.begin());
+    sarray.setValue(v);
+}
+
 /* Write data from an R list into a JAGS data table */
 static void writeDataTable(SEXP data, map<string,SArray> &table)
 {
@@ -130,7 +137,7 @@ static void writeDataTable(SEXP data, map<string,SArray> &table)
     if (ndim == 0) {
       // Scalar or vector entry
       SArray sarray(vector<unsigned int>(1, length(e2)));
-      sarray.setValue(NUMERIC_POINTER(e2), length(e2));
+      setSArrayValue(sarray, e2);
       table.insert(pair<string,SArray>(ename, sarray));
     }
     else {
@@ -143,7 +150,7 @@ static void writeDataTable(SEXP data, map<string,SArray> &table)
       }
       UNPROTECT(1);
       SArray sarray(idim);
-      sarray.setValue(NUMERIC_POINTER(e2), length(e2));
+      setSArrayValue(sarray, e2);
       table.insert(pair<string,SArray>(ename,sarray));
     }
     UNPROTECT(3);
@@ -170,7 +177,7 @@ static SEXP readDataTable(map<string,SArray> const &table)
 	PROTECT(e = allocVector(REALSXP, len));
 
 	//Copy values
-	double const *value = p->second.value();
+	vector<double> const &value = p->second.value();
 	for (int j = 0; j < len; ++j) {
             if (value[j] == JAGS_NA) {
                NUMERIC_POINTER(e)[j] = NA_REAL;
@@ -302,49 +309,67 @@ extern "C" {
   
   SEXP update(SEXP ptr, SEXP rniter)
   {
-    int niter = intArg(rniter);
-    Console *console = ptrArg(ptr);
-    int width = 40;
-    int refresh = niter/width;
+      int niter = intArg(rniter);
+      Console *console = ptrArg(ptr);
+      int width = 40;
+      int refresh = niter/width;
 
-    if (refresh == 0) {
-      bool status = console->update(niter);
-      printMessages(status);
+      bool adapt = console->isAdapting();
+
+      if (refresh == 0) {
+	  console->update(niter/2);
+	  bool status = true;
+	  if (adapt) {
+	      console->adaptOff(status);
+	  }
+	  console->update(niter - niter/2);
+	  if (!status) {
+	      warning("Adaptation incomplete");
+	  }
+	  return R_NilValue;
+      }
+    
+      if (width > niter / refresh + 1)
+	  width = niter / refresh + 1;
+
+      Rprintf("%s\n", jags_out.str().c_str());
+
+      Rprintf("Updating %d\n", niter);
+      for (int i = 0; i < width - 1; ++i) {
+	  Rprintf("-");
+      }
+      Rprintf("| %d\n", min2(width * refresh, niter));
+    
+      int col = 0;
+      bool status = true;
+      for (long n = niter; n > 0; n -= refresh) {
+	  if (adapt && n <= niter/2) {
+	      // Turn off adaptive mode half way through burnin
+	      console->adaptOff(status);
+	      adapt = false;
+	  }
+	  long nupdate = min2(n, refresh);
+	  if(console->update(nupdate))
+	      Rprintf("*");
+	  else {
+	      Rprintf("\n");
+	      printMessages(false);
+	      return R_NilValue;
+	  }
+	  col++;
+	  if (col == width || n <= nupdate) {
+	      int percent = 100 - (n-nupdate) * 100/niter;
+	      Rprintf(" %d\%\n", percent);
+	      if (n > nupdate) {
+		  col = 0;
+	      }
+	  }
+      }
+      if (!status) {
+	  warning("Adaptation incomplete");
+      }
+
       return R_NilValue;
-    }
-    
-    if (width > niter / refresh + 1)
-      width = niter / refresh + 1;
-
-    Rprintf("%s\n", jags_out.str().c_str());
-
-    Rprintf("Updating %d\n", niter);
-    for (int i = 0; i < width - 1; ++i) {
-      Rprintf("-");
-    }
-    Rprintf("| %d\n", min2(width * refresh, niter));
-    
-    int col = 0;
-    for (long n = niter; n > 0; n -= refresh) {
-      long nupdate = min2(n, refresh);
-      if(console->update(nupdate))
-        Rprintf("*");
-      else {
-        Rprintf("\n");
-	printMessages(false);
-	return R_NilValue;
-      }
-      col++;
-      if (col == width || n <= nupdate) {
-	int percent = 100 - (n-nupdate) * 100/niter;
-        Rprintf(" %d\%\n", percent);
-	if (n > nupdate) {
-	  col = 0;
-	}
-      }
-    }
-    
-    return R_NilValue;
   }
     
   SEXP set_monitor(SEXP ptr, SEXP name, SEXP thin)
@@ -423,4 +448,18 @@ extern "C" {
     UNPROTECT(1); //ans
     return ans;
   }
+
+
+    SEXP get_variable_names(SEXP ptr)
+    {
+	Console *console = ptrArg(ptr);
+	vector<string> const &namevec = console->variableNames();
+	SEXP varnames;
+	PROTECT(varnames = allocVector(STRSXP,namevec.size()));
+	for (unsigned int i = 0; i < namevec.size(); ++i) {
+	    SET_STRING_ELT(varnames, i, mkChar(namevec[i].c_str()));
+	}
+	UNPROTECT(1);
+	return varnames;
+    }
 }
