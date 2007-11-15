@@ -4,8 +4,7 @@
 #include <vector>
 
 #include <Console.h>
-/* For JAGS_NA */
-#include <sarray/nainf.h>
+#include <util/nainf.h>
 
 /* Workaround length being remapped to Rf_length
    by the preprocessor */

@@ -86,7 +86,7 @@ jags.model <- function(file, data, inits, nchain = 1)
                   ## Re-initialize
                   if (!is.null(model.state)) {
                     if (length(model.state) != nchain) {
-                      error("Incorrect number of chains in saved state")
+                      stop("Incorrect number of chains in saved state")
                     }
                     for (i in 1:nchain) {
                       statei <- model.state[[i]]
