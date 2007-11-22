@@ -1,8 +1,20 @@
 print.jags <- function(x, ...)
 {
+  cat("JAGS model:\n\n")
+  
   model <- x$model()
   for (i in 1:length(model)) {
     cat(model[i],"\n",sep="")
+  }
+
+  data <- x$data()
+  full <- !sapply(lapply(data, is.na), any)
+  if (any(full)) {
+    cat("Fully observed variables:\n", names(data)[full], "\n")
+  }
+  part <- !full & !sapply(lapply(data, is.na), all)
+  if (any(part)) {
+    cat("Partially observed variables:\n", names(data)[part], "\n")
   }
 }
 
@@ -15,10 +27,35 @@ jags.model <- function(file, data, inits, nchain = 1)
   p <- .Call("make_console", PACKAGE="rjags") 
   .Call("check_model", p, file, PACKAGE="rjags")
 
-  if (is.environment(data)) {
-    ##Get a list of numeric objects from the supplied environment
+  if (missing(data)) {
+    data <- list()
+  }
+  else {
     varnames <- .Call("get_variable_names", p, PACKAGE="rjags")
-    data <- mget(varnames, envir=data, mode="numeric", ifnotfound=list(NULL))
+    if (is.environment(data)) {
+      ##Get a list of numeric objects from the supplied environment
+      data <- mget(varnames, envir=data, mode="numeric",
+                   ifnotfound=list(NULL))
+    }
+    else if (is.list(data)) {
+      v <- names(data)
+      if (is.null(v)) {
+        stop("data must be a named list")
+      }
+      if (any(nchar(v)==0)) {
+        stop("unnamed variables in data list")
+      }
+      if (any(duplicated(v))) {
+        stop("Duplicated names in data list: ",
+             paste(v[duplicated(v)], collapse=" ")
+           }
+        relevant.variables <- names(data) %in% varnames
+        data <- data[relevant.variables]
+      }
+    }
+    else {
+      stop("data must be a list or environment")
+    }
   }
   .Call("compile", p, data, as.integer(nchain), TRUE, PACKAGE="rjags")
 
