@@ -36,6 +36,8 @@ jags.model <- function(file, data, inits, nchain = 1)
       ##Get a list of numeric objects from the supplied environment
       data <- mget(varnames, envir=data, mode="numeric",
                    ifnotfound=list(NULL))
+      ##Strip null entries
+      data <- data[!sapply(data, is.null)]
     }
     else if (is.list(data)) {
       v <- names(data)
@@ -47,18 +49,17 @@ jags.model <- function(file, data, inits, nchain = 1)
       }
       if (any(duplicated(v))) {
         stop("Duplicated names in data list: ",
-             paste(v[duplicated(v)], collapse=" ")
-           }
-        relevant.variables <- names(data) %in% varnames
-        data <- data[relevant.variables]
+             paste(v[duplicated(v)], collapse=" "))
       }
+      relevant.variables <- names(data) %in% varnames
+      data <- data[relevant.variables]
     }
     else {
       stop("data must be a list or environment")
     }
-  }
-  .Call("compile", p, data, as.integer(nchain), TRUE, PACKAGE="rjags")
 
+    .Call("compile", p, data, as.integer(nchain), TRUE, PACKAGE="rjags")
+  }
 
   setParameters <- function(initsi, chain) {
     if (!is.list(initsi))

@@ -25,5 +25,8 @@
   which can be used to generate dependent samples from the posterior
   distribution of the parameters
 
-  An object of class \code{jags} 
+  An object of class \code{jags} is a list of function that share a
+  common environment. This environment encapsulates the state of the
+  model, and the functions can be used to query or modify the model
+  state.
 }

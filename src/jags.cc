@@ -134,10 +134,12 @@ static void writeDataTable(SEXP data, map<string,SArray> &table)
 
     int ndim = length(dim);
     if (ndim == 0) {
-      // Scalar or vector entry
-      SArray sarray(vector<unsigned int>(1, length(e2)));
-      setSArrayValue(sarray, e2);
-      table.insert(pair<string,SArray>(ename, sarray));
+	// Scalar or vector entry
+	if (e2 > 0) {
+	    SArray sarray(vector<unsigned int>(1, length(e2)));
+	    setSArrayValue(sarray, e2);
+	    table.insert(pair<string,SArray>(ename, sarray));
+	}
     }
     else {
       // Array entry
