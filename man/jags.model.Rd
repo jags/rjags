@@ -29,4 +29,20 @@
   common environment. This environment encapsulates the state of the
   model, and the functions can be used to query or modify the model
   state.
+  \item{ptr()} Returns an external pointer to an object created by
+  the JAGS library
+  \item{data()} Returns a list containing the data that defines
+  the observed nodes in the model
+  \item{model()} Returns a character vector containing the BUGS-language
+  representation of the model
+  \item{state()} Returns a list of length equal to the number of
+  parallel chains in the model. Each element of the list is itself
+  a list containing the current parameter values in that chain.
+  \item{update(niter,by)} Updates the model by \code{niter} iterations. By
+  default a progress bar is printed to the screen, with an update every
+  \code{by} iterations. To suppress the update bar, use \code{by=0}.
+  
+  
+  ch
+  unobserved
 }
