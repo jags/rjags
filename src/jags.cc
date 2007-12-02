@@ -71,30 +71,30 @@ static bool boolArg(SEXP arg)
 
 static Console * ptrArg(SEXP ptr)
 {
-  checkConsole(ptr);
-  Console *console = static_cast<Console*>(R_ExternalPtrAddr(ptr));
-  if (console == NULL)
-    error("JAGS model must be recompiled");
-  return console;
+    checkConsole(ptr);
+    Console *console = static_cast<Console*>(R_ExternalPtrAddr(ptr));
+    if (console == NULL)
+	error("JAGS model must be recompiled");
+    return console;
 }
 
 static void printMessages(bool status)
 {
-  /* Print any messages from JAGS and clear the stream buffer */
-  if(!jags_out.str().empty()) {
-    Rprintf("%s\n", jags_out.str().c_str());
-    jags_out.str("");
-  }
-  if(status == false) {
-    if (!jags_err.str().empty()) {
-      string msg = jags_err.str();
-      jags_err.str("");
-      error("%s\n", msg.c_str());
+    /* Print any messages from JAGS and clear the stream buffer */
+    if(!jags_out.str().empty()) {
+	Rprintf("%s\n", jags_out.str().c_str());
+	jags_out.str("");
     }
-    else {
-      error("Internal error in JAGS library");
+    if(status == false) {
+	if (!jags_err.str().empty()) {
+	    string msg = jags_err.str();
+	    jags_err.str("");
+	    error("%s\n", msg.c_str());
+	}
+	else {
+	    error("Internal error in JAGS library");
+	}
     }
-  }
 }
 
 static void setSArrayValue(SArray &sarray, SEXP e)
@@ -107,56 +107,56 @@ static void setSArrayValue(SArray &sarray, SEXP e)
 /* Write data from an R list into a JAGS data table */
 static void writeDataTable(SEXP data, map<string,SArray> &table)
 {
-  SEXP names;
-  PROTECT(names = getAttrib(data, R_NamesSymbol));
-  if (!isNewList(data)) {
-    error("data must be a list");
-  }
-  if (length(names) != length(data)) {
-    error("data must be a named list");
-  }
-  int N = length(data);
-
-  for (int i = 0; i < N; ++i) {
-    SEXP e, e2, dim;
-    PROTECT(e = VECTOR_ELT(data, i));
-    PROTECT(dim = GET_DIM(e)); 
-    PROTECT(e2 = AS_NUMERIC(e));
-    //Replace R missing values in e2 with JAGS missing values
-    int elength = length(e2);
-    for (int j = 0; j < elength; ++j) {
-       if (ISNA(NUMERIC_POINTER(e2)[j])) {
-          NUMERIC_POINTER(e2)[j] = JAGS_NA;
-       }
+    SEXP names;
+    PROTECT(names = getAttrib(data, R_NamesSymbol));
+    if (!isNewList(data)) {
+	error("data must be a list");
     }
+    if (length(names) != length(data)) {
+	error("data must be a named list");
+    }
+    int N = length(data);
 
-    string ename = CHAR(STRING_ELT(names, i));
-
-    int ndim = length(dim);
-    if (ndim == 0) {
-	// Scalar or vector entry
-	if (e2 > 0) {
-	    SArray sarray(vector<unsigned int>(1, length(e2)));
-	    setSArrayValue(sarray, e2);
-	    table.insert(pair<string,SArray>(ename, sarray));
+    for (int i = 0; i < N; ++i) {
+	SEXP e, e2, dim;
+	PROTECT(e = VECTOR_ELT(data, i));
+	PROTECT(dim = GET_DIM(e)); 
+	PROTECT(e2 = AS_NUMERIC(e));
+	//Replace R missing values in e2 with JAGS missing values
+	int elength = length(e2);
+	for (int j = 0; j < elength; ++j) {
+	    if (ISNA(NUMERIC_POINTER(e2)[j])) {
+		NUMERIC_POINTER(e2)[j] = JAGS_NA;
+	    }
 	}
+
+	string ename = CHAR(STRING_ELT(names, i));
+
+	int ndim = length(dim);
+	if (ndim == 0) {
+	    // Scalar or vector entry
+	    if (e2 > 0) {
+		SArray sarray(vector<unsigned int>(1, length(e2)));
+		setSArrayValue(sarray, e2);
+		table.insert(pair<string,SArray>(ename, sarray));
+	    }
+	}
+	else {
+	    // Array entry
+	    vector<unsigned int> idim(ndim);
+	    SEXP dim2;
+	    PROTECT(dim2 = AS_INTEGER(dim));
+	    for (int j = 0; j < ndim; ++j) {
+		idim[j] = INTEGER_POINTER(dim2)[j];
+	    }
+	    UNPROTECT(1);
+	    SArray sarray(idim);
+	    setSArrayValue(sarray, e2);
+	    table.insert(pair<string,SArray>(ename,sarray));
+	}
+	UNPROTECT(3);
     }
-    else {
-      // Array entry
-      vector<unsigned int> idim(ndim);
-      SEXP dim2;
-      PROTECT(dim2 = AS_INTEGER(dim));
-      for (int j = 0; j < ndim; ++j) {
-	idim[j] = INTEGER_POINTER(dim2)[j];
-      }
-      UNPROTECT(1);
-      SArray sarray(idim);
-      setSArrayValue(sarray, e2);
-      table.insert(pair<string,SArray>(ename,sarray));
-    }
-    UNPROTECT(3);
-  }
-  UNPROTECT(1);
+    UNPROTECT(1);
 }
 
 /* Read data from a JAGS data table into and R list */
@@ -221,234 +221,236 @@ static SEXP readDataTable(map<string,SArray> const &table)
 extern "C" {
 
 
-  SEXP init_jags_console()
-  {
-    /* Called by .First.lib */
-    JAGS_console_tag = install("JAGS_CONSOLE_TAG");
-    return R_NilValue;
-  }
-
-  SEXP clear_console(SEXP s)
-  {
-    /* Finalizer for console pointers. Frees the external memory
-       and zeroes the pointer when the R object is deleted */
-
-    checkConsole(s);
-    Console *console = static_cast<Console*>(R_ExternalPtrAddr(s));
-    if (console != NULL) {
-      delete console;
-      R_ClearExternalPtr(s);
+    SEXP init_jags_console()
+    {
+	/* Called by .First.lib */
+	JAGS_console_tag = install("JAGS_CONSOLE_TAG");
+	return R_NilValue;
     }
-    return R_NilValue;
-  }
 
-  SEXP make_console()
-  {
-    void *p = static_cast<void*>(new Console(jags_out, jags_err));
-    SEXP ptr = R_MakeExternalPtr(p, JAGS_console_tag, R_NilValue);
-    R_RegisterCFinalizer(ptr, (R_CFinalizer_t) clear_console);
-    return ptr;
-  }
+    SEXP clear_console(SEXP s)
+    {
+	/* Finalizer for console pointers. Frees the external memory
+	   and zeroes the pointer when the R object is deleted */
+
+	checkConsole(s);
+	Console *console = static_cast<Console*>(R_ExternalPtrAddr(s));
+	if (console != NULL) {
+	    delete console;
+	    R_ClearExternalPtr(s);
+	}
+	return R_NilValue;
+    }
+
+    SEXP make_console()
+    {
+	void *p = static_cast<void*>(new Console(jags_out, jags_err));
+	SEXP ptr = R_MakeExternalPtr(p, JAGS_console_tag, R_NilValue);
+	R_RegisterCFinalizer(ptr, (R_CFinalizer_t) clear_console);
+	return ptr;
+    }
   
-  SEXP check_model(SEXP ptr, SEXP name)
-  {
-    /* Name should be a name of a file containing the model */
+    SEXP check_model(SEXP ptr, SEXP name)
+    {
+	/* Name should be a name of a file containing the model */
     
-    string sname = stringArg(name);
-    FILE *file = fopen(sname.c_str(), "r");
-    if (!file) {
-      jags_err << "Failed to open file " << sname << "\n";
-      return R_NilValue;
-    }
-    else {
-      bool status = ptrArg(ptr)->checkModel(file);	    
-      printMessages(status);
-      fclose(file);
-      return R_NilValue;
-    }
-  }
-
-  SEXP compile(SEXP ptr, SEXP data, SEXP nchain, SEXP gendata)
-  {
-    if (!isNumeric(nchain)) {
-      error("nchain must be numeric");
-    }
-    if (!isVector(data)) {
-      error("invalid data");
+	string sname = stringArg(name);
+	FILE *file = fopen(sname.c_str(), "r");
+	if (!file) {
+	    jags_err << "Failed to open file " << sname << "\n";
+	    return R_NilValue;
+	}
+	else {
+	    bool status = ptrArg(ptr)->checkModel(file);	    
+	    printMessages(status);
+	    fclose(file);
+	    return R_NilValue;
+	}
     }
 
-    map<string, SArray> table;
-    writeDataTable(data, table);
-    bool status = ptrArg(ptr)->compile(table, intArg(nchain),
-				       boolArg(gendata));
-    printMessages(status);
-    return R_NilValue;
-  }
+    SEXP compile(SEXP ptr, SEXP data, SEXP nchain, SEXP gendata)
+    {
+	if (!isNumeric(nchain)) {
+	    error("nchain must be numeric");
+	}
+	if (!isVector(data)) {
+	    error("invalid data");
+	}
 
-  SEXP set_parameters(SEXP ptr, SEXP data, SEXP nchain)
-  {
-    map<string,SArray> data_table;
-    writeDataTable(data, data_table);
-    bool status = ptrArg(ptr)->setParameters(data_table, intArg(nchain));
-    printMessages(status);
-    return R_NilValue;
-  }
+	map<string, SArray> table;
+	writeDataTable(data, table);
+	bool status = ptrArg(ptr)->compile(table, intArg(nchain),
+					   boolArg(gendata));
+	printMessages(status);
+	return R_NilValue;
+    }
+
+    SEXP set_parameters(SEXP ptr, SEXP data, SEXP nchain)
+    {
+	map<string,SArray> data_table;
+	writeDataTable(data, data_table);
+	bool status = ptrArg(ptr)->setParameters(data_table, intArg(nchain));
+	printMessages(status);
+	return R_NilValue;
+    }
   
-  SEXP set_rng_name(SEXP ptr, SEXP name, SEXP chain)
-  {
-    bool status = ptrArg(ptr)->setRNGname(stringArg(name), intArg(chain));
-    printMessages(status);
-    return R_NilValue;
-  }
+    SEXP set_rng_name(SEXP ptr, SEXP name, SEXP chain)
+    {
+	bool status = ptrArg(ptr)->setRNGname(stringArg(name), intArg(chain));
+	printMessages(status);
+	return R_NilValue;
+    }
   
-  SEXP initialize(SEXP ptr)
-  {
-    bool status = ptrArg(ptr)->initialize();
-    printMessages(status);
-    return R_NilValue;
-  }
+    SEXP initialize(SEXP ptr)
+    {
+	bool status = ptrArg(ptr)->initialize();
+	printMessages(status);
+	return R_NilValue;
+    }
   
-  SEXP update(SEXP ptr, SEXP rniter)
-  {
-      int niter = intArg(rniter);
-      Console *console = ptrArg(ptr);
-      int width = 40;
-      int refresh = niter/width;
+    SEXP update(SEXP ptr, SEXP rniter)
+    {
+	int niter = intArg(rniter);
+	Console *console = ptrArg(ptr);
+	int width = 40;
+	int refresh = niter/width;
 
-      bool adapt = console->isAdapting();
+	bool adapt = console->isAdapting();
 
-      if (refresh == 0) {
-	  console->update(niter/2);
-	  bool status = true;
-	  if (adapt) {
-	      console->adaptOff(status);
-	  }
-	  console->update(niter - niter/2);
-	  if (!status) {
-	      warning("Adaptation incomplete");
-	  }
-	  return R_NilValue;
-      }
+	if (refresh == 0) {
+	    console->update(niter/2);
+	    bool status = true;
+	    if (adapt) {
+		console->adaptOff(status);
+	    }
+	    console->update(niter - niter/2);
+	    if (!status) {
+		warning("Adaptation incomplete");
+	    }
+	    return R_NilValue;
+	}
     
-      if (width > niter / refresh + 1)
-	  width = niter / refresh + 1;
+	if (width > niter / refresh + 1)
+	    width = niter / refresh + 1;
 
-      Rprintf("%s\n", jags_out.str().c_str());
+	Rprintf("%s\n", jags_out.str().c_str());
 
-      Rprintf("Updating %d\n", niter);
-      for (int i = 0; i < width - 1; ++i) {
-	  Rprintf("-");
-      }
-      Rprintf("| %d\n", min2(width * refresh, niter));
+	Rprintf("Updating %d\n", niter);
+	for (int i = 0; i < width - 1; ++i) {
+	    Rprintf("-");
+	}
+	Rprintf("| %d\n", min2(width * refresh, niter));
     
-      int col = 0;
-      bool status = true;
-      for (long n = niter; n > 0; n -= refresh) {
-	  if (adapt && n <= niter/2) {
-	      // Turn off adaptive mode half way through burnin
-	      console->adaptOff(status);
-	      adapt = false;
-	  }
-	  long nupdate = min2(n, refresh);
-	  if(console->update(nupdate))
-	      Rprintf("*");
-	  else {
-	      Rprintf("\n");
-	      printMessages(false);
-	      return R_NilValue;
-	  }
-	  col++;
-	  if (col == width || n <= nupdate) {
-	      int percent = 100 - (n-nupdate) * 100/niter;
-	      Rprintf(" %d\%\n", percent);
-	      if (n > nupdate) {
-		  col = 0;
-	      }
-	  }
-      }
-      if (!status) {
-	  warning("Adaptation incomplete");
-      }
+	int col = 0;
+	bool status = true;
+	for (long n = niter; n > 0; n -= refresh) {
+	    if (adapt && n <= niter/2) {
+		// Turn off adaptive mode half way through burnin
+		console->adaptOff(status);
+		adapt = false;
+	    }
+	    long nupdate = min2(n, refresh);
+	    if(console->update(nupdate))
+		Rprintf("*");
+	    else {
+		Rprintf("\n");
+		printMessages(false);
+		return R_NilValue;
+	    }
+	    col++;
+	    if (col == width || n <= nupdate) {
+		int percent = 100 - (n-nupdate) * 100/niter;
+		Rprintf(" %d\%\n", percent);
+		if (n > nupdate) {
+		    col = 0;
+		}
+	    }
+	}
+	if (!status) {
+	    warning("Adaptation incomplete");
+	}
 
-      return R_NilValue;
-  }
+	return R_NilValue;
+    }
     
-  SEXP set_monitor(SEXP ptr, SEXP name, SEXP thin)
-  {
-    bool status = ptrArg(ptr)->setMonitor(stringArg(name), Range(), 
-					  intArg(thin), "trace");
-    printMessages(status);
-    return R_NilValue;
-  }
-
-  SEXP clear_monitor(SEXP ptr, SEXP name)
-  {
-    bool status = ptrArg(ptr)->clearMonitor(stringArg(name), Range(), "trace");
-    printMessages(status);
-    return R_NilValue;
-  }
-
-  SEXP get_monitored_values(SEXP ptr, SEXP chain)
-  {
-    map<string,SArray> data_table;
-    map<string,unsigned int> weight_table;
-    bool status = ptrArg(ptr)->dumpMonitors(data_table, weight_table,
-					    "trace", intArg(chain));
-    printMessages(status);
-    return readDataTable(data_table);
-  }
-
-  SEXP get_data(SEXP ptr)
-  {
-    map<string,SArray> data_table;
-    string rngname; //Not actually needed
-    bool status = ptrArg(ptr)->dumpState(data_table, rngname, DUMP_DATA, 1);
-    printMessages(status);
-    return readDataTable(data_table);
-  }
-
-  SEXP get_state(SEXP ptr)
-  {
-    Console *console = ptrArg(ptr);
-    unsigned int nchain = console->nchain();
-    if (nchain == 0) {
-      return R_NilValue;
+    SEXP set_monitor(SEXP ptr, SEXP name, SEXP thin, SEXP type)
+    {
+	bool status = ptrArg(ptr)->setMonitor(stringArg(name), Range(), 
+					      intArg(thin), stringArg(type));
+	printMessages(status);
+	return R_NilValue;
     }
 
-    //ans is the list that contains the state for each chain
-    SEXP ans;
-    PROTECT(ans = allocVector(VECSXP, nchain));
-    for (unsigned int n = 0; n < nchain; ++n) {
-      string srng;
-      map<string,SArray> param_table;
-      console->dumpState(param_table, srng, DUMP_PARAMETERS, n+1);
-      //Read the parameter values into an R list
-      SEXP params, names;
-      PROTECT(params = readDataTable(param_table));
-      int nparam = length(params);
-      PROTECT(names = getAttrib(params, R_NamesSymbol));
-      //Now we have to make a copy of the list with an extra element
-      SEXP staten, namesn;
-      PROTECT(staten = allocVector(VECSXP, nparam + 1));
-      PROTECT(namesn = allocVector(STRSXP, nparam + 1));
-      for (int j = 0; j < nparam; ++j) {
-	SET_ELEMENT(staten, j, VECTOR_ELT(params, j));
-	SET_STRING_ELT(namesn, j, STRING_ELT(names, j));
-      }
-      //Assign .RNG.name as the last element
-      SEXP rngname;
-      PROTECT(rngname = allocVector(STRSXP,1));
-      SET_STRING_ELT(rngname, 0, mkChar(srng.c_str()));
-      SET_ELEMENT(staten, nparam, rngname);
-      SET_STRING_ELT(namesn, nparam, mkChar(".RNG.name"));
-      setAttrib(staten, R_NamesSymbol, namesn);
-      //And we're done with this chain
-      SET_ELEMENT(ans, n, staten);
-      UNPROTECT(5); //rngname, namesn, statesn, names, params
+    SEXP clear_monitor(SEXP ptr, SEXP name, SEXP type)
+    {
+	bool status = ptrArg(ptr)->clearMonitor(stringArg(name), Range(), 
+						stringArg(type));
+	printMessages(status);
+	return R_NilValue;
     }
-    UNPROTECT(1); //ans
-    return ans;
-  }
+
+    SEXP get_monitored_values(SEXP ptr, SEXP chain, SEXP type)
+    {
+	map<string,SArray> data_table;
+	map<string,unsigned int> weight_table;
+	bool status = ptrArg(ptr)->dumpMonitors(data_table, weight_table,
+						stringArg(type),
+						intArg(chain));
+	printMessages(status);
+	return readDataTable(data_table);
+    }
+
+    SEXP get_data(SEXP ptr)
+    {
+	map<string,SArray> data_table;
+	string rngname; //Not actually needed
+	bool status = ptrArg(ptr)->dumpState(data_table, rngname, DUMP_DATA, 1);
+	printMessages(status);
+	return readDataTable(data_table);
+    }
+
+    SEXP get_state(SEXP ptr)
+    {
+	Console *console = ptrArg(ptr);
+	unsigned int nchain = console->nchain();
+	if (nchain == 0) {
+	    return R_NilValue;
+	}
+
+	//ans is the list that contains the state for each chain
+	SEXP ans;
+	PROTECT(ans = allocVector(VECSXP, nchain));
+	for (unsigned int n = 0; n < nchain; ++n) {
+	    string srng;
+	    map<string,SArray> param_table;
+	    console->dumpState(param_table, srng, DUMP_PARAMETERS, n+1);
+	    //Read the parameter values into an R list
+	    SEXP params, names;
+	    PROTECT(params = readDataTable(param_table));
+	    int nparam = length(params);
+	    PROTECT(names = getAttrib(params, R_NamesSymbol));
+	    //Now we have to make a copy of the list with an extra element
+	    SEXP staten, namesn;
+	    PROTECT(staten = allocVector(VECSXP, nparam + 1));
+	    PROTECT(namesn = allocVector(STRSXP, nparam + 1));
+	    for (int j = 0; j < nparam; ++j) {
+		SET_ELEMENT(staten, j, VECTOR_ELT(params, j));
+		SET_STRING_ELT(namesn, j, STRING_ELT(names, j));
+	    }
+	    //Assign .RNG.name as the last element
+	    SEXP rngname;
+	    PROTECT(rngname = allocVector(STRSXP,1));
+	    SET_STRING_ELT(rngname, 0, mkChar(srng.c_str()));
+	    SET_ELEMENT(staten, nparam, rngname);
+	    SET_STRING_ELT(namesn, nparam, mkChar(".RNG.name"));
+	    setAttrib(staten, R_NamesSymbol, namesn);
+	    //And we're done with this chain
+	    SET_ELEMENT(ans, n, staten);
+	    UNPROTECT(5); //rngname, namesn, statesn, names, params
+	}
+	UNPROTECT(1); //ans
+	return ans;
+    }
 
 
     SEXP get_variable_names(SEXP ptr)

@@ -1,26 +1,39 @@
 \name{model.samples}
 \alias{model.samples}
-\docType{data}
-\title{ ~~ data name/kind ... ~~}
+%- Also NEED an '\alias' for EACH other topic documented here.
+\title{Generate posterior samples}
 \description{
-  ~~ A concise (1-5 lines) description of the dataset. ~~
+  Function to extract random samples from the posterior distribution
+  of the parameters of a \code{jags} model. 
 }
-\usage{data(model.samples)}
-\format{
-  The format is:
- chr "model.samples"
+\usage{
+model.samples(model, variable.names, n.iter, thin = 1, type="trace")
+}
+%- maybe also 'usage' for other objects documented here.
+\arguments{
+  \item{model}{a jags model object}
+  \item{variable.names}{a character vector giving the names of variables
+    to be monitored}
+  \item{n.iter}{number of iterations to monitor}
+  \item{thin}{thinning interval for monitors}
+  \item{type}{type of monitor}
 }
 \details{
-  ~~ If necessary, more details than the __description__ above ~~
+  The \code{model.samples} function creates monitors for the given
+  variables, runs the model for \code{n.iter} iterations and returns
+  the monitored samples.
 }
-\source{
-  ~~ reference to a publication or URL from which the data were obtained ~~
+\value{
+  
+  \item{comp1 }{Description of 'comp1'}
+  \item{comp2 }{Description of 'comp2'}
+  ...
 }
-\references{
-  ~~ possibly secondary sources and usages ~~
+\references{ ~put references to the literature/web site here ~ }
+\author{Martyn Plummer}
+\note{ ~~further notes~~ 
+
+ ~Make other sections like Warning with \section{Warning }{....} ~
 }
-\examples{
-data(model.samples)
-## maybe str(model.samples) ; plot(model.samples) ...
-}
-\keyword{datasets}
+\seealso{\code{\link{jags.model}}}
+\keyword{models}

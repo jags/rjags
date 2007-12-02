@@ -1,6 +1,7 @@
 export ( 
   jags.model,
-  model.samples,
-  read.jagsdata
+  model.samples
 )
 S3method(print,jags)
+S3method(coef,jags)
+S3method(update,jags)

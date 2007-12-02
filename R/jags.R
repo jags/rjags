@@ -18,7 +18,8 @@ print.jags <- function(x, ...)
   }
 }
 
-jags.model <- function(file, data, inits, nchain = 1)
+jags.model <- function(file, data=sys.frame(sys.parent()), inits,
+                       nchain = 1)
 {
 
   if (missing(file)) {
@@ -61,16 +62,16 @@ jags.model <- function(file, data, inits, nchain = 1)
     .Call("compile", p, data, as.integer(nchain), TRUE, PACKAGE="rjags")
   }
 
-  setParameters <- function(initsi, chain) {
-    if (!is.list(initsi))
+  setParameters <- function(inits, chain) {
+    if (!is.list(inits))
       stop("Parameters must be a list")
-    if (is.null(names(initsi)) || any(nchar(names(initsi)) == 0))
+    if (is.null(names(inits)) || any(nchar(names(inits)) == 0))
       stop("Parameters must be a named list")
-    if (!is.null(initsi[[".RNG.name"]])) {
-      .Call("set_rng_name", p, initsi[[".RNG.name"]], PACKAGE="rjags")
+    if (!is.null(inits[[".RNG.name"]])) {
+      .Call("set_rng_name", p, inits[[".RNG.name"]], PACKAGE="rjags")
       inits[[".RNG.name"]] <- NULL
     }
-    .Call("set_parameters", p, initsi, as.integer(chain), PACKAGE="rjags")
+    .Call("set_parameters", p, inits, as.integer(chain), PACKAGE="rjags")
   }
 
   if (!missing(inits)) {
@@ -143,42 +144,42 @@ jags.model <- function(file, data, inits, nchain = 1)
   return(model)
 }
 
-read.jagsdata <- function(file)
+model.samples <- function(model, variable.names, n.iter, thin=1, type="trace")
 {
-  e <- new.env()
-  eval(parse(file), e)
-  return(as.list(e))
-}
+    if (class(model) != "jags")
+      stop("Invalid JAGS model")
 
-model.samples <- function(model, variable.names, n.iter, thin=1)
-{
-  if (class(model) != "jags")
-    stop("Invalid JAGS model")
-
-  if (!is.character(variable.names))
-    stop("variable.names must be a character vector")
-  if (length(variable.names) == 0)
-    stop("Empty variable name list")
+    if (!is.character(variable.names))
+      stop("variable.names must be a character vector")
+    if (length(variable.names) == 0)
+      stop("Empty variable name list")
   
-  if (!is.numeric(n.iter) || length(n.iter) != 1 || n.iter <= 0)
-    stop("n.iter must be a positive integer")
-
-  for (i in seq(along=variable.names)) {
-    .Call("set_monitor", model$ptr(), variable.names[i], thin, PACKAGE="rjags")
-  }
-  model$update(as.integer(n.iter))
-  nchain <- length(model$state())
-  if (nchain == 1) {
-    ans <- .Call("get_monitored_values", model$ptr(), 1, PACKAGE="rjags")
-  }
-  else {
-    ans <- vector("list", nchain)
-    for (i in 1:length(ans)) {
-      ans[[i]] <- .Call("get_monitored_values", model$ptr(), i, PACKAGE="rjags")
+    if (!is.numeric(n.iter) || length(n.iter) != 1 || n.iter <= 0)
+      stop("n.iter must be a positive integer")
+    if (!is.character(type))
+      stop("type must be a character vector")
+    
+    for (i in seq(along=variable.names)) {
+        .Call("set_monitor", model$ptr(), variable.names[i], thin, type,
+              PACKAGE="rjags")
     }
-  }
-  for (i in seq(along=variable.names)) {
-    .Call("clear_monitor", model$ptr(), variable.names[i], PACKAGE="rjags")
-  }
-  return(ans)
+    model$update(as.integer(n.iter))
+    nchain <- length(model$state())
+    if (nchain == 1) {
+        ans <- .Call("get_monitored_values", model$ptr(), 1,
+                     type, PACKAGE="rjags")
+    }
+    else {
+        ans <- vector("list", nchain)
+        names(ans) = paste("chain",1:nchain, sep="")
+        for (i in 1:length(ans)) {
+            ans[[i]] <- .Call("get_monitored_values", model$ptr(), i, type,
+                              PACKAGE="rjags")
+        }
+    }
+    for (i in seq(along=variable.names)) {
+        .Call("clear_monitor", model$ptr(), variable.names[i], type,
+              PACKAGE="rjags")
+    }
+    return(ans)
 }

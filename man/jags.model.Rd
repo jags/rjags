@@ -6,7 +6,8 @@
   Bayesian graphical model, specified with a BUGS-language description
   of the prior distribution, and a set of data.
 }
-\usage{jags.model(file, data=sys.frame(sys.parent()), inits=NULL, nchain = 1)}
+\usage{
+jags.model(file, data=sys.frame(sys.parent()), inits, nchain = 1)}
 \arguments{
   \item{file}{a file containing a description of the model in the
     JAGS dialect of the BUGS language}
@@ -41,8 +42,7 @@
   \item{update(niter,by)} Updates the model by \code{niter} iterations. By
   default a progress bar is printed to the screen, with an update every
   \code{by} iterations. To suppress the update bar, use \code{by=0}.
-  
-  
-  ch
-  unobserved
 }
+\author{Martyn Plummer}
+\keyword{models}
+
