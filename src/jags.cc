@@ -465,4 +465,32 @@ extern "C" {
 	UNPROTECT(1);
 	return varnames;
     }
+
+    SEXP get_samplers(SEXP ptr)
+    {
+	Console *console = ptrArg(ptr);
+	vector<vector<string> > samplers;
+	bool status = console->dumpSamplers(samplers);
+	printMessages(status);
+	    
+	unsigned int n = samplers.size();
+	SEXP node_list, sampler_names;
+	PROTECT(node_list = allocVector(VECSXP, n));
+	PROTECT(sampler_names = allocVector(STRSXP, n));
+	
+	for (unsigned int i = 0; i < n; ++i) {
+	    int nnode = samplers[i].size() - 1;
+	    SEXP e;
+	    PROTECT(e=allocVector(STRSXP, nnode));
+	    for (int j = 0; j < nnode; ++j) {
+		SET_STRING_ELT(e, j, mkChar(samplers[i][j+1].c_str()));
+	    }
+	    SET_ELEMENT(node_list, i, e);
+	    SET_STRING_ELT(sampler_names, i, mkChar(samplers[i][0].c_str()));
+	    UNPROTECT(1); //e
+	}
+	setAttrib(node_list, R_NamesSymbol, sampler_names);	
+	UNPROTECT(2); //names, ans
+	return node_list;
+    }
 }

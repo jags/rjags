@@ -1,4 +1,4 @@
-AC_INIT([rjags], [0.99.2])
+AC_INIT([rjags], [0.99.3])
 
 dnl Get location of JAGS library and header files from configure option or 
 dnl environment variable. Failing that, assume it is installed in ${libdir} 
