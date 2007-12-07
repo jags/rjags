@@ -5,6 +5,7 @@ Title: Bayesian graphical models using MCMC
 Author: Martyn Plummer 
 Maintainer: Martyn Plummer <plummer@iarc.fr>
 Depends: coda
+SystemRequirements: jags
 Description: Interface to the JAGS MCMC library 
 License: GPL (==2)
 URL: http://mcmc-jags.sourceforg.net
