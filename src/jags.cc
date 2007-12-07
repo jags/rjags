@@ -85,10 +85,19 @@ static void printMessages(bool status)
 	Rprintf("%s\n", jags_out.str().c_str());
 	jags_out.str("");
     }
-    if(status == false) {
-	if (!jags_err.str().empty()) {
-	    string msg = jags_err.str();
-	    jags_err.str("");
+    string msg;
+    if (!jags_err.str().empty()) {
+	msg = jags_err.str();
+	jags_err.str("");
+    }
+    if (status == true) {
+	if (!msg.empty()) {
+	    warning("%s\n", msg.c_str());
+	}
+    }
+    else {
+	//Something bad happened
+	if (!msg.empty()) {
 	    error("%s\n", msg.c_str());
 	}
 	else {
@@ -381,6 +390,14 @@ extern "C" {
 	return R_NilValue;
     }
 
+    SEXP set_default_monitors(SEXP ptr, SEXP type, SEXP thin)
+    {
+	bool status = ptrArg(ptr)->setDefaultMonitors(stringArg(type),
+						      intArg(thin));
+	printMessages(status);
+	return R_NilValue;
+    }
+
     SEXP clear_monitor(SEXP ptr, SEXP name, SEXP type)
     {
 	bool status = ptrArg(ptr)->clearMonitor(stringArg(name), Range(), 
@@ -389,13 +406,19 @@ extern "C" {
 	return R_NilValue;
     }
 
-    SEXP get_monitored_values(SEXP ptr, SEXP chain, SEXP type)
+    SEXP clear_default_monitors(SEXP ptr, SEXP type)
+    {
+	bool status = ptrArg(ptr)->clearDefaultMonitors(stringArg(type));
+	printMessages(status);
+	return R_NilValue;
+    }
+
+    SEXP get_monitored_values(SEXP ptr, SEXP type)
     {
 	map<string,SArray> data_table;
 	map<string,unsigned int> weight_table;
 	bool status = ptrArg(ptr)->dumpMonitors(data_table, weight_table,
-						stringArg(type),
-						intArg(chain));
+						stringArg(type));
 	printMessages(status);
 	return readDataTable(data_table);
     }
@@ -492,5 +515,29 @@ extern "C" {
 	setAttrib(node_list, R_NamesSymbol, sampler_names);	
 	UNPROTECT(2); //names, ans
 	return node_list;
+    }
+    
+    SEXP get_iter(SEXP ptr)
+    {
+	Console *console = ptrArg(ptr);
+	unsigned int iter = console->iter();
+
+	SEXP ans;
+	PROTECT(ans = allocVector(INTSXP, 1));
+	INTEGER(ans)[0] = iter;
+	UNPROTECT(1);
+	return ans;
+    }
+    
+    SEXP get_nchain(SEXP ptr)
+    {
+	Console *console = ptrArg(ptr);
+	unsigned int nchain = console->nchain();
+    
+	SEXP ans;
+	PROTECT(ans = allocVector(INTSXP,1));
+	INTEGER(ans)[0] = nchain;
+	UNPROTECT(1);
+	return ans;
     }
 }

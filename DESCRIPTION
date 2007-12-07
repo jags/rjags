@@ -6,6 +6,6 @@ Author: Martyn Plummer
 Maintainer: Martyn Plummer <plummer@iarc.fr>
 Depends: coda
 Description: Interface to the JAGS MCMC library 
-License: GPL version 2 or newer
+License: GPL (==2)
 URL: http://mcmc-jags.sourceforg.net
 Packaged: Thu Sep 14 11:09:48 2006; martyn

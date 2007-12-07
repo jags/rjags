@@ -1,6 +1,7 @@
 export ( 
   jags.model,
-  model.samples
+  samples,
+  coda.samples
 )
 S3method(print,jags)
 S3method(coef,jags)

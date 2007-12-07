@@ -97,10 +97,13 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
                           for(i in 1:nchain) {
                               model.state[[i]][[".RNG.state"]] <- NULL
                               model.state[[i]][[".RNG.name"]] <- NULL
-                              model.state[[i]][[".Iteration"]] <- NULL
                           }
                       }
                       return(model.state)
+                  },
+                  "iter" = function()
+                  {
+                      .Call("get_iter", p, PACKAGE="rjags")
                   },
                   "update" = function(niter, by) {
                       .Call("update", p, niter, PACKAGE="rjags")
@@ -140,50 +143,107 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
     return(model)
 }
 
-model.samples <- function(model, variable.names, n.iter, thin=1, type="trace")
+samples <- function(model, variable.names=NULL, n.iter, thin=1, type="trace")
 {
     if (class(model) != "jags")
       stop("Invalid JAGS model")
 
     if (!is.character(variable.names))
       stop("variable.names must be a character vector")
-    if (length(variable.names) == 0)
-      stop("Empty variable name list")
   
     if (!is.numeric(n.iter) || length(n.iter) != 1 || n.iter <= 0)
       stop("n.iter must be a positive integer")
     if (!is.character(type))
       stop("type must be a character vector")
-    
-    for (i in seq(along=variable.names)) {
-        .Call("set_monitor", model$ptr(), variable.names[i], thin, type,
+
+    if (is.null(variable.names)) {
+        .Call("set_default_monitors", model$ptr(), as.integer(thin),
               PACKAGE="rjags")
-    }
-    model$update(as.integer(n.iter))
-    nchain <- length(model$state())
-    if (nchain == 1) {
-        ans <- .Call("get_monitored_values", model$ptr(), 1,
-                     type, PACKAGE="rjags")
     }
     else {
-        ans <- vector("list", nchain)
-        names(ans) = paste("chain",1:nchain, sep="")
-        for (i in 1:length(ans)) {
-            ans[[i]] <- .Call("get_monitored_values", model$ptr(), i, type,
-                              PACKAGE="rjags")
+        for (i in seq(along=variable.names)) {
+            .Call("set_monitor", model$ptr(), variable.names[i],
+                  as.integer(thin), type, PACKAGE="rjags")
         }
     }
-    for (i in seq(along=variable.names)) {
-        .Call("clear_monitor", model$ptr(), variable.names[i], type,
-              PACKAGE="rjags")
+    model$update(as.integer(n.iter))
+    ans <- .Call("get_monitored_values", model$ptr(), type, PACKAGE="rjags")
+    if (is.null(variable.names)) {
+        .Call("clear_all_monitors", model$ptr(), type, PACKAGE="rjags")
+    }
+    else {
+        for (i in seq(along=variable.names)) {
+            .Call("clear_monitor", model$ptr(), variable.names[i], type,
+                  PACKAGE="rjags")
+        }
     }
     return(ans)
 }
 
-samplers <- function(model)
+list.samplers <- function(model)
 {
     if (!inherits(model, "jags")) {
         stop("not a jags model object")
     }
-    .Call("get_samplers", model$ptr())
+    .Call("get_samplers", model$ptr(), PACKAGE="rjags")
+}
+
+coda.names <- function(basename, dim)
+{
+    if (prod(dim) == 1)
+      return(basename)
+    
+    indices <- as.character(dim[1])
+    if (length(dim) > 1) {
+        for (i in 2:length(dim)) {
+            indices <- paste(indices, dim[i], FUN=paste, sep=",")
+        }
+    }
+    paste(basename,"[",as.vector(indices),"]",sep="")
+}
+
+nchain <- function(model)
+{
+    if (!inherits(model, "jags"))
+      stop("Invalid JAGS model object in nchain")
+    
+    .Call("get_nchain", model$ptr(), PACKAGE="rjags")
+}
+
+coda.samples <- function(model, variable.names=NULL, n.iter, thin=1)
+{
+    start <- model$iter() + thin
+    out <- samples(model, variable.names, n.iter, thin, type="trace")
+
+    ans <- vector("list", nchain(model))
+    for (ch in 1:nchain(model)) {
+        ans.ch <- vector("list", length(out))
+
+        vnames.ch <- NULL
+        for (i in seq(along=out)) {
+
+            varname <- names(out)[[i]]
+            d <- dim(out[[i]])
+            if (length(d) < 3) {
+                stop("Invalid dimensions for sampled output")
+            }
+            vardim <- d[1:(length(d)-2)]
+            nvar <- prod(vardim)
+            niter <- d[length(d) - 1]        
+            nchain <- d[length(d)]
+            
+            values <- as.vector(out[[i]])
+            var.i <- matrix(NA, nrow=niter, ncol=nvar)
+            for (j in 1:nvar) {
+                var.i[,j] <- values[j + (0:(niter-1))*nvar + (ch-1)*niter*nvar]
+            }
+            vnames.ch <- c(vnames.ch, coda.names(varname, vardim))
+            ans.ch[[i]] <- var.i
+        }
+        
+        ans.ch <- as.matrix(data.frame(ans.ch))
+        colnames(ans.ch) <- vnames.ch
+        ans[[ch]] <- mcmc(ans.ch, start=start, thin=thin)
+    }
+    mcmc.list(ans)
 }
