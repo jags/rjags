@@ -4,13 +4,8 @@
   library.dynam("rjags", pkg, lib, local=FALSE)
 
   ## ... and the modules.
-  cat("loading JAGS modules\n")
-  default.libs <- c("basemod", "bugs")
-  for (i in 1:length(default.libs)) {
-     cat("   ", default.libs[i], "\n", sep="")
-     dyn.load(paste("@JAGS_MODDIR@/", default.libs[i], 
-                    .Platform$dynlib.ext, sep=""))
-  }
+  options(jags.moddir="@JAGS_MODDIR@")
+  jags.module(c("basemod", "bugs"))
 
   .Call("init_jags_console", PACKAGE="rjags")
 }

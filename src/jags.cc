@@ -6,6 +6,8 @@
 #include <Console.h>
 #include <util/nainf.h>
 
+#include <R_ext/Utils.h>
+
 /* Workaround length being remapped to Rf_length
    by the preprocessor */
 
@@ -168,6 +170,7 @@ static void writeDataTable(SEXP data, map<string,SArray> &table)
     UNPROTECT(1);
 }
 
+#include <iostream>
 /* Read data from a JAGS data table into and R list */
 static SEXP readDataTable(map<string,SArray> const &table)
 {
@@ -198,7 +201,8 @@ static SEXP readDataTable(map<string,SArray> const &table)
 	}
     
 	if (p->second.ndim(false) > 1) {
-	    //Assign dim attribute
+
+	    //Set dim attribute
 	    vector<unsigned int> const &idim = p->second.dim(false);
 	    unsigned int ndim = idim.size();
 	    SEXP dim;
@@ -208,6 +212,23 @@ static SEXP readDataTable(map<string,SArray> const &table)
 	    }
 	    SET_DIM(e, dim);
 	    UNPROTECT(1); //dim
+
+	    //Set dimnames attribute
+	    vector<string> const &names = p->second.dimNames();
+	    if (!names.empty()) {
+		SEXP dn;
+		PROTECT(dn = allocVector(VECSXP,ndim));
+		
+		SEXP dn_names;
+		PROTECT(dn_names = allocVector(STRSXP,ndim));
+		for (unsigned int i = 0; i < ndim; ++i) {
+		    SET_STRING_ELT(dn_names, i, mkChar(names[i].c_str()));
+		}
+		setAttrib(dn, R_NamesSymbol, dn_names);
+		UNPROTECT(1); //dnnames
+		setAttrib(e, R_DimNamesSymbol, dn);
+		UNPROTECT(1); //dimnames
+	    }
 	}
     
 	SET_ELEMENT(data, i, e);
@@ -216,14 +237,12 @@ static SEXP readDataTable(map<string,SArray> const &table)
 
     //Set names
     SEXP names;
-    PROTECT(names = allocVector(STRSXP, N));
+    PROTECT(names = allocVector(STRSXP, table.size()));
     for (i = 0, p = table.begin() ; p != table.end(); ++p, ++i) {
 	SET_STRING_ELT(names, i, mkChar(p->first.c_str()));
     }
     setAttrib(data, R_NamesSymbol, names);
-    UNPROTECT(1); //names
-
-    UNPROTECT(1); //data
+    UNPROTECT(2); //names, data
     return data;
 }
 
@@ -317,9 +336,8 @@ extern "C" {
 	return R_NilValue;
     }
   
-    SEXP update(SEXP ptr, SEXP rniter)
+    void do_update(SEXP ptr, int niter)
     {
-	int niter = intArg(rniter);
 	Console *console = ptrArg(ptr);
 	int width = 40;
 	int refresh = niter/width;
@@ -327,16 +345,20 @@ extern "C" {
 	bool adapt = console->isAdapting();
 
 	if (refresh == 0) {
-	    console->update(niter/2);
+	    refresh = 10;
+	    for (int n = niter; n > 0; n-=10) {
+		int nupdate = min2(n, refresh);
+		console->update(nupdate);
+		R_CheckUserInterrupt();
+	    }
 	    bool status = true;
 	    if (adapt) {
 		console->adaptOff(status);
 	    }
-	    console->update(niter - niter/2);
 	    if (!status) {
 		warning("Adaptation incomplete");
 	    }
-	    return R_NilValue;
+	    return;
 	}
     
 	if (width > niter / refresh + 1)
@@ -351,20 +373,20 @@ extern "C" {
 	Rprintf("| %d\n", min2(width * refresh, niter));
     
 	int col = 0;
-	bool status = true;
 	for (long n = niter; n > 0; n -= refresh) {
-	    if (adapt && n <= niter/2) {
-		// Turn off adaptive mode half way through burnin
-		console->adaptOff(status);
-		adapt = false;
-	    }
 	    long nupdate = min2(n, refresh);
-	    if(console->update(nupdate))
-		Rprintf("*");
+	    if(console->update(nupdate)) {
+                if (adapt) {
+		   Rprintf("+");
+                }
+                else {
+                   Rprintf("*");
+                }
+            }
 	    else {
 		Rprintf("\n");
 		printMessages(false);
-		return R_NilValue;
+		return;
 	    }
 	    col++;
 	    if (col == width || n <= nupdate) {
@@ -374,13 +396,36 @@ extern "C" {
 		    col = 0;
 		}
 	    }
+            R_CheckUserInterrupt();
+        }
+
+	bool status = true;
+	if (adapt) {
+	    // Turn off adaptive mode 
+	    console->adaptOff(status);
+	    adapt = false;
 	}
 	if (!status) {
 	    warning("Adaptation incomplete");
 	}
-
-	return R_NilValue;
     }
+
+    SEXP update(SEXP ptr, SEXP rniter)
+    {
+        Console *console = ptrArg(ptr);
+        int niter = intArg(rniter);
+        if (console->isAdapting()) {
+            int niter1 = niter/2;
+            int niter2 = niter - niter1;
+            do_update(ptr, niter1);
+            do_update(ptr, niter2);
+        }
+        else {
+            do_update(ptr, niter);
+        }
+        return R_NilValue;
+    }
+
     
     SEXP set_monitor(SEXP ptr, SEXP name, SEXP thin, SEXP type)
     {
@@ -390,7 +435,7 @@ extern "C" {
 	return R_NilValue;
     }
 
-    SEXP set_default_monitors(SEXP ptr, SEXP type, SEXP thin)
+    SEXP set_default_monitors(SEXP ptr, SEXP thin, SEXP type)
     {
 	bool status = ptrArg(ptr)->setDefaultMonitors(stringArg(type),
 						      intArg(thin));

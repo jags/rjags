@@ -13,3 +13,7 @@ coef.jags <- function(object, chain = 1, ...) {
     }
     object$state(internal=FALSE)[[nchain]]
 }
+
+variable.names.jags <- function(object, ...) {
+    .Call("get_variable_names", oject$ptr(), PACKAGE="rjags")
+}

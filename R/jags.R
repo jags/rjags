@@ -143,14 +143,17 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
     return(model)
 }
 
-samples <- function(model, variable.names=NULL, n.iter, thin=1, type="trace")
+jags.samples <-
+  function(model, variable.names=NULL, n.iter, thin=1, type="trace")
 {
     if (class(model) != "jags")
       stop("Invalid JAGS model")
 
-    if (!is.character(variable.names))
-      stop("variable.names must be a character vector")
-  
+    if (!is.null(variable.names)) {
+       if (!is.character(variable.names))
+         stop("variable.names must be a character vector")
+    }
+     
     if (!is.numeric(n.iter) || length(n.iter) != 1 || n.iter <= 0)
       stop("n.iter must be a positive integer")
     if (!is.character(type))
@@ -158,7 +161,7 @@ samples <- function(model, variable.names=NULL, n.iter, thin=1, type="trace")
 
     if (is.null(variable.names)) {
         .Call("set_default_monitors", model$ptr(), as.integer(thin),
-              PACKAGE="rjags")
+              type, PACKAGE="rjags")
     }
     else {
         for (i in seq(along=variable.names)) {
@@ -168,8 +171,11 @@ samples <- function(model, variable.names=NULL, n.iter, thin=1, type="trace")
     }
     model$update(as.integer(n.iter))
     ans <- .Call("get_monitored_values", model$ptr(), type, PACKAGE="rjags")
+    for (i in seq(along=ans)) {
+        class(ans[[i]]) <- "mcarray"
+    }
     if (is.null(variable.names)) {
-        .Call("clear_all_monitors", model$ptr(), type, PACKAGE="rjags")
+        .Call("clear_default_monitors", model$ptr(), type, PACKAGE="rjags")
     }
     else {
         for (i in seq(along=variable.names)) {
@@ -193,10 +199,10 @@ coda.names <- function(basename, dim)
     if (prod(dim) == 1)
       return(basename)
     
-    indices <- as.character(dim[1])
+    indices <- as.character(1:dim[1])
     if (length(dim) > 1) {
         for (i in 2:length(dim)) {
-            indices <- paste(indices, dim[i], FUN=paste, sep=",")
+            indices <- outer(indices, 1:dim[i], FUN=paste, sep=",")
         }
     }
     paste(basename,"[",as.vector(indices),"]",sep="")
@@ -213,7 +219,7 @@ nchain <- function(model)
 coda.samples <- function(model, variable.names=NULL, n.iter, thin=1)
 {
     start <- model$iter() + thin
-    out <- samples(model, variable.names, n.iter, thin, type="trace")
+    out <- jags.samples(model, variable.names, n.iter, thin, type="trace")
 
     ans <- vector("list", nchain(model))
     for (ch in 1:nchain(model)) {
@@ -247,3 +253,23 @@ coda.samples <- function(model, variable.names=NULL, n.iter, thin=1)
     }
     mcmc.list(ans)
 }
+
+jags.module <- function(names)
+{
+    moddir = getOption("jags.moddir")
+    if (is.null(moddir)) {
+        stop("option jags.moddir is not set")
+    }
+    
+    cat("loading JAGS module\n")
+    for (i in 1:length(names)) {
+        cat("   ", names[i], "\n", sep="")
+        file <- file.path(moddir,
+                          paste(names[i], .Platform$dynlib.ext, sep=""))
+        if (!file.exists(file)) {
+            stop("Cannot load", file)
+        }
+        dyn.load(file)
+    }
+}
+
