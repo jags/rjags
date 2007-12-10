@@ -339,7 +339,7 @@ extern "C" {
     void do_update(SEXP ptr, int niter)
     {
 	Console *console = ptrArg(ptr);
-	int width = 40;
+	int width = 50;
 	int refresh = niter/width;
 
 	bool adapt = console->isAdapting();
@@ -366,7 +366,12 @@ extern "C" {
 
 	Rprintf("%s\n", jags_out.str().c_str());
 
-	Rprintf("Updating %d\n", niter);
+        if (adapt) {
+	    Rprintf("Adapting %d\n", niter);
+        }
+        else {
+	    Rprintf("Updating %d\n", niter);
+        }
 	for (int i = 0; i < width - 1; ++i) {
 	    Rprintf("-");
 	}
@@ -410,8 +415,20 @@ extern "C" {
 	}
     }
 
-    SEXP update(SEXP ptr, SEXP rniter)
+    SEXP update(SEXP ptr, SEXP rniter, SEXP adapt)
     {
+        int niter = intArg(rniter);
+        Console *console = ptrArg(ptr);
+	if (boolArg(adapt)) {
+	    if (console->isAdapting()) {
+		do_update(ptr, niter);
+	    }
+	}
+	else {
+	    do_update(ptr, niter);
+	}
+	return R_NilValue;
+	/*
         Console *console = ptrArg(ptr);
         int niter = intArg(rniter);
         if (console->isAdapting()) {
@@ -424,6 +441,7 @@ extern "C" {
             do_update(ptr, niter);
         }
         return R_NilValue;
+	*/
     }
 
     
