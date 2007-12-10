@@ -19,7 +19,7 @@ print.jags <- function(x, ...)
 }
 
 jags.model <- function(file, data=sys.frame(sys.parent()), inits,
-                       nchain = 1)
+                       nchain = 1, n.adapt=1000)
 {
 
     if (missing(file)) {
@@ -105,8 +105,8 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
                   {
                       .Call("get_iter", p, PACKAGE="rjags")
                   },
-                  "update" = function(niter, by) {
-                      .Call("update", p, niter, PACKAGE="rjags")
+                  "update" = function(niter, by, adapt=FALSE) {
+                      .Call("update", p, niter, adapt, PACKAGE="rjags")
                       model.state <<- .Call("get_state", p, PACKAGE="rjags")
                       invisible(NULL)
                   },
@@ -140,6 +140,7 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
                       invisible(NULL)
                   })
     class(model) <- "jags"
+    model$update(as.integer(n.adapt), adapt=TRUE)
     return(model)
 }
 
@@ -254,17 +255,19 @@ coda.samples <- function(model, variable.names=NULL, n.iter, thin=1)
     mcmc.list(ans)
 }
 
-jags.module <- function(names)
+jags.module <- function(names, path)
 {
-    moddir = getOption("jags.moddir")
-    if (is.null(moddir)) {
-        stop("option jags.moddir is not set")
+    if (missing(path)) {
+        path = getOption("jags.moddir")
+        if (is.null(path)) {
+            stop("option jags.moddir is not set")
+        }
     }
     
     cat("loading JAGS module\n")
     for (i in 1:length(names)) {
         cat("   ", names[i], "\n", sep="")
-        file <- file.path(moddir,
+        file <- file.path(path,
                           paste(names[i], .Platform$dynlib.ext, sep=""))
         if (!file.exists(file)) {
             stop("Cannot load", file)

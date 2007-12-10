@@ -15,5 +15,5 @@ coef.jags <- function(object, chain = 1, ...) {
 }
 
 variable.names.jags <- function(object, ...) {
-    .Call("get_variable_names", oject$ptr(), PACKAGE="rjags")
+    .Call("get_variable_names", object$ptr(), PACKAGE="rjags")
 }
