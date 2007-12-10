@@ -5,9 +5,10 @@ export (
   coda.samples,
   jags.module
 )
-S3method(print,jags)
-S3method(coef,jags)
-S3method(update,jags)
-S3method(variable.names,jags)
-S3method(print,mcarray)
-S3method(summary,mcarray)
+S3method(print, jags)
+S3method(coef, jags)
+S3method(update, jags)
+S3method(variable.names, jags)
+S3method(print, mcarray)
+S3method(summary, mcarray)
+S3method(print, summary.mcarray)

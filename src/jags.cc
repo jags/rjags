@@ -210,25 +210,23 @@ static SEXP readDataTable(map<string,SArray> const &table)
 	    for (unsigned int k = 0; k < ndim; ++k) {
 		INTEGER_POINTER(dim)[k] = idim[k];
 	    }
-	    SET_DIM(e, dim);
-	    UNPROTECT(1); //dim
 
-	    //Set dimnames attribute
+	    //Set names of the dimensions 
 	    vector<string> const &names = p->second.dimNames();
 	    if (!names.empty()) {
-		SEXP dn;
-		PROTECT(dn = allocVector(VECSXP,ndim));
-		
-		SEXP dn_names;
-		PROTECT(dn_names = allocVector(STRSXP,ndim));
-		for (unsigned int i = 0; i < ndim; ++i) {
-		    SET_STRING_ELT(dn_names, i, mkChar(names[i].c_str()));
+		SEXP dimnames;
+		PROTECT(dimnames = allocVector(STRSXP, ndim));
+		for (unsigned int k = 0; k < ndim; ++k) {
+		    SET_STRING_ELT(dimnames, k, mkChar(names[k].c_str()));
 		}
-		setAttrib(dn, R_NamesSymbol, dn_names);
-		UNPROTECT(1); //dnnames
-		setAttrib(e, R_DimNamesSymbol, dn);
-		UNPROTECT(1); //dimnames
+		setAttrib(dim, R_NamesSymbol, dimnames);
+	        SET_DIM(e, dim);
+		UNPROTECT(2); //dimnames, dim
 	    }
+            else {
+	        SET_DIM(e, dim);
+	        UNPROTECT(1); //dim
+            }
 	}
     
 	SET_ELEMENT(data, i, e);
