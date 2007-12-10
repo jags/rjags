@@ -11,7 +11,7 @@ coef.jags <- function(object, chain = 1, ...) {
     if (!is.numeric(chain) || chain < 1 || chain > object$nchain()) {
         stop("Invalid chain")
     }
-    object$state(internal=FALSE)[[nchain]]
+    object$state(internal=FALSE)[[chain]]
 }
 
 variable.names.jags <- function(object, ...) {

@@ -101,6 +101,10 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
                       }
                       return(model.state)
                   },
+                  "nchain" = function()
+                  {
+                      .Call("get_nchain", p, PACKAGE="rjags")
+                  },
                   "iter" = function()
                   {
                       .Call("get_iter", p, PACKAGE="rjags")
@@ -136,6 +140,9 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
                               .Call("set_parameters", p, statei, i, PACKAGE="rjags")
                           }
                           .Call("initialize", p, PACKAGE="rjags")
+                          #Redo adaptation
+                          .Call("update", p, n.adapt, TRUE, PACKAGE="rjags")
+                          model.state <<- .Call("get_state", p, PACKAGE="rjags")
                       }
                       invisible(NULL)
                   })
