@@ -1,3 +1,4 @@
+importFrom(coda,as.mcmc.list)
 importFrom(stats,variable.names)
 export ( 
   jags.model,
@@ -12,3 +13,4 @@ S3method(variable.names, jags)
 S3method(print, mcarray)
 S3method(summary, mcarray)
 S3method(print, summary.mcarray)
+S3method(as.mcmc.list,mcarray)
