@@ -3,34 +3,34 @@ print.mcarray <- function(x, ...)
     if (is.null(dim(x)) || is.null(names(dim(x)))) {
         NextMethod()
     }
-    summary(x, mean)
+    print(summary(x, mean))
 }
    
 summary.mcarray <- function(object, FUN, ...)
 {
-    if (is.null(dim(x)) || is.null(names(dim(x)))) {
+    if (is.null(dim(object)) || is.null(names(dim(object)))) {
         NextMethod()
     }
 
-    dn <- names(dim(x))
+    dn <- names(dim(object))
     drop.dims <- dn %in% c("iteration","chain")
 
-    y <- apply(x, which(!drop.dims), FUN, ...)
-    attr(y, "dropped.dims") <- dn[drop.dims]
-    class(y) <- "summary.mcarray"
+    ans <- list("stat"=apply(object, which(!drop.dims), FUN, ...),
+                "drop.dims" = dim(object)[drop.dims])
+    class(ans) <- "summary.mcarray"
 
-    return(y)
+    return(ans)
 }
 
 print.summary.mcarray <- function(x, ...)
 {
     cat("mcarray:\n")
-    print(x,...)
-    if (lengt(drop.dims) > 0) {
+    print(x$stat,...)
+    if (length(x$drop.dims) > 0) {
         cat("\nMarginalizing over:", 
-            paste(dn[drop.dims], "(", dim(x)[drop.dims],")\n" , sep=""))
+            paste(paste(names(x$drop.dims), "(", x$drop.dims,")" , sep=""),
+                  collapse=","),"\n")
     }
-    invisible(x)
 }
 
 as.mcmc.list.mcarray <- function(x, ...)
@@ -39,8 +39,9 @@ as.mcmc.list.mcarray <- function(x, ...)
         NextMethod()
     }
 
-    ndim <- length(dim(x))
-    dn <- names(dim(x))
+    xdim <- dim(x)
+    ndim <- length(xdim)
+    dn <- names(xdim)
 
     which.iter <- which(dn=="iteration")
     if (length(which.iter) != 1) {
@@ -49,23 +50,23 @@ as.mcmc.list.mcarray <- function(x, ...)
     
     which.chain <- which(dn=="chain")
     if (length(which.chain) > 1) {
-        stop("Bad chain dimensino in mcarray")
+        stop("Bad chain dimension in mcarray")
     }
 
-    niter <- dim[which.iter]
+    niter <- xdim[which.iter]
     if (length(which.chain) == 0) {
         perm <- c((1:ndim)[-which.iter], which.iter)
         x <- matrix(aperm(x, perm), nrow=niter)
         ans <- mcmc.list(mcmc(x))
     }
     else {
+        nchain <- xdim[which.chain]
         ans <- vector("list",nchain)
-        nchain <- dim[which.chain]
-        len <- prod(dim[-which.chain])
+        len <- prod(xdim[-which.chain])
         perm <- c((1:ndim)[-c(which.iter,which.chain)], which.iter, which.chain)
         x <- aperm(x,perm)
         for (i in 1:nchain) {
-            ans <- mcmc(matrix(x[1:length + (i-1)*length], nrow=niter))
+            ans <- mcmc(matrix(x[1:len + (i-1)*len], nrow=niter))
         }
         ans <- mcmc.list(ans)
     }
