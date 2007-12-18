@@ -151,7 +151,7 @@ elif test $pkg_failed = untried; then
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.])],
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.])],
 		[$4])
 else
 	$1[]_CFLAGS=$pkg_cv_[]$1[]_CFLAGS
