@@ -1,10 +1,10 @@
-AC_INIT([rjags], [1.0.0])
+AC_INIT([rjags], [1.0.1])
 
 dnl Get location of JAGS library and header files from configure option or 
 dnl environment variable. Failing that, assume it is installed in ${libdir} 
 
 AC_ARG_WITH([jags],
-   AC_HELP_STRING([--with-jags=JAGS_HOME], [the ocation of the JAGS pkgconfig file]), [JAGS_ROOT=$withval])
+   AC_HELP_STRING([--with-jags=JAGS_HOME], [the location of the JAGS pkgconfig file]), [JAGS_ROOT=$withval])
 
 if ! test -z "${JAGS_ROOT}"; then
    export PKG_CONFIG_PATH=${JAGS_ROOT}:$PKG_CONFIG_PATH
