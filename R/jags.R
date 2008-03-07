@@ -57,29 +57,65 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
     
     .Call("compile", p, data, as.integer(nchain), TRUE, PACKAGE="rjags")
 
-
-    setParameters <- function(inits, chain) {
-        if (!is.list(inits))
-          stop("Parameters must be a list")
-        if (is.null(names(inits)) || any(nchar(names(inits)) == 0))
-          stop("Parameters must be a named list")
-        if (!is.null(inits[[".RNG.name"]])) {
-            .Call("set_rng_name", p, inits[[".RNG.name"]], PACKAGE="rjags")
-            inits[[".RNG.name"]] <- NULL
-        }
-        .Call("set_parameters", p, inits, as.integer(chain), PACKAGE="rjags")
-    }
+### Setting initial values
 
     if (!missing(inits)) {
-        if (!is.list(inits)) {
-            stop("Initial values must be a list")
-        }
-        if (length(inits) != nchain) {
-            stop("inits list must be the same length as the number of chains")
-        }
 
+        checkParameters <- function(inits) {
+            if(!is.list(inits))
+              return (FALSE)
+            if (is.null(names(inits)) || any(nchar(names(inits)) == 0))
+              return (FALSE)
+            if (!all(sapply(inits, is.numeric)))
+              return (FALSE)
+            
+            return (TRUE)
+        }
+        
+        setParameters <- function(inits, chain) {
+            if (!is.null(inits[[".RNG.name"]])) {
+                .Call("set_rng_name", p, inits[[".RNG.name"]], PACKAGE="rjags")
+                inits[[".RNG.name"]] <- NULL
+            }
+            .Call("set_parameters", p, inits, as.integer(chain),
+                  PACKAGE="rjags")
+        }
+        
+        init.values <- vector("list", nchain)
+        
+        if (is.function(inits)) {
+            if (any(names(formals(inits)) == "chain")) {
+                for (i in 1:nchain) {
+                    init.values[[i]] <- inits(chain=i)
+                }
+            }
+            else {
+                for (i in 1:nchain) {
+                    init.values[[i]] <- inits()
+                }
+            }
+        }
+        else if (is.list(inits)) {
+
+            if (checkParameters(inits)) {
+                ## Replicate initial values for all chains
+                for (i in 1:nchain) {
+                    init.values[[i]] <- inits
+                }
+            }
+            else {
+                if (length(inits) != nchain) {
+                    stop("Length mismatch in inits")
+                }
+                init.values <- inits
+            }
+        }
+            
         for (i in 1:nchain) {
-            setParameters(inits[[i]], i)
+            if (!checkParameters(inits[[i]])) {
+                stop("Invalid parameters for chain ", i)
+            }
+            setParameters(init.values[[i]], i)
         }
     }
 
