@@ -313,7 +313,7 @@ jags.module <- function(names, path)
         file <- file.path(path,
                           paste(names[i], .Platform$dynlib.ext, sep=""))
         if (!file.exists(file)) {
-            stop("Cannot load", file)
+            stop("Cannot load ", file)
         }
         dyn.load(file)
     }

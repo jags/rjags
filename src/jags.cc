@@ -245,8 +245,7 @@ static SEXP readDataTable(map<string,SArray> const &table)
 }
 
 extern "C" {
-
-
+    
     SEXP init_jags_console()
     {
 	/* Called by .First.lib */
@@ -359,10 +358,11 @@ extern "C" {
 	    return;
 	}
     
-	if (width > niter / refresh + 1)
+	if (width > niter / refresh + 1) {
 	    width = niter / refresh + 1;
+        }
 
-	Rprintf("%s\n", jags_out.str().c_str());
+        Rprintf("%s\n", jags_out.str().c_str());
 
         if (adapt) {
 	    Rprintf("Adapting %d\n", niter);

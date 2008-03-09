@@ -18,4 +18,3 @@ JAGS_MODDIR=`$PKG_CONFIG --variable=moduledir jags`
 AC_SUBST(JAGS_MODDIR)
 
 AC_OUTPUT(src/Makevars)
-AC_OUTPUT(R/zzz.R)
