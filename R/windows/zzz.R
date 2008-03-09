@@ -1,7 +1,5 @@
 .onLoad <- function(lib, pkg)
 {
-  ## Load the rjags wrapper ...
-  library.dynam("rjags", pkg, lib, local=FALSE)
 
   if (!require("SWinRegistry")) {
       stop("On Windows, rjags requires package SWinRegistry from ",
@@ -26,9 +24,8 @@
       Sys.setenv("PATH"=path)
   }
       
-  ## The user may overwrite the default module directory with the
-  ## option jags.moddir
-  
+  library.dynam("rjags", pkg, lib, local=FALSE)
+
   if (is.null(getOption("jags.moddir"))) {
       options("jags.moddir" = file.path(jags.home, "modules"))
   }
