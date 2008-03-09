@@ -18,7 +18,7 @@
 
   bindir <- file.path(jags.home, "bin")
   path <- Sys.getenv("PATH")
-  split.path <- strsplit(path, Platform$path.sep)$PATH
+  split.path <- strsplit(path, .Platform$path.sep)$PATH
   if (!any(split.path == jags.bindir)) {
       path <- paste(path, jags.bindir, sep=.Platform$path.sep)
       Sys.setenv("PATH"=path)
