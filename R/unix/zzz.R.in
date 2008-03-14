@@ -4,11 +4,8 @@
   library.dynam("rjags", pkg, lib, local=FALSE)
 
   ## ... and the modules
-  moddir <- .Call("compile_time_moddir", PACKAGE="rjags")
+  moddir <- "@JAGS_MODDIR@"
   if (is.null(getOption("jags.moddir"))) {
-      if (is.null(moddir)) {
-          stop("Unable to locate module directory")
-      }
       options("jags.moddir" = moddir)
   }
   jags.module(c("basemod","bugs"))

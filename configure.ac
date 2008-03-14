@@ -1,4 +1,4 @@
-AC_INIT([rjags], [1.0.1])
+AC_INIT([rjags], [1.0.2])
 
 dnl Get location of JAGS library and header files from configure option or 
 dnl environment variable. Failing that, assume it is installed in ${libdir} 
@@ -18,3 +18,4 @@ JAGS_MODDIR=`$PKG_CONFIG --variable=moduledir jags`
 AC_SUBST(JAGS_MODDIR)
 
 AC_OUTPUT(src/Makevars)
+AC_OUTPUT(R/unix/zzz.R)
