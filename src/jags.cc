@@ -1,4 +1,5 @@
 #include <map>
+#include <string>
 #include <sstream>
 #include <algorithm>
 #include <vector>
@@ -6,7 +7,10 @@
 #include <Console.h>
 #include <util/nainf.h>
 
-#include <R_ext/Utils.h>
+using std::string;
+using std::map;
+using std::pair;
+using std::vector;
 
 /* Workaround length being remapped to Rf_length
    by the preprocessor */
@@ -16,7 +20,7 @@ unsigned long sarray_len(SArray const &s)
   return s.length();
 }
 
-long min2(long a, long b)
+int min2(int a, int b)
 {
   return std::min(a,b);
 }
@@ -24,11 +28,6 @@ long min2(long a, long b)
 #include <R.h>
 #include <Rinternals.h>
 #include <Rdefines.h>
-
-using std::string;
-using std::map;
-using std::pair;
-using std::vector;
 
 std::ostringstream jags_out; //Output stream
 std::ostringstream jags_err; //Error stream
@@ -55,7 +54,7 @@ static int intArg(SEXP arg)
     return i;
 }
 
-static string stringArg(SEXP arg)
+static char const *stringArg(SEXP arg)
 {
     if (!isString(arg)) {
 	error("Invalid string parameter");
@@ -333,9 +332,8 @@ extern "C" {
 	return R_NilValue;
     }
   
-    void do_update(SEXP ptr, int niter)
+    void do_update(Console *console, int niter)
     {
-	Console *console = ptrArg(ptr);
 	int width = 50;
 	int refresh = niter/width;
 
@@ -343,9 +341,8 @@ extern "C" {
 
 	if (refresh == 0) {
 	    refresh = 10;
-	    for (int n = niter; n > 0; n-=10) {
-		int nupdate = min2(n, refresh);
-		console->update(nupdate);
+	    for (int n = niter; n > 0; n-=refresh) {
+		console->update(min2(n, refresh));
 		R_CheckUserInterrupt();
 	    }
 	    bool status = true;
@@ -362,8 +359,23 @@ extern "C" {
 	    width = niter / refresh + 1;
         }
 
-        Rprintf("%s\n", jags_out.str().c_str());
+	//Not sure what this is doing here, and it probably causes a
+	//crash on Windows ... If we must do this, it should be using
+	//printMessages.
 
+        //Rprintf("%s\n", jags_out.str().c_str());
+
+	for (int n = niter; n > 0; n -= refresh) {
+	    int nupdate = min2(n, refresh);
+	    if(!console->update(nupdate)) {
+		Rprintf("\n");
+		printMessages(false);
+		return;
+	    }
+            R_CheckUserInterrupt();
+        }
+
+	/*
         if (adapt) {
 	    Rprintf("Adapting %d\n", niter);
         }
@@ -376,8 +388,8 @@ extern "C" {
 	Rprintf("| %d\n", min2(width * refresh, niter));
     
 	int col = 0;
-	for (long n = niter; n > 0; n -= refresh) {
-	    long nupdate = min2(n, refresh);
+	for (int n = niter; n > 0; n -= refresh) {
+	    int nupdate = min2(n, refresh);
 	    if(console->update(nupdate)) {
                 if (adapt) {
 		   Rprintf("+");
@@ -401,6 +413,7 @@ extern "C" {
 	    }
             R_CheckUserInterrupt();
         }
+	*/
 
 	bool status = true;
 	if (adapt) {
@@ -417,29 +430,11 @@ extern "C" {
     {
         int niter = intArg(rniter);
         Console *console = ptrArg(ptr);
-	if (boolArg(adapt)) {
-	    if (console->isAdapting()) {
-		do_update(ptr, niter);
-	    }
+	if (boolArg(adapt) && !console->isAdapting()) {
+	    return R_NilValue;
 	}
-	else {
-	    do_update(ptr, niter);
-	}
+	do_update(console, niter);
 	return R_NilValue;
-	/*
-        Console *console = ptrArg(ptr);
-        int niter = intArg(rniter);
-        if (console->isAdapting()) {
-            int niter1 = niter/2;
-            int niter2 = niter - niter1;
-            do_update(ptr, niter1);
-            do_update(ptr, niter2);
-        }
-        else {
-            do_update(ptr, niter);
-        }
-        return R_NilValue;
-	*/
     }
 
     
@@ -477,9 +472,11 @@ extern "C" {
     SEXP get_monitored_values(SEXP ptr, SEXP type)
     {
 	map<string,SArray> data_table;
-	map<string,unsigned int> weight_table;
+        //This is only included for compatibility with previous versions
+        //of the JAGS library. 
+        map<string, unsigned int> weight_table;
 	bool status = ptrArg(ptr)->dumpMonitors(data_table, weight_table,
-						stringArg(type));
+                                                stringArg(type));
 	printMessages(status);
 	return readDataTable(data_table);
     }
