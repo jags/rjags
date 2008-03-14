@@ -1,2 +1,2 @@
-PKG_CPPFLAGS=-I../include 
-PKG_LIBS=-L../winlibs -ljags
+PKG_CPPFLAGS=-I../jags-win32/include 
+PKG_LIBS=-L../jags-win32/lib -ljags
