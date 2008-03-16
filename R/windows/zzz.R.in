@@ -1,11 +1,5 @@
 .onLoad <- function(lib, pkg)
 {
-
-  if (!require("SWinRegistry")) {
-      stop("On Windows, rjags requires package SWinRegistry from ",
-           "http://www.omegahat.org")
-  }
-
   if (is.null(resolveKey("SOFTWARE\\JAGS-@PACKAGE_VERSION@\\Install_Dir",
                          top="HKEY_LOCAL_MACHINE")))
     {
@@ -16,6 +10,8 @@
                                 "Install_Dir",
                                 top="HKEY_LOCAL_MACHINE")
 
+  ## Add jags.home to the windows PATH, if not already present
+
   bindir <- file.path(jags.home, "bin")
   path <- Sys.getenv("PATH")
   split.path <- strsplit(path, .Platform$path.sep)$PATH
@@ -24,12 +20,13 @@
       Sys.setenv("PATH"=path)
   }
       
-  library.dynam("rjags", pkg, lib, local=FALSE)
+  ## Set the module directory, if the option jags.moddir is not already set
 
   if (is.null(getOption("jags.moddir"))) {
       options("jags.moddir" = file.path(jags.home, "modules"))
   }
   jags.module(c("basemod","bugs"))
 
+  library.dynam("rjags", pkg, lib, local=FALSE)
   .Call("init_jags_console", PACKAGE="rjags")
 }
