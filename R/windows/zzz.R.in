@@ -6,13 +6,13 @@
            "http://www.omegahat.org")
   }
 
-  if (is.null(resolveKey("SOFTWARE\\JAGS-1.0.2\\Install_Dir",
+  if (is.null(resolveKey("SOFTWARE\\JAGS-@PACKAGE_VERSION@\\Install_Dir",
                          top="HKEY_LOCAL_MACHINE")))
     {
-        stop("Failed to locate JAGS 1.0.2 installation")
+        stop("Failed to locate JAGS @PACKAGE_VERSION@ installation")
     }
   
-  jags.home <- getRegistryValue("SOFTWARE\\JAGS-1.0.2",
+  jags.home <- getRegistryValue("SOFTWARE\\JAGS-@PACKAGE_VERSION@",
                                 "Install_Dir",
                                 top="HKEY_LOCAL_MACHINE")
 
