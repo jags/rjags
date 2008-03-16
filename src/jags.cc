@@ -286,7 +286,7 @@ extern "C" {
 	}
 	else {
 	    bool status = ptrArg(ptr)->checkModel(file);	    
-	    printMessages(status);
+ 	    printMessages(status);
 	    fclose(file);
 	    return R_NilValue;
 	}
@@ -322,7 +322,7 @@ extern "C" {
     {
 	bool status = ptrArg(ptr)->setRNGname(stringArg(name), intArg(chain));
 	printMessages(status);
-	return R_NilValue;
+ 	return R_NilValue;
     }
   
     SEXP initialize(SEXP ptr)
@@ -359,23 +359,6 @@ extern "C" {
 	    width = niter / refresh + 1;
         }
 
-	//Not sure what this is doing here, and it probably causes a
-	//crash on Windows ... If we must do this, it should be using
-	//printMessages.
-
-        //Rprintf("%s\n", jags_out.str().c_str());
-
-	for (int n = niter; n > 0; n -= refresh) {
-	    int nupdate = min2(n, refresh);
-	    if(!console->update(nupdate)) {
-		Rprintf("\n");
-		printMessages(false);
-		return;
-	    }
-            R_CheckUserInterrupt();
-        }
-
-	/*
         if (adapt) {
 	    Rprintf("Adapting %d\n", niter);
         }
@@ -406,14 +389,13 @@ extern "C" {
 	    col++;
 	    if (col == width || n <= nupdate) {
 		int percent = 100 - (n-nupdate) * 100/niter;
-		Rprintf(" %d\%\n", percent);
+		Rprintf(" %d%%\n", percent); 
 		if (n > nupdate) {
 		    col = 0;
 		}
 	    }
             R_CheckUserInterrupt();
         }
-	*/
 
 	bool status = true;
 	if (adapt) {
