@@ -112,7 +112,7 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
         }
             
         for (i in 1:nchain) {
-            if (!checkParameters(inits[[i]])) {
+            if (!checkParameters(init.values[[i]])) {
                 stop("Invalid parameters for chain ", i)
             }
             setParameters(init.values[[i]], i)
