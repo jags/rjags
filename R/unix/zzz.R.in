@@ -4,7 +4,7 @@
   library.dynam("rjags", pkg, lib, local=FALSE)
 
   ## ... and the modules
-  moddir <- "@JAGS_MODDIR@"
+  moddir <- "@JAGS_MODULES@"
   if (is.null(getOption("jags.moddir"))) {
       options("jags.moddir" = moddir)
   }
