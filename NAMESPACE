@@ -1,10 +1,12 @@
 importFrom(coda,as.mcmc.list)
+importFrom(coda,spectrum0)
 importFrom(stats,variable.names)
 export ( 
   jags.model,
   jags.samples,
   coda.samples,
-  jags.module
+  jags.module,
+  dic.samples
 )
 S3method(print, jags)
 S3method(coef, jags)
@@ -14,3 +16,6 @@ S3method(print, mcarray)
 S3method(summary, mcarray)
 S3method(print, summary.mcarray)
 S3method(as.mcmc.list,mcarray)
+S3method(print, dic)
+S3Method("-", dic)
+S3method(print, diffdic)

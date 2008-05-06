@@ -1,8 +1,8 @@
-ploss.samples <-
+"dic.samples" <-
   function(model, n.iter, thin=1, type)
 {
     if (nchain(model) == 1) {
-        stop("Estimation of the penalty requires 2 or more parallel chains")
+        stop("Estimation of the deviance penalty requires 2 or more parallel chains")
     }
     jags.module("dic")
     
@@ -35,5 +35,41 @@ ploss.samples <-
     .Call("clear_default_monitors", model$ptr(), type, PACKAGE="rjags")
 
     ans <-  list(deviance = dev, penalty=pen, type=type)
-    class(ans) <- "ploss"
+    class(ans) <- "dic"
+    return(ans)
 }
+
+"print.dic" <- function(x, ...)
+{
+    deviance <- mean(unlist(x$deviance))
+    cat("Mean deviance: ", deviance, "\n")
+    penalty <- matrix(unlist(x$penalty), ncol=length(x$penalty))
+    penalty <- apply(penalty, 1, sum)
+    spec.var <- spectrum0(penalty)/length(penalty)
+    cat(x$type, "(Markov Error):", mean(penalty), "(", sqrt(spec.var), ")",
+        sep="")
+    cat("Penalized deviance:", deviance + mean(penalty), "\n")
+    invisible(x)
+}
+
+"-.dic" <- function(x,y)
+{
+    if(!identical(names(x$deviance),names(y$deviance))) {
+        stop("incompatible dic objects: variable names differ")
+    }
+    if (!identical(x$type, y$type)) {
+        stop("incompatible dic object: different penalty types")
+    }
+    delta <- sapply(x$deviance, mean) + sapply(x$penalty, mean)
+    - sapply(y$deviance, mean) - sapply(y$penalty, mean)
+    class(delta) <- "diffdic"
+    return(delta)
+}
+
+"print.diffdic" <- function(x, ...)
+{
+    cat("Difference: ", x, "\n", sep="") 
+    cat("Sample standard error: ", sqrt(length(x)) * sd(x), "\n", sep="")
+    invisible(x)
+}
+
