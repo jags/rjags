@@ -19,7 +19,7 @@ jags.samples(model, variable.names, n.iter, thin = 1, type="trace")
   \item{type}{type of monitor}
 }
 \details{
-  The \code{model.samples} function creates monitors for the given
+  The \code{jags.samples} function creates monitors for the given
   variables, runs the model for \code{n.iter} iterations and returns
   the monitored samples.
 }
