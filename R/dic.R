@@ -41,27 +41,30 @@
 
 "print.dic" <- function(x, ...)
 {
-    deviance <- mean(unlist(x$deviance))
+    deviance <- mean(sapply(x$deviance, mean))
     cat("Mean deviance: ", deviance, "\n")
-    penalty <- matrix(unlist(x$penalty), ncol=length(x$penalty))
-    penalty <- apply(penalty, 1, sum)
-    spec.var <- spectrum0(penalty)/length(penalty)
-    cat(x$type, "(Markov Error):", mean(penalty), "(", sqrt(spec.var), ")",
+    N <- length(x$penalty[[1]])
+    psum <- rep(0, N)
+    for (i in 1:length(x$penalty)) {
+        psum <- psum + x$penalty[[i]]
+    }
+    psum.var <- spectrum0(psum)$spec/N
+    cat(x$type, " (Markov Error):", mean(psum), " (", sqrt(psum.var), ")\n",
         sep="")
-    cat("Penalized deviance:", deviance + mean(penalty), "\n")
+    cat("Penalized deviance:", deviance + mean(psum), "\n")
     invisible(x)
 }
 
-"-.dic" <- function(x,y)
+"-.dic" <- function(e1,e2)
 {
-    if(!identical(names(x$deviance),names(y$deviance))) {
+    if(!identical(names(e1$deviance),names(e2$deviance))) {
         stop("incompatible dic objects: variable names differ")
     }
-    if (!identical(x$type, y$type)) {
+    if (!identical(e1$type, e2$type)) {
         stop("incompatible dic object: different penalty types")
     }
-    delta <- sapply(x$deviance, mean) + sapply(x$penalty, mean)
-    - sapply(y$deviance, mean) - sapply(y$penalty, mean)
+    delta <- sapply(e1$deviance, mean) + sapply(e1$penalty, mean) -
+      sapply(e2$deviance, mean) - sapply(e2$penalty, mean)
     class(delta) <- "diffdic"
     return(delta)
 }
