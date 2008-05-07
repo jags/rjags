@@ -55,24 +55,57 @@
     invisible(x)
 }
 
-"-.dic" <- function(e1,e2)
+as.mcmc.dic <- function(x)
 {
-    if(!identical(names(e1$deviance),names(e2$deviance))) {
+    N <- length(x$deviance)
+    Nsample <- length(x$deviance[[1]])
+
+    dn <- names(dim(x$deviance[[1]]))
+    which.iter <- which(dn=="iteration")
+    
+    dev <- pen <- rep(0,Nsample)
+    for (i in 1:N) {
+        dev <- dev + apply(x$deviance[[i]], which.iter, mean)
+        pen <- pen + unclass(x$pen[[i]])
+    }
+
+    ans <- matrix(c(dev,pen), nrow=Nsample, ncol=2)
+    dimnames(ans) <- list(names(x$deviance), c("deviance",x$type))
+    return(mcmc(ans))
+}
+
+Ops.dic <- function(e1, e2)
+{
+    if (nargs() == 1) {
+        stop(sprintf("unary '%s' not defined for \"dic\" objects",
+                     .Generic))
+    }
+    else if(.Generic == "-") {
+        return(diffdic(e1, e2))
+    }
+    else {
+        stop(sprintf("'%s' not defined for \"dic\" objects",
+                     .Generic))
+    }
+}
+            
+"diffdic" <- function(dic1,dic2)
+{
+    if(!identical(names(dic1$deviance),names(dic2$deviance))) {
         stop("incompatible dic objects: variable names differ")
     }
-    if (!identical(e1$type, e2$type)) {
+    if (!identical(dic1$type, dic2$type)) {
         stop("incompatible dic object: different penalty types")
     }
-    delta <- sapply(e1$deviance, mean) + sapply(e1$penalty, mean) -
-      sapply(e2$deviance, mean) - sapply(e2$penalty, mean)
+    delta <- sapply(dic1$deviance, mean) + sapply(dic1$penalty, mean) -
+      sapply(dic2$deviance, mean) - sapply(dic2$penalty, mean)
     class(delta) <- "diffdic"
     return(delta)
 }
 
 "print.diffdic" <- function(x, ...)
 {
-    cat("Difference: ", x, "\n", sep="") 
+    cat("Difference: ", sum(x), "\n", sep="") 
     cat("Sample standard error: ", sqrt(length(x)) * sd(x), "\n", sep="")
     invisible(x)
 }
-
