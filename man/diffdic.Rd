@@ -1,6 +1,5 @@
 \name{diffdic}
 \alias{diffdic}
-\alias{Ops.dic}
 \title{Differences in penalized deviance}
 \description{
   Compare two models by the difference of two \code{dic} objects.
@@ -10,7 +9,7 @@
 diffdic(dic1, dic2)
 } 
 \arguments{
-  \item{dic1, dic2}{Objects inheriting from class ``dic''}}
+  \item{dic1, dic2}{Objects inheriting from class ``dic''}
 }
 \details{
   A \code{diffdic} object represents the difference in penalized

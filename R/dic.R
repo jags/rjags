@@ -39,19 +39,20 @@
     return(ans)
 }
 
-"print.dic" <- function(x, ...)
+"print.dic" <- function(x, digits= max(3, getOption("digits") - 3), ...)
 {
-    deviance <- mean(sapply(x$deviance, mean))
-    cat("Mean deviance: ", deviance, "\n")
+    deviance <- sum(sapply(x$deviance, mean))
+    cat("Mean deviance: ", format(deviance, digits=digits), "\n")
     N <- length(x$penalty[[1]])
     psum <- rep(0, N)
     for (i in 1:length(x$penalty)) {
         psum <- psum + x$penalty[[i]]
     }
     psum.var <- spectrum0(psum)$spec/N
-    cat(x$type, " (Markov Error):", mean(psum), " (", sqrt(psum.var), ")\n",
-        sep="")
-    cat("Penalized deviance:", deviance + mean(psum), "\n")
+    cat(x$type, " (Markov Error): ", format(mean(psum), digits=digits),
+        " (", format(sqrt(psum.var), digits=digits), ")\n", sep="")
+    cat("Penalized deviance:", format(deviance + mean(psum), digits=digits),
+        "\n")
     invisible(x)
 }
 
@@ -70,23 +71,13 @@ as.mcmc.dic <- function(x)
     }
 
     ans <- matrix(c(dev,pen), nrow=Nsample, ncol=2)
-    dimnames(ans) <- list(names(x$deviance), c("deviance",x$type))
+    colnames(ans) <- c("deviance",x$type)
     return(mcmc(ans))
 }
 
-Ops.dic <- function(e1, e2)
+"-.dic" <- function(e1, e2)
 {
-    if (nargs() == 1) {
-        stop(sprintf("unary '%s' not defined for \"dic\" objects",
-                     .Generic))
-    }
-    else if(.Generic == "-") {
-        return(diffdic(e1, e2))
-    }
-    else {
-        stop(sprintf("'%s' not defined for \"dic\" objects",
-                     .Generic))
-    }
+    diffdic(e1, e2)
 }
             
 "diffdic" <- function(dic1,dic2)
