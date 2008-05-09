@@ -4,7 +4,9 @@
     if (nchain(model) == 1) {
         stop("Estimation of the deviance penalty requires 2 or more parallel chains")
     }
-    jags.module("dic")
+    if (!("dic" %in% names(getLoadedDLLs()))) {
+        jags.module("dic")
+    }
     
     if (class(model) != "jags")
       stop("Invalid JAGS model")
