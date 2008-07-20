@@ -331,7 +331,7 @@ extern "C" {
 	printMessages(status);
 	return R_NilValue;
     }
-  
+/*  
     void do_update(Console *console, int niter)
     {
 	int width = 50;
@@ -407,15 +407,30 @@ extern "C" {
 	    warning("Adaptation incomplete");
 	}
     }
+*/
 
-    SEXP update(SEXP ptr, SEXP rniter, SEXP adapt)
+    SEXP is_adapting(SEXP ptr)
+    {
+	Console *console = ptrArg(ptr);
+	return ScalarLogical(console->isAdapting());
+    }
+
+    SEXP adapt_off(SEXP ptr)
+    {
+	Console *console = ptrArg(ptr);
+	bool status = true;
+	console->adaptOff(status);
+	return ScalarLogical(status);
+    }
+
+    SEXP update(SEXP ptr, SEXP rniter)
     {
         int niter = intArg(rniter);
         Console *console = ptrArg(ptr);
-	if (boolArg(adapt) && !console->isAdapting()) {
-	    return R_NilValue;
+	if (!console->update(niter)) {
+	    Rprintf("\n");
+	    printMessages(false);
 	}
-	do_update(console, niter);
 	return R_NilValue;
     }
 
