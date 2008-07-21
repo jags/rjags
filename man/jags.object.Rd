@@ -33,7 +33,8 @@
   
   Since MCMC calculations are typically long, a progress bar is displayed
   during the call to \code{update}. The progress bar is refreshed every
-  \code{by} iterations.
+  \code{by} iterations. If R is not being used interactively then the
+  progress bar is suppressed.
 
 }
 \author{Martyn Plummer}
