@@ -159,16 +159,24 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
                       stop("by must be positive")
                     by <- ceiling(by)
 
-                    pb <- txtProgressBar(0, niter, style=3,width=50,
+                    if (interactive()) {
+                      #Show progress bar
+                      pb <- txtProgressBar(0, niter, style=1,width=50,
                                            char=ifelse(adapting,"+","*"))
-                    n <- niter
-                    while (n > 0) {
-                      .Call("update", p, min(n,by), adapt, PACKAGE="rjags")
-                      n <- n - by
-                      setTxtProgressBar(pb, niter - n)
+                      n <- niter
+                      while (n > 0) {
+                        .Call("update", p, min(n,by), adapt, PACKAGE="rjags")
+                        n <- n - by
+                        setTxtProgressBar(pb, niter - n)
+                        model.state <<- .Call("get_state", p, PACKAGE="rjags")
+                      }
+                      close(pb)
+                    }
+                    else {
+                      #Suppress progress bar
+                      .Call("update", p, niter, adapt, PACKAGE="rjags")
                       model.state <<- .Call("get_state", p, PACKAGE="rjags")
                     }
-                    close(pb)
                     
                     if (adapting) {
                       if (!.Call("adapt_off", p, PACKAGE="rjags")) {
