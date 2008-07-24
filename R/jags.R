@@ -245,10 +245,8 @@ jags.samples <-
               type, PACKAGE="rjags")
     }
     else {
-        for (i in seq(along=variable.names)) {
-            .Call("set_monitor", model$ptr(), variable.names[i],
-                  as.integer(thin), type, PACKAGE="rjags")
-        }
+        .Call("set_monitors", model$ptr(), variable.names,
+              as.integer(thin), type, PACKAGE="rjags")
     }
     update(model, n.iter)
     ans <- .Call("get_monitored_values", model$ptr(), type, PACKAGE="rjags")
