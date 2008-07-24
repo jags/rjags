@@ -54,12 +54,12 @@ static int intArg(SEXP arg)
     return i;
 }
 
-static char const *stringArg(SEXP arg)
+static char const *stringArg(SEXP arg, unsigned int i = 0)
 {
     if (!isString(arg)) {
 	error("Invalid string parameter");
     }
-    return R_CHAR(STRING_ELT(arg,0));
+    return R_CHAR(STRING_ELT(arg,i));
 }
 
 static bool boolArg(SEXP arg)
@@ -435,11 +435,31 @@ extern "C" {
     }
 
     
-    SEXP set_monitor(SEXP ptr, SEXP name, SEXP thin, SEXP type)
+    SEXP set_monitors(SEXP ptr, SEXP names, SEXP thin, SEXP type)
     {
-	bool status = ptrArg(ptr)->setMonitor(stringArg(name), Range(), 
-					      intArg(thin), stringArg(type));
-	printMessages(status);
+	if (!isString(names)) {
+	    error("names must be a character vector");
+	}
+	unsigned int n = length(names);
+	unsigned int i;
+	for (i = 0; i < n; ++i) {
+	    bool status = ptrArg(ptr)->setMonitor(stringArg(names,i), Range(), 
+						  intArg(thin), 
+						  stringArg(type));
+	    if (!status)
+		break;
+	}
+	if (i < n) {
+	    //Failure to set monitor i: unwind the others
+	    for (unsigned int j = i; j > 0; --j) {
+		ptrArg(ptr)->clearMonitor(stringArg(names, j - 1), Range(),
+					  stringArg(type));
+	    }
+	    printMessages(false);
+	}
+	else {
+	    printMessages(true);
+	}
 	return R_NilValue;
     }
 
