@@ -1747,10 +1747,19 @@ fi
 #Set optional library path with option --with-jags-lib or
 #environment variable JAGS_LIBS
 
-R_HOME_SAVE=R_HOME
-R_HOME=""
-: ${LIBnn=`R CMD config LIBnn`}
-R_HOME=R_HOME_SAVE
+if test -z "${LIBnn}"; then
+   : ${R_HOME=`R RHOME`}
+   if test -z "${R_HOME}"; then
+      echo "R_HOME is not defined"
+      exit 1
+   fi
+   LIBnn=`${R_HOME}/bin/R CMD config LIBnn`
+fi
+
+echo " ****** DEBUGGING ******"
+echo "R_HOME is " ${R_HOME}
+echo "LIBBN is" ${LIBnn}
+echo " **** END DEBUGGING ****"
 
 
 # Check whether --with-jags-lib was given.
