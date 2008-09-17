@@ -25,6 +25,10 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
     if (missing(file)) {
         stop("Model file name missing")
     }
+    if (!file.exists(file)) {
+        stop(paste("Model file \"", file, "\" not found", sep=""))
+    }
+    
     p <- .Call("make_console", PACKAGE="rjags") 
     .Call("check_model", p, file, PACKAGE="rjags")
 
@@ -161,7 +165,7 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
 
                     if (interactive()) {
                       #Show progress bar
-                      pb <- txtProgressBar(0, niter, style=1,width=50,
+                      pb <- txtProgressBar(0, niter, style=3,width=50,
                                            char=ifelse(adapting,"+","*"))
                       n <- niter
                       while (n > 0) {
@@ -212,7 +216,7 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
                               .Call("set_parameters", p, statei, i, PACKAGE="rjags")
                           }
                           .Call("initialize", p, PACKAGE="rjags")
-                          #Redo adaptation
+                          ## Redo adaptation
                           cat("Adapting\n")
                           .Call("update", p, n.adapt, TRUE, PACKAGE="rjags")
                           model.state <<- .Call("get_state", p, PACKAGE="rjags")
