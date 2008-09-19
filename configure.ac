@@ -1,4 +1,4 @@
-AC_INIT([rjags], [1.0.3])
+AC_INIT([rjags], [2.0.0])
 
 AC_PREFIX_PROGRAM(jags)
 
@@ -69,7 +69,7 @@ if test [ -n "$jags_mod_path" ] ; then
    JAGS_MODULES=$jags_mod_path
 else
    if test [ -z "${JAGS_MODULES}" ] ; then
-      JAGS_MODULES=${JAGS_LIB}/JAGS/modules
+      JAGS_MODULES=${JAGS_LIB}/JAGS/modules-${PACKAGE_VERSION}
       if test [! -d ${JAGS_MODULES} ]; then
          AC_MSG_ERROR("JAGS module directory not found. Use --with-jags-modules configure option")
       fi

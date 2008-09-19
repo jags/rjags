@@ -489,11 +489,7 @@ extern "C" {
     SEXP get_monitored_values(SEXP ptr, SEXP type)
     {
 	map<string,SArray> data_table;
-        //This is only included for compatibility with previous versions
-        //of the JAGS library. 
-        map<string, unsigned int> weight_table;
-	bool status = ptrArg(ptr)->dumpMonitors(data_table, weight_table,
-                                                stringArg(type));
+	bool status = ptrArg(ptr)->dumpMonitors(data_table, stringArg(type));
 	printMessages(status);
 	return readDataTable(data_table);
     }
