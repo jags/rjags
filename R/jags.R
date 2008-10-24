@@ -25,6 +25,10 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
     if (missing(file)) {
         stop("Model file name missing")
     }
+    if (!file.exists(file)) {
+        stop(paste("Model file \"", file, "\" not found", sep=""))
+    }
+    
     p <- .Call("make_console", PACKAGE="rjags") 
     .Call("check_model", p, file, PACKAGE="rjags")
 
@@ -57,29 +61,79 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
     
     .Call("compile", p, data, as.integer(nchain), TRUE, PACKAGE="rjags")
 
-
-    setParameters <- function(inits, chain) {
-        if (!is.list(inits))
-          stop("Parameters must be a list")
-        if (is.null(names(inits)) || any(nchar(names(inits)) == 0))
-          stop("Parameters must be a named list")
-        if (!is.null(inits[[".RNG.name"]])) {
-            .Call("set_rng_name", p, inits[[".RNG.name"]], PACKAGE="rjags")
-            inits[[".RNG.name"]] <- NULL
-        }
-        .Call("set_parameters", p, inits, as.integer(chain), PACKAGE="rjags")
-    }
+### Setting initial values
 
     if (!missing(inits)) {
-        if (!is.list(inits)) {
-            stop("Initial values must be a list")
-        }
-        if (length(inits) != nchain) {
-            stop("inits list must be the same length as the number of chains")
-        }
 
+        checkParameters <- function(inits) {
+            if(!is.list(inits))
+                return (FALSE)
+
+            inames <- names(inits)
+            if (is.null(inames) || any(nchar(inames) == 0))
+                return (FALSE)
+
+            if (any(duplicated(inames)))
+                return (FALSE)
+            
+            if (any(inames==".RNG.name")) {
+                rngname <- inits[[".RNG.name"]]
+                if (!is.character(rngname) || length(rngname) != 1)
+                    return (FALSE)
+                inits[[".RNG.name"]] <- NULL
+            }
+
+            if (!all(sapply(inits, is.numeric)))
+                return (FALSE)
+            
+            return (TRUE)
+        }
+        
+        setParameters <- function(inits, chain) {
+            if (!is.null(inits[[".RNG.name"]])) {
+                .Call("set_rng_name", p, inits[[".RNG.name"]],
+                      as.integer(chain), PACKAGE="rjags")
+                inits[[".RNG.name"]] <- NULL
+            }
+            .Call("set_parameters", p, inits, as.integer(chain),
+                  PACKAGE="rjags")
+        }
+        
+        init.values <- vector("list", nchain)
+        
+        if (is.function(inits)) {
+            if (any(names(formals(inits)) == "chain")) {
+                for (i in 1:nchain) {
+                    init.values[[i]] <- inits(chain=i)
+                }
+            }
+            else {
+                for (i in 1:nchain) {
+                    init.values[[i]] <- inits()
+                }
+            }
+        }
+        else if (is.list(inits)) {
+
+            if (checkParameters(inits)) {
+                ## Replicate initial values for all chains
+                for (i in 1:nchain) {
+                    init.values[[i]] <- inits
+                }
+            }
+            else {
+                if (length(inits) != nchain) {
+                    stop("Length mismatch in inits")
+                }
+                init.values <- inits
+            }
+        }
+            
         for (i in 1:nchain) {
-            setParameters(inits[[i]], i)
+            if (!checkParameters(init.values[[i]])) {
+                stop("Invalid parameters for chain ", i)
+            }
+            setParameters(init.values[[i]], i)
         }
     }
 
@@ -101,14 +155,54 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
                       }
                       return(model.state)
                   },
+                  "nchain" = function()
+                  {
+                      .Call("get_nchain", p, PACKAGE="rjags")
+                  },
                   "iter" = function()
                   {
                       .Call("get_iter", p, PACKAGE="rjags")
                   },
-                  "update" = function(niter, by, adapt=FALSE) {
+                  "update" = function(niter, by=niter/50, adapt=FALSE) {
+
+                    adapting <- .Call("is_adapting", p, PACKAGE="rjags")
+                    if (adapt & !adapting)
+                      return(invisible(NULL))
+
+                    if (niter <= 0)
+                      stop("niter must be positive")
+                    niter <- floor(niter)
+
+                    if (by <= 0)
+                      stop("by must be positive")
+                    by <- ceiling(by)
+
+                    if (interactive()) {
+                      #Show progress bar
+                      pb <- txtProgressBar(0, niter, style=3,width=50,
+                                           char=ifelse(adapting,"+","*"))
+                      n <- niter
+                      while (n > 0) {
+                        .Call("update", p, min(n,by), adapt, PACKAGE="rjags")
+                        n <- n - by
+                        setTxtProgressBar(pb, niter - n)
+                        model.state <<- .Call("get_state", p, PACKAGE="rjags")
+                      }
+                      close(pb)
+                    }
+                    else {
+                      #Suppress progress bar
                       .Call("update", p, niter, adapt, PACKAGE="rjags")
                       model.state <<- .Call("get_state", p, PACKAGE="rjags")
-                      invisible(NULL)
+                    }
+                    
+                    if (adapting) {
+                      if (!.Call("adapt_off", p, PACKAGE="rjags")) {
+                        warning("Adaptation incomplete");
+                      }
+                    }
+                    
+                    invisible(NULL)
                   },
                   "recompile" = function() {
                       ## Clear the console
@@ -136,11 +230,15 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
                               .Call("set_parameters", p, statei, i, PACKAGE="rjags")
                           }
                           .Call("initialize", p, PACKAGE="rjags")
+                          ## Redo adaptation
+                          cat("Adapting\n")
+                          .Call("update", p, n.adapt, TRUE, PACKAGE="rjags")
+                          model.state <<- .Call("get_state", p, PACKAGE="rjags")
                       }
                       invisible(NULL)
                   })
     class(model) <- "jags"
-    model$update(as.integer(n.adapt), adapt=TRUE)
+    model$update(n.adapt, adapt=TRUE)
     return(model)
 }
 
@@ -165,12 +263,10 @@ jags.samples <-
               type, PACKAGE="rjags")
     }
     else {
-        for (i in seq(along=variable.names)) {
-            .Call("set_monitor", model$ptr(), variable.names[i],
-                  as.integer(thin), type, PACKAGE="rjags")
-        }
+        .Call("set_monitors", model$ptr(), variable.names,
+              as.integer(thin), type, PACKAGE="rjags")
     }
-    model$update(as.integer(n.iter))
+    update(model, n.iter)
     ans <- .Call("get_monitored_values", model$ptr(), type, PACKAGE="rjags")
     for (i in seq(along=ans)) {
         class(ans[[i]]) <- "mcarray"
@@ -270,7 +366,7 @@ jags.module <- function(names, path)
         file <- file.path(path,
                           paste(names[i], .Platform$dynlib.ext, sep=""))
         if (!file.exists(file)) {
-            stop("Cannot load", file)
+            stop("Cannot load ", file)
         }
         dyn.load(file)
     }
