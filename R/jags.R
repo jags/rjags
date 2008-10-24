@@ -67,18 +67,32 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
 
         checkParameters <- function(inits) {
             if(!is.list(inits))
-              return (FALSE)
-            if (is.null(names(inits)) || any(nchar(names(inits)) == 0))
-              return (FALSE)
+                return (FALSE)
+
+            inames <- names(inits)
+            if (is.null(inames) || any(nchar(inames) == 0))
+                return (FALSE)
+
+            if (any(duplicated(inames)))
+                return (FALSE)
+            
+            if (any(inames==".RNG.name")) {
+                rngname <- inits[[".RNG.name"]]
+                if (!is.character(rngname) || length(rngname) != 1)
+                    return (FALSE)
+                inits[[".RNG.name"]] <- NULL
+            }
+
             if (!all(sapply(inits, is.numeric)))
-              return (FALSE)
+                return (FALSE)
             
             return (TRUE)
         }
         
         setParameters <- function(inits, chain) {
             if (!is.null(inits[[".RNG.name"]])) {
-                .Call("set_rng_name", p, inits[[".RNG.name"]], PACKAGE="rjags")
+                .Call("set_rng_name", p, inits[[".RNG.name"]],
+                      as.integer(chain), PACKAGE="rjags")
                 inits[[".RNG.name"]] <- NULL
             }
             .Call("set_parameters", p, inits, as.integer(chain),
