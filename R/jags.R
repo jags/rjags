@@ -359,15 +359,41 @@ list.samplers <- function(model)
     .Call("get_samplers", model$ptr(), PACKAGE="rjags")
 }
 
+
 coda.names <- function(basename, dim)
 {
+    ## Utility function used to get the names of the individual elements
+    ## of a node array
+  
     if (prod(dim) == 1)
       return(basename)
+
+    ##Default lower and upper limits
+    ndim <- length(dim)
+    lower <- rep(1, ndim)
+    upper <- dim
+
+    ##If the node name is a subset, we try to parse it to get the
+    ##names of its elements. For example, if basename is "A[2:3]"
+    ##we want to return names "A[2]", "A[3]" not "A[2:3][1]", "A[2:3][2]".
+    pn <- parse.varname(basename)
+    if (!is.null(pn) && !is.null(pn$lower) && !is.null(pn$upper)) {
+        if (length(pn$lower) == length(pn$upper)) {
+            dim2 <- pn$upper - pn$lower + 1
+            if (isTRUE(all.equal(dim[dim!=1], dim2[dim2!=1],
+                                 check.attributes=FALSE))) {
+                basename <- pn$name
+                lower <- pn$lower
+                upper <- pn$upper
+                ndim <- length(dim2)
+            }
+        }
+    }
     
-    indices <- as.character(1:dim[1])
-    if (length(dim) > 1) {
-        for (i in 2:length(dim)) {
-            indices <- outer(indices, 1:dim[i], FUN=paste, sep=",")
+    indices <- as.character(lower[1]:upper[1])
+    if (ndim > 1) {
+        for (i in 2:ndim) {
+            indices <- outer(indices, lower[i]:upper[i], FUN=paste, sep=",")
         }
     }
     paste(basename,"[",as.vector(indices),"]",sep="")
