@@ -1,12 +1,18 @@
 #include <map>
+#include <string>
 #include <sstream>
 #include <algorithm>
 #include <vector>
+#include <stdexcept>
 
 #include <Console.h>
 #include <util/nainf.h>
 
-#include <R_ext/Utils.h>
+using std::string;
+using std::map;
+using std::pair;
+using std::vector;
+using std::copy;
 
 /* Workaround length being remapped to Rf_length
    by the preprocessor */
@@ -16,7 +22,7 @@ unsigned long sarray_len(SArray const &s)
   return s.length();
 }
 
-long min2(long a, long b)
+int min2(int a, int b)
 {
   return std::min(a,b);
 }
@@ -24,11 +30,6 @@ long min2(long a, long b)
 #include <R.h>
 #include <Rinternals.h>
 #include <Rdefines.h>
-
-using std::string;
-using std::map;
-using std::pair;
-using std::vector;
 
 std::ostringstream jags_out; //Output stream
 std::ostringstream jags_err; //Error stream
@@ -55,12 +56,12 @@ static int intArg(SEXP arg)
     return i;
 }
 
-static string stringArg(SEXP arg)
+static char const *stringArg(SEXP arg, unsigned int i = 0)
 {
     if (!isString(arg)) {
 	error("Invalid string parameter");
     }
-    return R_CHAR(STRING_ELT(arg,0));
+    return R_CHAR(STRING_ELT(arg,i));
 }
 
 static bool boolArg(SEXP arg)
@@ -111,7 +112,7 @@ static void printMessages(bool status)
 static void setSArrayValue(SArray &sarray, SEXP e)
 {
     vector<double> v(length(e));
-    std::copy(NUMERIC_POINTER(e), NUMERIC_POINTER(e) + length(e), v.begin());
+    copy(NUMERIC_POINTER(e), NUMERIC_POINTER(e) + length(e), v.begin());
     sarray.setValue(v);
 }
 
@@ -170,6 +171,34 @@ static void writeDataTable(SEXP data, map<string,SArray> &table)
     UNPROTECT(1);
 }
 
+static Range makeRange(SEXP lower, SEXP upper)
+{
+    if (lower == R_NilValue || upper == R_NilValue) {
+	return Range();
+    }
+    if (length(lower) != length(upper)) {
+	error("length mismatch between lower and upper limits");
+    }
+    int n = length(lower);
+
+    SEXP il, iu;
+    PROTECT(il = AS_INTEGER(lower));
+    PROTECT(iu = AS_INTEGER(upper));
+    vector<int> lvec(n), uvec(n);
+    copy(INTEGER(il), INTEGER(il) + n, lvec.begin());
+    copy(INTEGER(iu), INTEGER(iu) + n, uvec.begin());
+    UNPROTECT(2);
+
+    Range r;
+    try {
+	r = Range(lvec, uvec);
+    }
+    catch (std::logic_error except) {                                   
+	error("Invalid range");
+    }
+    return r;
+}
+
 #include <iostream>
 /* Read data from a JAGS data table into and R list */
 static SEXP readDataTable(map<string,SArray> const &table)
@@ -210,25 +239,23 @@ static SEXP readDataTable(map<string,SArray> const &table)
 	    for (unsigned int k = 0; k < ndim; ++k) {
 		INTEGER_POINTER(dim)[k] = idim[k];
 	    }
-	    SET_DIM(e, dim);
-	    UNPROTECT(1); //dim
 
-	    //Set dimnames attribute
+	    //Set names of the dimensions 
 	    vector<string> const &names = p->second.dimNames();
 	    if (!names.empty()) {
-		SEXP dn;
-		PROTECT(dn = allocVector(VECSXP,ndim));
-		
-		SEXP dn_names;
-		PROTECT(dn_names = allocVector(STRSXP,ndim));
-		for (unsigned int i = 0; i < ndim; ++i) {
-		    SET_STRING_ELT(dn_names, i, mkChar(names[i].c_str()));
+		SEXP dimnames;
+		PROTECT(dimnames = allocVector(STRSXP, ndim));
+		for (unsigned int k = 0; k < ndim; ++k) {
+		    SET_STRING_ELT(dimnames, k, mkChar(names[k].c_str()));
 		}
-		setAttrib(dn, R_NamesSymbol, dn_names);
-		UNPROTECT(1); //dnnames
-		setAttrib(e, R_DimNamesSymbol, dn);
-		UNPROTECT(1); //dimnames
+		setAttrib(dim, R_NamesSymbol, dimnames);
+	        SET_DIM(e, dim);
+		UNPROTECT(2); //dimnames, dim
 	    }
+            else {
+	        SET_DIM(e, dim);
+	        UNPROTECT(1); //dim
+            }
 	}
     
 	SET_ELEMENT(data, i, e);
@@ -247,8 +274,7 @@ static SEXP readDataTable(map<string,SArray> const &table)
 }
 
 extern "C" {
-
-
+    
     SEXP init_jags_console()
     {
 	/* Called by .First.lib */
@@ -290,7 +316,7 @@ extern "C" {
 	}
 	else {
 	    bool status = ptrArg(ptr)->checkModel(file);	    
-	    printMessages(status);
+ 	    printMessages(status);
 	    fclose(file);
 	    return R_NilValue;
 	}
@@ -326,7 +352,7 @@ extern "C" {
     {
 	bool status = ptrArg(ptr)->setRNGname(stringArg(name), intArg(chain));
 	printMessages(status);
-	return R_NilValue;
+ 	return R_NilValue;
     }
   
     SEXP initialize(SEXP ptr)
@@ -335,20 +361,18 @@ extern "C" {
 	printMessages(status);
 	return R_NilValue;
     }
-  
-    void do_update(SEXP ptr, int niter)
+/*  
+    void do_update(Console *console, int niter)
     {
-	Console *console = ptrArg(ptr);
-	int width = 40;
+	int width = 50;
 	int refresh = niter/width;
 
 	bool adapt = console->isAdapting();
 
 	if (refresh == 0) {
 	    refresh = 10;
-	    for (int n = niter; n > 0; n-=10) {
-		int nupdate = min2(n, refresh);
-		console->update(nupdate);
+	    for (int n = niter; n > 0; n-=refresh) {
+		console->update(min2(n, refresh));
 		R_CheckUserInterrupt();
 	    }
 	    bool status = true;
@@ -361,20 +385,24 @@ extern "C" {
 	    return;
 	}
     
-	if (width > niter / refresh + 1)
+	if (width > niter / refresh + 1) {
 	    width = niter / refresh + 1;
+        }
 
-	Rprintf("%s\n", jags_out.str().c_str());
-
-	Rprintf("Updating %d\n", niter);
+        if (adapt) {
+	    Rprintf("Adapting %d\n", niter);
+        }
+        else {
+	    Rprintf("Updating %d\n", niter);
+        }
 	for (int i = 0; i < width - 1; ++i) {
 	    Rprintf("-");
 	}
 	Rprintf("| %d\n", min2(width * refresh, niter));
     
 	int col = 0;
-	for (long n = niter; n > 0; n -= refresh) {
-	    long nupdate = min2(n, refresh);
+	for (int n = niter; n > 0; n -= refresh) {
+	    int nupdate = min2(n, refresh);
 	    if(console->update(nupdate)) {
                 if (adapt) {
 		   Rprintf("+");
@@ -391,7 +419,7 @@ extern "C" {
 	    col++;
 	    if (col == width || n <= nupdate) {
 		int percent = 100 - (n-nupdate) * 100/niter;
-		Rprintf(" %d\%\n", percent);
+		Rprintf(" %d%%\n", percent); 
 		if (n > nupdate) {
 		    col = 0;
 		}
@@ -409,29 +437,65 @@ extern "C" {
 	    warning("Adaptation incomplete");
 	}
     }
+*/
+
+    SEXP is_adapting(SEXP ptr)
+    {
+	Console *console = ptrArg(ptr);
+	return ScalarLogical(console->isAdapting());
+    }
+
+    SEXP adapt_off(SEXP ptr)
+    {
+	Console *console = ptrArg(ptr);
+	bool status = true;
+	console->adaptOff(status);
+	return ScalarLogical(status);
+    }
 
     SEXP update(SEXP ptr, SEXP rniter)
     {
-        Console *console = ptrArg(ptr);
         int niter = intArg(rniter);
-        if (console->isAdapting()) {
-            int niter1 = niter/2;
-            int niter2 = niter - niter1;
-            do_update(ptr, niter1);
-            do_update(ptr, niter2);
-        }
-        else {
-            do_update(ptr, niter);
-        }
-        return R_NilValue;
+        Console *console = ptrArg(ptr);
+	if (!console->update(niter)) {
+	    Rprintf("\n");
+	    printMessages(false);
+	}
+	return R_NilValue;
     }
 
-    
-    SEXP set_monitor(SEXP ptr, SEXP name, SEXP thin, SEXP type)
+    SEXP set_monitors(SEXP ptr, SEXP names, SEXP lower, SEXP upper, 
+		      SEXP thin, SEXP type)
     {
-	bool status = ptrArg(ptr)->setMonitor(stringArg(name), Range(), 
-					      intArg(thin), stringArg(type));
-	printMessages(status);
+	if (!isString(names)) {
+	    error("names must be a character vector");
+	}
+
+	unsigned int n = length(names);
+	if (length(lower) != n || length(upper) != n) {
+	    error("length of names must match legnth of lower and upper");
+	}
+	unsigned int i;
+	for (i = 0; i < n; ++i) {
+	    Range range = makeRange(VECTOR_ELT(lower, i), VECTOR_ELT(upper, i));
+	    bool status = ptrArg(ptr)->setMonitor(stringArg(names,i), range, 
+						  intArg(thin), 
+						  stringArg(type));
+	    if (!status)
+		break;
+	}
+	if (i < n) {
+	    //Failure to set monitor i: unwind the others
+	    Range range = makeRange(VECTOR_ELT(lower, i), VECTOR_ELT(upper, i));
+	    for (unsigned int j = i; j > 0; --j) {
+		ptrArg(ptr)->clearMonitor(stringArg(names, j - 1), range,
+					  stringArg(type));
+	    }
+	    printMessages(false);
+	}
+	else {
+	    printMessages(true);
+	}
 	return R_NilValue;
     }
 
@@ -443,9 +507,10 @@ extern "C" {
 	return R_NilValue;
     }
 
-    SEXP clear_monitor(SEXP ptr, SEXP name, SEXP type)
+    SEXP clear_monitor(SEXP ptr, SEXP name, SEXP lower, SEXP upper, SEXP type)
     {
-	bool status = ptrArg(ptr)->clearMonitor(stringArg(name), Range(), 
+        Range range = makeRange(lower, upper);
+	bool status = ptrArg(ptr)->clearMonitor(stringArg(name), range, 
 						stringArg(type));
 	printMessages(status);
 	return R_NilValue;
@@ -461,9 +526,11 @@ extern "C" {
     SEXP get_monitored_values(SEXP ptr, SEXP type)
     {
 	map<string,SArray> data_table;
-	map<string,unsigned int> weight_table;
+        //This is only included for compatibility with previous versions
+        //of the JAGS library. 
+        map<string, unsigned int> weight_table;
 	bool status = ptrArg(ptr)->dumpMonitors(data_table, weight_table,
-						stringArg(type));
+                                                stringArg(type));
 	printMessages(status);
 	return readDataTable(data_table);
     }
