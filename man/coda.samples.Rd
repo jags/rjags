@@ -19,6 +19,12 @@ coda.samples(model, variable.names, n.iter, thin = 1)
 \value{
   An \code{mcmc.list} object.
 }
+\note{
+  If you monitor a subset of a node array, such as \code{Y[26,2:5]} then
+  the corresponding variables in the \code{mcmc.list} object returned by
+  \code{coda.samples} will have double subscripts, e.g. \code{Y[26,3]}
+  will appear as \code{Y[26,2:5][2]}.
+}
 \author{Martyn Plummer}
 \seealso{\code{\link{jags.samples}}, \code{\link[coda]{mcmc.list}}}
 \keyword{models}
