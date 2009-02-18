@@ -1,9 +1,12 @@
-update.jags <- function(object, niter = 1, ...)
+update.jags <- function(object, n.iter = 1, by, ...)
 {
-    if (!is.numeric(niter) || niter < 1) {
-        stop("Invalid niter")
+    if (!is.numeric(n.iter) || n.iter < 1) {
+        stop("Invalid n.iter")
     }
-    object$update(niter)
+    if (missing(by))
+	by <- floor(n.iter/50)
+
+    object$update(n.iter, by)
     invisible(NULL)
 }
     
@@ -11,7 +14,7 @@ coef.jags <- function(object, chain = 1, ...) {
     if (!is.numeric(chain) || chain < 1 || chain > object$nchain()) {
         stop("Invalid chain")
     }
-    object$state(internal=FALSE)[[nchain]]
+    object$state(internal=FALSE)[[chain]]
 }
 
 variable.names.jags <- function(object, ...) {
