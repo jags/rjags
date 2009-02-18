@@ -473,7 +473,7 @@ extern "C" {
 
 	unsigned int n = length(names);
 	if (length(lower) != n || length(upper) != n) {
-	    error("length of names must match legnth of lower and upper");
+	    error("length of names must match length of lower and upper");
 	}
 	unsigned int i;
 	for (i = 0; i < n; ++i) {
