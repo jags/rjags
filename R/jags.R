@@ -173,11 +173,11 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
                       stop("n.iter must be positive")
                     n.iter <- floor(n.iter)
 
-                    if (by <= 0)
+                    if (by < 0)
                       stop("by must be positive")
                     by <- ceiling(by)
 
-                    if (interactive()) {
+                    if (interactive() && by > 0) {
                       #Show progress bar
                       pb <- txtProgressBar(0, n.iter, style=3,width=50,
                                            char=ifelse(adapting,"+","*"))
