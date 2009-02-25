@@ -1,3 +1,6 @@
+if(tools:::.OStype() == "windows") {
+importFrom(utils,readRegistry)
+}
 importFrom(coda,as.mcmc.list)
 importFrom(coda,as.mcmc)
 importFrom(coda,spectrum0)
