@@ -1,6 +1,6 @@
 Package: rjags
 Version: 1.0.3-6
-Date: 2009-02-24
+Date: 2009-02-25
 Title: Bayesian graphical models using MCMC
 Author: Martyn Plummer 
 Maintainer: Martyn Plummer <plummer@iarc.fr>

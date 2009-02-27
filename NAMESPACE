@@ -1,5 +1,8 @@
 if(tools:::.OStype() == "windows") {
-importFrom(utils,readRegistry)
+importFrom(utils, readRegistry, winProgressBar, setWinProgressBar)
+}
+if(tools:::.OStype() == "unix") {
+importFrom(tcltk, tkProgressBar, setTkProgressBar)
 }
 importFrom(coda,as.mcmc.list)
 importFrom(coda,as.mcmc)
