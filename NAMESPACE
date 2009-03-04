@@ -4,10 +4,9 @@ importFrom(utils, readRegistry, winProgressBar, setWinProgressBar)
 if(tools:::.OStype() == "unix") {
 importFrom(tcltk, tkProgressBar, setTkProgressBar)
 }
-importFrom(coda,as.mcmc.list)
-importFrom(coda,as.mcmc)
-importFrom(coda,spectrum0)
-importFrom(stats,variable.names)
+importFrom(utils, txtProgressBar, setTxtProgressBar)
+importFrom(stats, variable.names, sd, update)
+importFrom(coda, as.mcmc.list, as.mcmc, spectrum0)
 export ( 
   jags.model,
   jags.samples,
