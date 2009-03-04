@@ -4,7 +4,7 @@ update.jags <- function(object, n.iter = 1, by, progress.bar, ...)
         stop("Invalid n.iter")
     }
 
-    if ("update" in names(object)) {
+    if ("update" %in% names(object)) {
         ## Old-style jags.model object
         ## The progress bar was created by the object$update() function
         
