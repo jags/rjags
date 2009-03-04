@@ -21,60 +21,47 @@ update.jags <- function(object, n.iter = 1, by, progress.bar, ...)
         adapting <- .Call("is_adapting", object$ptr(), PACKAGE="rjags")
 
         if (missing(progress.bar)) {
-            jpb <- getOption("jags.pb")
-            if(!is.null(jpb)) {
-                progress.bar <- jpb
-            }
-            else {
-                progress.bar <- "text"
-            }
+            progress.bar <- getOption("jags.pb")
         }
-        match.arg(progress.bar, c("text","gui","none"))
-    
-        if (!interactive() || n.iter <100 || progress.bar == "none") {
-            ##Suppress progress bar
-            ##FIXME: this is not sensitive to user interrupt
-            .Call("update", object$ptr(), n.iter, PACKAGE="rjags")
+        if (!is.null(progress.bar)) {
+            match.arg(progress.bar, c("text","gui"))
+        }
+        
+        do.pb <- interactive() && !is.null(progress.bar) && n.iter >= 100
+        if (do.pb) {
+            start.iter <- object$iter()
+            end.iter <- start.iter + n.iter
+            pb <- switch(progress.bar,
+                         "text" = txtProgressBar(start.iter, end.iter,
+                         initial = start.iter, style=3, width=50, 
+                         char=ifelse(adapting,"+","*")),
+                         "gui" = updatePB(start.iter, end.iter, adapting))
+        }
+        
+        ## Set refresh frequency for progress bar
+        if (missing(by) || by <= 0) {
+            by <- min(ceiling(n.iter/50), 100)
         }
         else {
-        
-            if (progress.bar=="text") {
+            by <- ceiling(by)
+        }
 
-                if (missing(by))
-                    by <- floor(n.iter/50)
-                else {
-                    if (by <= 0)
-                        stop("by must be positive")
-                    by <- ceiling(by)
-                }
-
-                pb <- txtProgressBar(object$iter(), object$iter() + n.iter,
-                                     style=3, width=50,
-                                     char=ifelse(adapting,"+","*"))
-                n <- n.iter
-                while (n > 0) {
-                    .Call("update", object$ptr(), min(n,by), PACKAGE="rjags")
-                    n <- n - by
-                    setTxtProgressBar(pb, object$iter())
-                }
-                close(pb)
+        ## Do updates
+        n <- n.iter
+        while (n > 0) {
+            .Call("update", object$ptr(), min(n,by), PACKAGE="rjags")
+            if (do.pb) {
+                switch(progress.bar,
+                       "text" = setTxtProgressBar(pb, object$iter()),
+                       "gui" =  setPB(pb, object$iter()))
             }
-            else if (progress.bar=="gui") {
-
-                if (missing(by))
-                    by <- min(floor(n.iter/50), 100)
-
-                pb <- updatePB(object$iter(), n.iter, adapting)
-                n <- n.iter
-                while (n > 0) {
-                    .Call("update", object$ptr(), min(n,by), PACKAGE="rjags")
-                    n <- n - by
-                    setPB(pb, object$iter())
-                }
-            }
+            n <- n - by
+        }
+        if (do.pb) {
             close(pb)
         }
 
+        ## End adaptive phase at the end of first call to update
         if (adapting) {
             if (!.Call("adapt_off", object$ptr(), PACKAGE="rjags")) {
                 warning("Adaptation incomplete");

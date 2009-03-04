@@ -34,16 +34,19 @@
 \details{
   
   Since MCMC calculations are typically long, a progress bar is
-  displayed during the call to \code{update}. The progress bar is
-  refreshed every \code{by} iterations. It is suppressed if either
-  \code{type="none"} or R is not being run interactively.
-   
+  displayed during the call to \code{update}.  It is suppressed if
+  \code{progress.bar} is \code{NULL}, or \code{n.iter < 100}, or R
+  is not being run interactively.
+
   Type \code{"text"} is a text progress bar displayed on the R
   console. Type \code{"gui"} is a graphical progress bar, which also
   displays the current iteration number.  The default progress bar type
-  is taken from the option \code{jags.pb}, or is type \code{"text"} if
-  this is option not set.
-  
+  is taken from the option \code{jags.pb}.
+
+  The progress bar is refreshed every \code{by} iterations. The
+  update can only be interrupted when the progress bar is refreshed.
+  Therefore it is advisable not to set \code{by} to a very large
+  value. By default \code{by} is either \code{n.iter/50} or \code{100},
+  whichever is smaller.
 }
-\author{Martyn Plummer}
-\keyword{models}
+\author{Martyn Plummer} \keyword{models}
