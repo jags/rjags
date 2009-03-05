@@ -24,7 +24,9 @@ update.jags <- function(object, n.iter = 1, by, progress.bar, ...)
             progress.bar <- getOption("jags.pb")
         }
         if (!is.null(progress.bar)) {
-            match.arg(progress.bar, c("text","gui"))
+            match.arg(progress.bar, c("text","gui","none"))
+            if (progress.bar=="none")
+                progress.bar <- NULL
         }
         
         do.pb <- interactive() && !is.null(progress.bar) && n.iter >= 100
