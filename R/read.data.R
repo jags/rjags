@@ -1,7 +1,7 @@
 read.data <- function(file, format=c("jags","bugs"))
 {
     format <- match.arg(format)
-    switch(format, "jags"=read.jagsdata(file), "bugs"=read.jagsdata(file))
+    switch(format, "jags"=read.jagsdata(file), "bugs"=read.bugsdata(file))
 }
 
 read.jagsdata <- function(file)
