@@ -1,17 +1,20 @@
 if(tools:::.OStype() == "windows") {
-importFrom(utils,readRegistry)
+importFrom(utils, readRegistry, winProgressBar, setWinProgressBar)
 }
-importFrom(coda,as.mcmc.list)
-importFrom(coda,as.mcmc)
-importFrom(coda,spectrum0)
-importFrom(stats,variable.names)
+if(tools:::.OStype() == "unix") {
+importFrom(tcltk, tkProgressBar, setTkProgressBar)
+}
+importFrom(utils, txtProgressBar, setTxtProgressBar)
+importFrom(stats, variable.names, sd, update)
+importFrom(coda, as.mcmc.list, as.mcmc, spectrum0)
 export ( 
   jags.model,
   jags.samples,
   coda.samples,
   jags.module,
   dic.samples,
-  diffdic
+  diffdic,
+  adapt
 )
 S3method(print, jags)
 S3method(coef, jags)

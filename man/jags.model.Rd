@@ -8,7 +8,7 @@
  }
  \usage{
  jags.model(file, data=sys.frame(sys.parent()), inits, n.chains = 1,
-            n.adapt=1000)}
+            n.adapt=1000, nchain)}
 \arguments{
   \item{file}{a file containing a description of the model in the
     JAGS dialect of the BUGS language}
@@ -21,10 +21,12 @@
     initial values will be generated automatically.  It is an error to
     supply an initial value for an observed node.}
   \item{n.chains}{the number of parallel chains for the model}
-  \item{n.adapt}{the number of iterations for adaptation.  When a model
-    is first created, some of the samplers may have an adaptive mode. In
-    this case, the samplers are run for \code{n.adapt} iterations and then
-    the adaptive mode is switched off}
+  \item{n.adapt}{the number of iterations for adaptation. See 
+    \code{\link{adapt}} for details. If \code{n.adapt = 0} then no 
+    adaptation takes place.}
+  \item{nchain}{deprecated argument for the number of parallel chains.  Use 
+    \code{n.chain} instead. If both \code{n.chain} and \code{nchain} are
+    supplied then the value of \code{nchain} is ignored}
 }
 \value{
   \code{jags.model} returns an object inheriting from class \code{jags}
@@ -48,11 +50,8 @@
     names (\code{.RNG.name}) and states (\code{.RNG.state}).  This is
     not the user-level interface: use the \code{\link{coef.jags}} method
     instead.}
-  \item{update(n.iter, by = n.iter/50, adapt=FALSE)}{Updates the model by
-    \code{n.iter} iterations. By default a progress bar is printed to the
-    screen, with an update every \code{by} iterations. To suppress the
-    update bar, use \code{by=0}. The \code{adapt} argument is used for
-    adaptive mode.  This is not the user-level interface: use the
+  \item{update(n.iter)}{Updates the model by \code{n.iter} iterations.
+    This is not the user-level interface: use the
     \code{\link{update.jags}} method instead.}
   
 }

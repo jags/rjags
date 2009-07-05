@@ -19,7 +19,7 @@ print.jags <- function(x, ...)
 }
 
 jags.model <- function(file, data=sys.frame(sys.parent()), inits,
-                       n.chains = 1, n.adapt=1000)
+                       n.chains = 1, n.adapt=1000, nchain)
 {
 
     if (missing(file)) {
@@ -27,6 +27,12 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
     }
     if (!file.exists(file)) {
         stop(paste("Model file \"", file, "\" not found", sep=""))
+    }
+    if (!missing(nchain)) {
+        warning("Argument nchain in jags.model is deprecated. Use n.chains.")
+        if (missing(n.chains)) {
+            n.chains = nchain
+        }
     }
     
     p <- .Call("make_console", PACKAGE="rjags") 
@@ -163,46 +169,9 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
                   {
                       .Call("get_iter", p, PACKAGE="rjags")
                   },
-                  "update" = function(n.iter, by=n.iter/50, adapt=FALSE) {
-
-                    adapting <- .Call("is_adapting", p, PACKAGE="rjags")
-                    if (adapt & !adapting)
-                      return(invisible(NULL))
-
-                    if (n.iter <= 0)
-                      stop("n.iter must be positive")
-                    n.iter <- floor(n.iter)
-
-                    if (by < 0)
-                      stop("by must be positive")
-                    by <- ceiling(by)
-
-                    if (interactive() && by > 0) {
-                      #Show progress bar
-                      pb <- txtProgressBar(0, n.iter, style=3,width=50,
-                                           char=ifelse(adapting,"+","*"))
-                      n <- n.iter
-                      while (n > 0) {
-                        .Call("update", p, min(n,by), adapt, PACKAGE="rjags")
-                        n <- n - by
-                        setTxtProgressBar(pb, n.iter - n)
-                        model.state <<- .Call("get_state", p, PACKAGE="rjags")
-                      }
-                      close(pb)
-                    }
-                    else {
-                      #Suppress progress bar
-                      .Call("update", p, n.iter, adapt, PACKAGE="rjags")
+                  "sync" = function() {
+                      
                       model.state <<- .Call("get_state", p, PACKAGE="rjags")
-                    }
-                    
-                    if (adapting) {
-                      if (!.Call("adapt_off", p, PACKAGE="rjags")) {
-                        warning("Adaptation incomplete");
-                      }
-                    }
-                    
-                    invisible(NULL)
                   },
                   "recompile" = function() {
                       ## Clear the console
@@ -231,14 +200,23 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
                           }
                           .Call("initialize", p, PACKAGE="rjags")
                           ## Redo adaptation
-                          cat("Adapting\n")
-                          .Call("update", p, n.adapt, TRUE, PACKAGE="rjags")
+                          adapting <- .Call("is_adapting", p, PACKAGE="rjags")
+                          if(n.adapt > 0 && adapting) {
+                              cat("Adapting\n")
+                              .Call("update", p, n.adapt, PACKAGE="rjags")
+                              if (!.Call("adapt_off", p, PACKAGE="rjags")) {
+                                  warning("Adaptation incomplete");
+                              }
+                          }
                           model.state <<- .Call("get_state", p, PACKAGE="rjags")
                       }
                       invisible(NULL)
                   })
     class(model) <- "jags"
-    model$update(n.adapt, adapt=TRUE)
+
+    if (n.adapt > 0) {
+        adapt(model, n.adapt)
+    }
     return(model)
 }
 
@@ -310,7 +288,7 @@ parse.varnames <- function(varnames)
 
 
 jags.samples <-
-  function(model, variable.names=NULL, n.iter, thin=1, type="trace")
+  function(model, variable.names=NULL, n.iter, thin=1, type="trace", ...)
 {
     if (class(model) != "jags")
       stop("Invalid JAGS model")
@@ -334,7 +312,7 @@ jags.samples <-
       .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper,
             as.integer(thin), type, PACKAGE="rjags")
     }
-    update(model, n.iter)
+    update(model, n.iter, ...)
     ans <- .Call("get_monitored_values", model$ptr(), type, PACKAGE="rjags")
     for (i in seq(along=ans)) {
         class(ans[[i]]) <- "mcarray"
@@ -407,10 +385,10 @@ nchain <- function(model)
     .Call("get_nchain", model$ptr(), PACKAGE="rjags")
 }
 
-coda.samples <- function(model, variable.names=NULL, n.iter, thin=1)
+coda.samples <- function(model, variable.names=NULL, n.iter, thin=1, ...)
 {
     start <- model$iter() + thin
-    out <- jags.samples(model, variable.names, n.iter, thin, type="trace")
+    out <- jags.samples(model, variable.names, n.iter, thin, type="trace", ...)
 
     ans <- vector("list", nchain(model))
     for (ch in 1:nchain(model)) {
