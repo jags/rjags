@@ -1903,8 +1903,8 @@ if test  -n "$jags_include_path"  ; then
 else
    if test  -z "${JAGS_INCLUDE}"  ; then
       if test  "$prefix" = "NONE" ; then
-         { { $as_echo "$as_me:$LINENO: error: \"Location of JAGS headers not defined. Use configure arg --with-jags-include or environment variable JAGS_INCLUDE\"" >&5
-$as_echo "$as_me: error: \"Location of JAGS headers not defined. Use configure arg --with-jags-include or environment variable JAGS_INCLUDE\"" >&2;}
+         { { $as_echo "$as_me:$LINENO: error: \"Location of JAGS headers not defined. Use configure arg '--with-jags-include' or environment variable 'JAGS_INCLUDE'\"" >&5
+$as_echo "$as_me: error: \"Location of JAGS headers not defined. Use configure arg '--with-jags-include' or environment variable 'JAGS_INCLUDE'\"" >&2;}
    { (exit 1); exit 1; }; }
       else
          JAGS_INCLUDE=${prefix}/include/JAGS
@@ -3293,9 +3293,9 @@ if test "x$ac_cv_header_Console_h" = x""yes; then
 else
   { { $as_echo "$as_me:$LINENO: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-{ { $as_echo "$as_me:$LINENO: error: \"Console.h header not compilable\"
+{ { $as_echo "$as_me:$LINENO: error: \"Problem with header file ${JAGS_INCLUDE}/Console.h \"
 See \`config.log' for more details." >&5
-$as_echo "$as_me: error: \"Console.h header not compilable\"
+$as_echo "$as_me: error: \"Problem with header file ${JAGS_INCLUDE}/Console.h \"
 See \`config.log' for more details." >&2;}
    { (exit 1); exit 1; }; }; }
 fi
@@ -3343,8 +3343,8 @@ if test  -n "$jags_lib_path"  ; then
 else
    if test  -z "${JAGS_LIB}"  ; then
       if test  "${prefix}" = "NONE"  ; then
-         { { $as_echo "$as_me:$LINENO: error: \"Location of JAGS library not defined. Use configure arg --with-jags-lib or environment variable JAGS_LIB\"" >&5
-$as_echo "$as_me: error: \"Location of JAGS library not defined. Use configure arg --with-jags-lib or environment variable JAGS_LIB\"" >&2;}
+         { { $as_echo "$as_me:$LINENO: error: \"Location of JAGS library not defined. Use configure arg '--with-jags-lib' or environment variable 'JAGS_LIB'\"" >&5
+$as_echo "$as_me: error: \"Location of JAGS library not defined. Use configure arg '--with-jags-lib' or environment variable 'JAGS_LIB'\"" >&2;}
    { (exit 1); exit 1; }; }
       else
          JAGS_LIB=${prefix}/${LIBnn}
@@ -4118,13 +4118,9 @@ _ACEOF
   LIBS="-ljags $LIBS"
 
 else
-  { { $as_echo "$as_me:$LINENO: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-{ { $as_echo "$as_me:$LINENO: error: \"Cannot load JAGS library\"
-See \`config.log' for more details." >&5
-$as_echo "$as_me: error: \"Cannot load JAGS library\"
-See \`config.log' for more details." >&2;}
-   { (exit 1); exit 1; }; }; }
+  { { $as_echo "$as_me:$LINENO: error: \"Cannot load JAGS library in ${JAGS_LIB}\"" >&5
+$as_echo "$as_me: error: \"Cannot load JAGS library in ${JAGS_LIB}\"" >&2;}
+   { (exit 1); exit 1; }; }
 fi
 
 
@@ -4151,8 +4147,8 @@ else
    if test  -z "${JAGS_MODULES}"  ; then
       JAGS_MODULES=${JAGS_LIB}/JAGS/modules-${PACKAGE_VERSION}
       if test ! -d ${JAGS_MODULES} ; then
-         { { $as_echo "$as_me:$LINENO: error: \"JAGS module directory not found. Use configure arg --with-jags-modules or environment variable JAGS_MODULES\"" >&5
-$as_echo "$as_me: error: \"JAGS module directory not found. Use configure arg --with-jags-modules or environment variable JAGS_MODULES\"" >&2;}
+         { { $as_echo "$as_me:$LINENO: error: \"JAGS module directory ${JAGS_MODULES} does not exist.\"" >&5
+$as_echo "$as_me: error: \"JAGS module directory ${JAGS_MODULES} does not exist.\"" >&2;}
    { (exit 1); exit 1; }; }
       fi
    fi

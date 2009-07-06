@@ -6,12 +6,12 @@
     jags.home <- Sys.getenv("JAGS_HOME")
     if (strlen(jags.home)==0) {
         ## Look for multi-user installation in registry
-        regkey <- try(readRegistry("SOFTWARE\JAGS\JAGS-2.0.0", 
+        regkey <- try(readRegistry("SOFTWARE\\JAGS\\JAGS-2.0.0", 
                                    hive = "HLM", maxdepth = 1),
                       silent = TRUE)
         if (inherits(regkey, "try-error")) {
             ## Look for single-user installation in registry
-            regkey <- try(readRegistry("SOFTWARE\JAGS\JAGS-2.0.0", 
+            regkey <- try(readRegistry("SOFTWARE\\JAGS\\JAGS-2.0.0", 
                                        hive = "HCU", maxdepth = 1),
                           silent = TRUE)
         }

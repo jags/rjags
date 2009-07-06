@@ -14,7 +14,7 @@ if test [ -n "$jags_include_path" ] ; then
 else
    if test [ -z "${JAGS_INCLUDE}" ] ; then
       if test [ "$prefix" = "NONE" ]; then
-         AC_MSG_ERROR("Location of JAGS headers not defined. Use configure arg --with-jags-include or environment variable JAGS_INCLUDE")
+         AC_MSG_ERROR("Location of JAGS headers not defined. Use configure arg '--with-jags-include' or environment variable 'JAGS_INCLUDE'")
       else
          JAGS_INCLUDE=${prefix}/include/JAGS
       fi
@@ -25,7 +25,7 @@ AC_LANG_PUSH(C++)
 OCPPFLAGS=${CPPFLAGS}
 CPPFLAGS=-I${JAGS_INCLUDE}
 AC_CHECK_HEADER(Console.h, [],
-             [AC_MSG_FAILURE("Console.h header not compilable")])
+             [AC_MSG_FAILURE("Problem with header file ${JAGS_INCLUDE}/Console.h ")])
 CPPFLAGS=${OCPPFLAGS}
 AC_LANG_POP()
 
@@ -59,7 +59,7 @@ if test [ -n "$jags_lib_path" ] ; then
 else
    if test [ -z "${JAGS_LIB}" ] ; then
       if test [ "${prefix}" = "NONE" ] ; then 
-         AC_MSG_ERROR("Location of JAGS library not defined. Use configure arg --with-jags-lib or environment variable JAGS_LIB")
+         AC_MSG_ERROR("Location of JAGS library not defined. Use configure arg '--with-jags-lib' or environment variable 'JAGS_LIB'")
       else
          JAGS_LIB=${prefix}/${LIBnn}
       fi
@@ -70,7 +70,7 @@ OLDFLAGS=${LDFLAGS}
 AC_LANG_PUSH(C)
 LDFLAGS=-L${JAGS_LIB}
 AC_CHECK_LIB(jags, jags_version, [],
-             [AC_MSG_FAILURE("Cannot load JAGS library")])
+             [AC_MSG_ERROR("Cannot load JAGS library in ${JAGS_LIB}")])
 
 AC_LANG_POP()
 LDFLAGS=${OLDFLAGS}
@@ -88,7 +88,7 @@ else
    if test [ -z "${JAGS_MODULES}" ] ; then
       JAGS_MODULES=${JAGS_LIB}/JAGS/modules-${PACKAGE_VERSION}
       if test [! -d ${JAGS_MODULES} ]; then
-         AC_MSG_ERROR("JAGS module directory not found. Use configure arg --with-jags-modules or environment variable JAGS_MODULES")
+         AC_MSG_ERROR("JAGS module directory ${JAGS_MODULES} does not exist.")
       fi
    fi
 fi
