@@ -4,7 +4,7 @@
 
     ## Try environment variable first
     jags.home <- Sys.getenv("JAGS_HOME")
-    if (strlen(jags.home)==0) {
+    if (nchar(jags.home)==0) {
         ## Look for multi-user installation in registry
         regkey <- try(readRegistry("SOFTWARE\\JAGS\\JAGS-2.0.0", 
                                    hive = "HLM", maxdepth = 1),
