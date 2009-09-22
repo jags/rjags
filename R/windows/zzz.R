@@ -15,7 +15,7 @@
                                        hive = "HCU", maxdepth = 1),
                           silent = TRUE)
         }
-        if (inherits(regkey, "try-error") || is.null(regkey[["InstallDir"]]) {
+        if (inherits(regkey, "try-error") || is.null(regkey[["InstallDir"]])) {
             ## Give up
             stop("Failed to locate JAGS 2.0.0 installation.")
         }
