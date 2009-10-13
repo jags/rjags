@@ -329,12 +329,12 @@ jags.samples <-
     return(ans)
 }
 
-list.samplers <- function(model)
+list.samplers <- function(object)
 {
-    if (!inherits(model, "jags")) {
+    if (!inherits(object, "jags")) {
         stop("not a jags model object")
     }
-    .Call("get_samplers", model$ptr(), PACKAGE="rjags")
+    .Call("get_samplers", object$ptr(), PACKAGE="rjags")
 }
 
 
@@ -423,7 +423,7 @@ coda.samples <- function(model, variable.names=NULL, n.iter, thin=1, ...)
     mcmc.list(ans)
 }
 
-jags.module <- function(names, path)
+load.modules <- function(names, path)
 {
     if (missing(path)) {
         path = getOption("jags.moddir")
@@ -432,15 +432,20 @@ jags.module <- function(names, path)
         }
     }
     
-    cat("loading JAGS module\n")
-    for (i in 1:length(names)) {
-        cat("   ", names[i], "\n", sep="")
+    for (i in seq(along=names)) {
         file <- file.path(path,
                           paste(names[i], .Platform$dynlib.ext, sep=""))
         if (!file.exists(file)) {
-            stop("Cannot load ", file)
+            stop("File not found: ", file)
         }
         dyn.load(file)
+        .Call("load_module", names[i], PACKAGE="rjags")
     }
 }
 
+unload.modules <- function(names)
+{
+    for (i in seq(along=names)) {
+        .Call("unload_module", names[i], PACKAGE="rjags")
+    }
+}

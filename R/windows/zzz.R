@@ -38,7 +38,7 @@
     if (is.null(getOption("jags.moddir"))) {
         options("jags.moddir" = file.path(jags.home, "modules"))
     }
-    jags.module(c("basemod","bugs"))
+    load.modules(c("basemod","bugs"))
     
     library.dynam("rjags", pkg, lib, local=FALSE)
     .Call("init_jags_console", PACKAGE="rjags")

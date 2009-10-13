@@ -11,10 +11,13 @@ export (
   jags.model,
   jags.samples,
   coda.samples,
-  jags.module,
+  load.modules,
+  unload.modules,
   dic.samples,
   diffdic,
-  adapt
+  adapt,
+  list.samplers,
+  read.data
 )
 S3method(print, jags)
 S3method(coef, jags)

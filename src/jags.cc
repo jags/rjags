@@ -571,4 +571,28 @@ extern "C" {
 	UNPROTECT(1);
 	return ans;
     }
+
+    SEXP load_module(SEXP name)
+    {
+	string sname = stringArg(name);
+	if(Console::loadModule(sname)) {
+	    Rprintf("Module %s loaded\n", sname.c_str());
+	}
+	else {
+	    warning("Module %s failed to load\n", sname.c_str());
+	}
+	return R_NilValue;
+    }
+
+    SEXP unload_module(SEXP name)
+    {
+	string sname = stringArg(name);
+	if (Console::unloadModule(sname)) {
+	    Rprintf("Module %s is not loaded", sname.c_str());
+	}
+	else {
+	    Rprintf("Module %s unloaded", sname.c_str());
+	}
+	return R_NilValue;
+    }
 }
