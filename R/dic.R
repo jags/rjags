@@ -5,7 +5,7 @@
         stop("Estimation of the deviance penalty requires 2 or more parallel chains")
     }
     if (!("dic" %in% names(getLoadedDLLs()))) {
-        jags.module("dic")
+        load.modules("dic")
     }
     
     if (class(model) != "jags")
