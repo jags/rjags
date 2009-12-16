@@ -8,10 +8,12 @@
 #include <string>
 #include <map>
 #include <cstdio>
+#include <list>
 
 class BUGSModel;
 class ParseTree;
 class RNG;
+class Module;
 
 /**
  * Flags for the function Console#dumpState
@@ -213,6 +215,18 @@ public:
   bool isAdapting() const;
   /** Clears the model */
   void clearModel();
+  /**
+   * Access the list of loaded modules
+   */
+  static std::list<Module *> &loadedModules();
+  /**
+   * Load a module by name
+   */
+  static bool loadModule(std::string const &name);
+  /**
+   * Unload a module by name
+   */ 
+  static bool unloadModule(std::string const &name);
 };
 
 #endif /* CONSOLE_H_ */
