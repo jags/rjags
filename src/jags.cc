@@ -8,6 +8,8 @@
 #include <Console.h>
 #include <util/nainf.h>
 
+#include <R.h>
+
 using std::string;
 using std::map;
 using std::pair;
@@ -308,7 +310,8 @@ extern "C" {
     {
 	/* Name should be a name of a file containing the model */
     
-	string sname = stringArg(name);
+	string sname = R_ExpandFileName(stringArg(name));
+
 	FILE *file = fopen(sname.c_str(), "r");
 	if (!file) {
 	    jags_err << "Failed to open file " << sname << "\n";
