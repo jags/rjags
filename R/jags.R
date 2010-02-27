@@ -292,43 +292,30 @@ parse.varnames <- function(varnames)
 
 
 jags.samples <-
-  function(model, variable.names=NULL, n.iter, thin=1, type="trace", ...)
+  function(model, variable.names, n.iter, thin=1, type="trace", ...)
 {
     if (class(model) != "jags")
       stop("Invalid JAGS model")
 
-    if (!is.null(variable.names)) {
-       if (!is.character(variable.names))
-         stop("variable.names must be a character vector")
-    }
+    if (!is.character(variable.names) || length(variable.names) == 0)
+      stop("variable.names must be a character vector")
      
     if (!is.numeric(n.iter) || length(n.iter) != 1 || n.iter <= 0)
       stop("n.iter must be a positive integer")
     if (!is.character(type))
       stop("type must be a character vector")
 
-    if (is.null(variable.names)) {
-        .Call("set_default_monitors", model$ptr(), as.integer(thin),
-              type, PACKAGE="rjags")
-    }
-    else {
-      pn <- parse.varnames(variable.names)
-      .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper,
-            as.integer(thin), type, PACKAGE="rjags")
-    }
+    pn <- parse.varnames(variable.names)
+    .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper,
+          as.integer(thin), type, PACKAGE="rjags")
     update(model, n.iter, ...)
     ans <- .Call("get_monitored_values", model$ptr(), type, PACKAGE="rjags")
     for (i in seq(along=ans)) {
         class(ans[[i]]) <- "mcarray"
     }
-    if (is.null(variable.names)) {
-        .Call("clear_default_monitors", model$ptr(), type, PACKAGE="rjags")
-    }
-    else {
-        for (i in seq(along=variable.names)) {
-            .Call("clear_monitor", model$ptr(), pn$names[i], pn$lower[[i]],
-                  pn$upper[[i]], type, PACKAGE="rjags")
-        }
+    for (i in seq(along=variable.names)) {
+      .Call("clear_monitor", model$ptr(), pn$names[i], pn$lower[[i]],
+            pn$upper[[i]], type, PACKAGE="rjags")
     }
     return(ans)
 }

@@ -412,25 +412,19 @@ extern "C" {
 	}
 	if (i < n) {
 	    //Failure to set monitor i: unwind the others
-	    Range range = makeRange(VECTOR_ELT(lower, i), VECTOR_ELT(upper, i));
-	    for (unsigned int j = i; j > 0; --j) {
-		ptrArg(ptr)->clearMonitor(stringArg(names, j - 1), range,
+	    for (int j = i - 1; j > 0; --j) {
+		Range range = makeRange(VECTOR_ELT(lower, j), 
+					VECTOR_ELT(upper, j));
+		ptrArg(ptr)->clearMonitor(stringArg(names, j), range,
 					  stringArg(type));
 	    }
 	    printMessages(false);
+	    return ScalarLogical(FALSE);
 	}
 	else {
 	    printMessages(true);
+	    return ScalarLogical(TRUE);
 	}
-	return R_NilValue;
-    }
-
-    SEXP set_default_monitors(SEXP ptr, SEXP thin, SEXP type)
-    {
-	bool status = ptrArg(ptr)->setDefaultMonitors(stringArg(type),
-						      intArg(thin));
-	printMessages(status);
-	return R_NilValue;
     }
 
     SEXP clear_monitor(SEXP ptr, SEXP name, SEXP lower, SEXP upper, SEXP type)
@@ -438,13 +432,6 @@ extern "C" {
         Range range = makeRange(lower, upper);
 	bool status = ptrArg(ptr)->clearMonitor(stringArg(name), range, 
 						stringArg(type));
-	printMessages(status);
-	return R_NilValue;
-    }
-
-    SEXP clear_default_monitors(SEXP ptr, SEXP type)
-    {
-	bool status = ptrArg(ptr)->clearDefaultMonitors(stringArg(type));
 	printMessages(status);
 	return R_NilValue;
     }
