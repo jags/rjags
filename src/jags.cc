@@ -202,7 +202,7 @@ static Range makeRange(SEXP lower, SEXP upper)
 }
 
 #include <iostream>
-/* Read data from a JAGS data table into and R list */
+/* Read data from a JAGS data table into an R list */
 static SEXP readDataTable(map<string,SArray> const &table)
 {
     int N = table.size();
@@ -251,15 +251,54 @@ static SEXP readDataTable(map<string,SArray> const &table)
 		    SET_STRING_ELT(dimnames, k, mkChar(names[k].c_str()));
 		}
 		setAttrib(dim, R_NamesSymbol, dimnames);
-	        SET_DIM(e, dim);
-		UNPROTECT(2); //dimnames, dim
+		UNPROTECT(1); //dimnames
 	    }
-            else {
-	        SET_DIM(e, dim);
-	        UNPROTECT(1); //dim
-            }
+	    SET_DIM(e, dim);
+	    UNPROTECT(1); //dim
+
+	    //Set S dimnames
+	    bool set_s_dimnames = false;
+	    for (unsigned int k = 0; k < ndim; ++k) {
+		if (!p->second.getSDimNames(k).empty()) {
+		    set_s_dimnames = true;
+		    break;
+		}
+	    }
+	    if (set_s_dimnames) {
+		SEXP sdimnames;
+		PROTECT(sdimnames = allocVector(VECSXP, ndim));
+		for (unsigned int k = 0; k < ndim; ++k) {
+		    vector<string> const &names_k = p->second.getSDimNames(k);
+		    if (names_k.empty()) {
+			SET_VECTOR_ELT(sdimnames, k, R_NilValue);
+		    }
+		    else {
+			SEXP snames_k;
+			PROTECT(snames_k = allocVector(STRSXP, names_k.size()));
+			for (unsigned int l = 0; l < names_k.size(); ++l) {
+			    SET_STRING_ELT(sdimnames, l, 
+					   mkChar(names_k[l].c_str()));
+			}
+			UNPROTECT(1); //snames_k
+		    }
+		}
+		setAttrib(e, R_DimNamesSymbol, sdimnames);
+		UNPROTECT(1); //sdimnames
+	    }
 	}
-    
+	else if (!p->second.getSDimNames(0).empty()) {
+
+	    //Set names attribute
+	    SEXP snames;
+	    vector<string> const &names = p->second.getSDimNames(0);
+	    PROTECT(snames = allocVector(STRSXP, names.size()));
+	    for (unsigned int l = 0; l < names.size(); ++l) {
+		SET_STRING_ELT(snames, l,  mkChar(names[l].c_str()));
+	    }
+	    setAttrib(e, R_NamesSymbol, snames);
+	    UNPROTECT(1); //snames
+	}
+	    
 	SET_ELEMENT(data, i, e);
 	UNPROTECT(1); //e
     }
@@ -439,7 +478,18 @@ extern "C" {
     SEXP get_monitored_values(SEXP ptr, SEXP type)
     {
 	map<string,SArray> data_table;
-	bool status = ptrArg(ptr)->dumpMonitors(data_table, stringArg(type));
+	bool status = ptrArg(ptr)->dumpMonitors(data_table, stringArg(type),
+						false);
+	printMessages(status);
+	return readDataTable(data_table);
+    }
+
+    //FIXME: lazy cut-and-paste here
+    SEXP get_monitored_values_flat(SEXP ptr, SEXP type)
+    {
+	map<string,SArray> data_table;
+	bool status = ptrArg(ptr)->dumpMonitors(data_table, stringArg(type),
+						true);
 	printMessages(status);
 	return readDataTable(data_table);
     }

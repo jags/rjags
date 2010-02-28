@@ -22,8 +22,9 @@
     }
     
     update(model, n.iter = as.integer(n.iter), ...)
-    dev <- .Call("get_monitored_values", model$ptr(), "mean",
+    dev <- .Call("get_monitored_values_flat", model$ptr(), "mean",
                  PACKAGE="rjags")
+    return(dev)
     for (i in seq(along=dev)) {
         class(dev[[i]]) <- "mcarray"
     }
@@ -33,6 +34,8 @@
     .Call("clear_monitor", model$ptr(), pdtype, NULL, NULL, "mean",
           PACKAGE="rjags")
 
+    ans <- list("deviance" = dev$deviance, "penalty" = dev[[type]],
+                "type" = type)
     class(ans) <- "dic"
     return(ans)
 }
