@@ -24,7 +24,6 @@
     update(model, n.iter = as.integer(n.iter), ...)
     dev <- .Call("get_monitored_values_flat", model$ptr(), "mean",
                  PACKAGE="rjags")
-    return(dev)
     for (i in seq(along=dev)) {
         class(dev[[i]]) <- "mcarray"
     }
