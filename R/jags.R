@@ -151,7 +151,7 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
 
     model.state <- .Call("get_state", p, PACKAGE="rjags")
     model.data <- .Call("get_data", p, PACKAGE="rjags")
-    model.code <- readLines(file)
+    model.code <- readLines(file, warn=FALSE)
     model <- list("ptr" = function() {p},
                   "data" = function() {model.data},
                   "model" = function() {model.code},
