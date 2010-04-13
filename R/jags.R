@@ -449,7 +449,7 @@ isModuleLoaded <- function(file)
 {
     dll.list <- getLoadedDLLs()
     for (i in seq(along=dll.list)) {
-        if (dll.list[[i]]["file"] == file)
+        if (dll.list[[i]]["path"][1] == file)
             return(TRUE)
     }
     return(FALSE)

@@ -615,10 +615,7 @@ extern "C" {
     SEXP load_module(SEXP name)
     {
 	string sname = stringArg(name);
-	if(Console::loadModule(sname)) {
-	    Rprintf("Module %s loaded\n", sname.c_str());
-	}
-	else {
+	if(!Console::loadModule(sname)) {
 	    warning("Module %s failed to load\n", sname.c_str());
 	}
 	return R_NilValue;
