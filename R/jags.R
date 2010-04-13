@@ -414,7 +414,7 @@ coda.samples <- function(model, variable.names=NULL, n.iter, thin=1, ...)
     mcmc.list(ans)
 }
 
-load.modules <- function(names, path)
+load.module <- function(name, path)
 {
     if (missing(path)) {
         path = getOption("jags.moddir")
@@ -422,21 +422,35 @@ load.modules <- function(names, path)
             stop("option jags.moddir is not set")
         }
     }
+    if (!is.character(path) || length(path) != 1)
+        stop("invalid path")
+    if (!is.character(name) || length(name) != 1)
+        stop("invalid name")
     
-    for (i in seq(along=names)) {
-        file <- file.path(path,
-                          paste(names[i], .Platform$dynlib.ext, sep=""))
-        if (!file.exists(file)) {
-            stop("File not found: ", file)
-        }
-        dyn.load(file)
-        .Call("load_module", names[i], PACKAGE="rjags")
+    file <- file.path(path, paste(name, .Platform$dynlib.ext, sep=""))
+    if (!file.exists(file)) {
+        stop("File not found: ", file)
     }
+    if (!isModuleLoaded(file)) {
+        dyn.load(file)
+    }
+    .Call("load_module", name, PACKAGE="rjags")
 }
 
-unload.modules <- function(names)
+unload.module <- function(name)
 {
-    for (i in seq(along=names)) {
-        .Call("unload_module", names[i], PACKAGE="rjags")
+    if (!is.character(name) || length(name) != 1)
+        stop("invalid name")
+    
+    .Call("unload_module", name, PACKAGE="rjags")
+}
+
+isModuleLoaded <- function(file)
+{
+    dll.list <- getLoadedDLLs()
+    for (i in seq(along=dll.list)) {
+        if (dll.list[[i]]["file"] == file)
+            return(TRUE)
     }
+    return(FALSE)
 }
