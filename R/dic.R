@@ -9,7 +9,7 @@
     
     if (!is.numeric(n.iter) || length(n.iter) != 1 || n.iter <= 0)
       stop("n.iter must be a positive integer")
-    load.module("dic")
+    load.module("dic", quiet=TRUE)
     limits <- vector("list",2)
     pdtype <- match.arg(type, c("pD","popt"))
     ok <- .Call("set_monitors", model$ptr(), c("deviance",pdtype),

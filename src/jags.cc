@@ -39,7 +39,7 @@ static SEXP JAGS_console_tag; //Run-time type checking for external pointer
 
 static void checkConsole (SEXP s)
 {				  
-  if (TYPEOF(s) != EXTPTRSXP || R_ExternalPtrTag(s) != JAGS_console_tag)
+    if (TYPEOF(s) != EXTPTRSXP || R_ExternalPtrTag(s) != JAGS_console_tag)
     {
         error("bad JAGS console pointer");
     }
@@ -312,6 +312,25 @@ static SEXP readDataTable(map<string,SArray> const &table)
     setAttrib(data, R_NamesSymbol, names);
     UNPROTECT(2); //names, data
     return data;
+}
+
+static FactoryType asFactoryType(SEXP type)
+{
+    string ft = stringArg(type);
+    FactoryType ans;
+    if (ft == "sampler") {
+	ans = SAMPLER_FACTORY;
+    }
+    else if (ft == "rng") {
+	ans = RNG_FACTORY;
+    }
+    else if (ft == "monitor") {
+	ans = MONITOR_FACTORY;
+    }
+    else {
+	error("Invalid factory type");
+    }
+    return ans;
 }
 
 extern "C" {
@@ -587,7 +606,45 @@ extern "C" {
 	UNPROTECT(2); //names, ans
 	return node_list;
     }
-    
+
+    SEXP get_factories(SEXP type)
+    {
+	FactoryType ft = asFactoryType(type);
+	vector<pair<string, bool> > factories = Console::listFactories(ft);
+	    
+	unsigned int n = factories.size();
+	SEXP names, status;
+	PROTECT(names = allocVector(STRSXP, n));
+	PROTECT(status = allocVector(LGLSXP, n));
+	for (unsigned int i = 0; i < n; ++i) {
+	    SET_STRING_ELT(names, i, mkChar(factories[i].first.c_str()));
+	    LOGICAL_POINTER(status)[i] = factories[i].second;
+	}
+
+	SEXP fac_list;
+	PROTECT(fac_list = allocVector(VECSXP, 2));
+	SET_ELEMENT(fac_list, 0, names);
+	SET_ELEMENT(fac_list, 1, status);
+	UNPROTECT(2); //names, status
+
+	SEXP fac_names;
+	PROTECT(fac_names = allocVector(STRSXP,2));
+	SET_STRING_ELT(fac_names, 0, mkChar("factory"));
+	SET_STRING_ELT(fac_names, 1, mkChar("status"));
+	setAttrib(fac_list, R_NamesSymbol, fac_names);	
+	UNPROTECT(1); //fac_names
+
+	UNPROTECT(1); //fac_list
+	return fac_list;
+    }
+
+    SEXP set_factory_active(SEXP name, SEXP type, SEXP status)
+    {
+	Console::setFactoryActive(stringArg(name), asFactoryType(type), 
+				  boolArg(status));
+	return R_NilValue;
+    }
+
     SEXP get_iter(SEXP ptr)
     {
 	Console *console = ptrArg(ptr);
@@ -614,22 +671,24 @@ extern "C" {
 
     SEXP load_module(SEXP name)
     {
-	string sname = stringArg(name);
-	if(!Console::loadModule(sname)) {
-	    warning("Module %s failed to load\n", sname.c_str());
-	}
-	return R_NilValue;
+	return ScalarLogical(Console::loadModule(stringArg(name)));
     }
 
     SEXP unload_module(SEXP name)
     {
-	string sname = stringArg(name);
-	if (Console::unloadModule(sname)) {
-	    Rprintf("Module %s is not loaded", sname.c_str());
+	return ScalarLogical(Console::unloadModule(stringArg(name)));
+    }
+
+    SEXP get_modules()
+    {
+	vector<string> modules = Console::listModules();
+	unsigned int n = modules.size();
+	SEXP mod_list;
+	PROTECT(mod_list = allocVector(STRSXP, n));
+	for (unsigned int i = 0; i < n; ++i) {
+	    SET_STRING_ELT(mod_list, i, mkChar(modules[i].c_str()));
 	}
-	else {
-	    Rprintf("Module %s unloaded", sname.c_str());
-	}
-	return R_NilValue;
+	UNPROTECT(1); //mod_list
+	return mod_list;
     }
 }

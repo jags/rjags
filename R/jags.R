@@ -328,6 +328,24 @@ list.samplers <- function(object)
     .Call("get_samplers", object$ptr(), PACKAGE="rjags")
 }
 
+list.factories <- function(type)
+{
+    type = match.arg(type, c("sampler","monitor","rng"))
+    as.data.frame(.Call("get_factories", type, PACKAGE="rjags"))
+}
+
+set.factory <- function(name, type, state)
+{
+    if (!is.character(name) || length(name) != 1)
+        stop("invalid name")
+    if (!is.character(type) || length(type) != 1)
+        stop("invalid name")
+    if (length(state) != 1)
+        stop("invalid state")
+    
+    type <- match.arg(type, c("sampler","rng","monitor"))
+    .C("set_factory_active", name, type, as.logical(state), PACKAGE="rjags")
+}
 
 coda.names <- function(basename, dim)
 {
@@ -414,7 +432,7 @@ coda.samples <- function(model, variable.names=NULL, n.iter, thin=1, ...)
     mcmc.list(ans)
 }
 
-load.module <- function(name, path)
+load.module <- function(name, path, quiet=FALSE)
 {
     if (missing(path)) {
         path = getOption("jags.moddir")
@@ -426,23 +444,46 @@ load.module <- function(name, path)
         stop("invalid path")
     if (!is.character(name) || length(name) != 1)
         stop("invalid name")
-    
+
     file <- file.path(path, paste(name, .Platform$dynlib.ext, sep=""))
     if (!file.exists(file)) {
         stop("File not found: ", file)
     }
     if (!isModuleLoaded(file)) {
+        ## We must avoid calling dyn.load twice on the same DLL This
+        ## may result in the DLL being unloaded and then reloaded,
+        ## which will invalidate pointers to the distributions,
+        ## functions and factories in the module.
         dyn.load(file)
     }
-    .Call("load_module", name, PACKAGE="rjags")
+    ok <- .Call("load_module", name, PACKAGE="rjags")
+    if (!ok) {
+        stop("module", name, "not found\n", sep=" ")
+    }
+    else if (!quiet) {
+        cat("module", name, "loaded\n", sep=" ")
+    }
+    invisible()
 }
 
-unload.module <- function(name)
+unload.module <- function(name, quiet=FALSE)
 {
     if (!is.character(name) || length(name) != 1)
         stop("invalid name")
-    
-    .Call("unload_module", name, PACKAGE="rjags")
+
+    ok <- .Call("unload_module", name, PACKAGE="rjags")
+    if (!ok) {
+        warning("module", name, "not loaded", sep=" ")
+    }
+    else if (!quiet) {
+        cat("Module", name, "unloaded\n", sep=" ")
+    }
+    invisible()
+}
+
+list.modules <- function()
+{
+    .Call("get_modules", PACKAGE="rjags");
 }
 
 isModuleLoaded <- function(file)
