@@ -16,9 +16,13 @@ class RNG;
 class Module;
 
 /**
- * Flags for the function Console#dumpState
+ * @short Flags for the function Console#dumpState
  */
 enum DumpType {DUMP_DATA, DUMP_PARAMETERS, DUMP_ALL};
+/**
+ * @short Enumerates factory types in a model
+ */
+enum FactoryType {SAMPLER_FACTORY, MONITOR_FACTORY, RNG_FACTORY};
 
 /**
  * @short Interface to the JAGS library
@@ -140,23 +144,6 @@ public:
   bool clearMonitor(std::string const &name, Range const &range,
 		    std::string const &type);
   /**
-   * @short Creates default monitors
-   *
-   * This short-cut function allows the user to define multiple
-   * monitors with a single function call. Default nodes are selected
-   * by the MonitorFactory, and monitors are created for these nodes.
-   */
-  bool setDefaultMonitors(std::string const &type, unsigned int thin);
-  /**
-   * @short Clears default monitors 
-   *
-   * This function deletes all monitors created by a previous call to
-   * setDefault monitors.
-   *
-   * @param type The type of Monitor to clear
-   */
-  bool clearDefaultMonitors(std::string const &type);
-  /**
    * @short Dumps the state of the model.
    *
    * Writes the current values of the variables to the data table.
@@ -189,25 +176,20 @@ public:
   std::vector<std::string> const &variableNames() const;
   /**
    * Dump the contants of monitored node in CODA format
-   * The parameters name and range must correspond to a previous
-   * call to setMonitor.
    *
    * @param node Vector of monitored nodes to be dumped, each node
    * is described by the variable name and index range. If the vector
    * is empty then ALL monitored nodes will be dumped.
    * 
-   * @param index Index file stream
-   *
-   * @param output Output file stream
-   *
+   * @param prefix Prefix to be prepended to the output file names
    */
   bool coda(std::vector<std::pair<std::string, Range> > const &nodes,
-	    std::ofstream &index, std::vector<std::ofstream*> const &output);
-  bool coda(std::ofstream &index, std::vector<std::ofstream*> const &output);
+	    std::string const &prefix);
+  bool coda(std::string const &prefix);
   BUGSModel const *model();
   unsigned int nchain() const;
   bool dumpMonitors(std::map<std::string,SArray> &data_table,
-		    std::string const &type);
+		    std::string const &type, bool flat);
   bool dumpSamplers(std::vector<std::vector<std::string> > &sampler_list);
   /** Turns off adaptive mode of the model */
   bool adaptOff(bool &status);
@@ -216,17 +198,29 @@ public:
   /** Clears the model */
   void clearModel();
   /**
-   * Access the list of loaded modules
-   */
-  static std::list<Module *> &loadedModules();
-  /**
-   * Load a module by name
+   * Loads a module by name
    */
   static bool loadModule(std::string const &name);
   /**
-   * Unload a module by name
+   * Unloads a module by name
    */ 
   static bool unloadModule(std::string const &name);
+  /**
+   * Returns a vector containing the names of loaded modules
+   */
+  static std::vector<std::string> listModules();
+  /**
+   * Returns a vector containing the names of currently loaded factories
+   * and whether or not they are active.
+   */
+  static std::vector<std::pair<std::string, bool> >  
+      listFactories(FactoryType type);
+  /**
+   * Sets a factory to be active or inactive
+   */
+  static bool setFactoryActive(std::string const &name, FactoryType type, 
+			       bool active);
+
 };
 
 #endif /* CONSOLE_H_ */
