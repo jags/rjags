@@ -6,7 +6,7 @@
     jags.home <- Sys.getenv("JAGS_HOME")
     if (nchar(jags.home)==0) {
         keyname <- "SOFTWARE\\JAGS\\JAGS-2.0.0"
-        if (identical(.Platform$r_arch, "/x64")) {
+        if (identical(.Platform$r_arch, "x64")) {
             keyname <- paste(keyname,"-x64", sep="")
         }
         ## Look for multi-user installation in registry
