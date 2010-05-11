@@ -1,0 +1,5 @@
+if test -z "${JAGS_ROOT}"; then
+    echo "You need to set a variable JAGS_ROOT to point to a folder containing"
+    echo "sub-folders \"include\" and \"lib\" with the JAGS headers and library"
+    exit 1
+fi
