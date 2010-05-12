@@ -5,7 +5,7 @@
     ## Try environment variable first
     jags.home <- Sys.getenv("JAGS_HOME")
     if (nchar(jags.home)==0) {
-        keyname <- "SOFTWARE\\JAGS\\JAGS-2.0.0"
+        keyname <- "SOFTWARE\\JAGS\\JAGS-2.1.0"
         if (identical(.Platform$r_arch, "x64")) {
             keyname <- paste(keyname,"-x64", sep="")
         }
@@ -19,7 +19,7 @@
         }
         if (inherits(regkey, "try-error") || is.null(regkey[["InstallDir"]])) {
             ## Give up
-            stop("Failed to locate JAGS 2.0.0 installation.")
+            stop("Failed to locate JAGS 2.1.0 installation.")
         }
         jags.home <- regkey[["InstallDir"]]
     }
