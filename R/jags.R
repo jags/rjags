@@ -344,7 +344,7 @@ set.factory <- function(name, type, state)
         stop("invalid state")
     
     type <- match.arg(type, c("sampler","rng","monitor"))
-    .C("set_factory_active", name, type, as.logical(state), PACKAGE="rjags")
+    .Call("set_factory_active", name, type, as.logical(state), PACKAGE="rjags")
 }
 
 coda.names <- function(basename, dim)
