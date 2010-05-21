@@ -465,7 +465,7 @@ load.module <- function(name, path, quiet=FALSE)
     }
     ok <- .Call("load_module", name, PACKAGE="rjags")
     if (!ok) {
-        stop("module", name, "not found\n", sep=" ")
+        stop(paste("module", name, "not found\n"))
     }
     else if (!quiet) {
         cat("module", name, "loaded\n", sep=" ")
@@ -480,7 +480,7 @@ unload.module <- function(name, quiet=FALSE)
 
     ok <- .Call("unload_module", name, PACKAGE="rjags")
     if (!ok) {
-        warning("module", name, "not loaded", sep=" ")
+        warning(paste("module", name, "not loaded"))
     }
     else if (!quiet) {
         cat("Module", name, "unloaded\n", sep=" ")
