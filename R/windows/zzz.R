@@ -19,7 +19,10 @@
         }
         if (inherits(regkey, "try-error") || is.null(regkey[["InstallDir"]])) {
             ## Give up
-            stop("Failed to locate JAGS 2.1.0 installation.")
+            stop("Failed to locate JAGS 2.1.0 installation.\n",
+                 "The rjags package is just an interface to the JAGS library\n",
+                 "which must be separately installed\n",
+                 "See http://www.sourceforge.net/projects/mcmc-jags/files\n")
         }
         jags.home <- regkey[["InstallDir"]]
     }
