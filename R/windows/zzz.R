@@ -27,7 +27,7 @@
     if (nchar(jags.home)==0) {
         jags.home <- .findKey("SOFTWARE\\JAGS\\JAGS-2.2.0")
         if (is.null(jags.home)) {
-            jags.home <- .findKey("SOFTWARE\\JAGS\\JAGS-2.1.0")
+            jags.home <- .findKey("SOFTWARE\\JAGS\\JAGS-2.2.0")
         }
         if (is.null(jags.home)) {
             stop("Failed to locate JAGS 2.2.0 installation.\n",
