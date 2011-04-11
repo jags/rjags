@@ -1,23 +1,38 @@
-.findKey <- function(keyname)
+.findJAGS <- function(hive, major)
 {
-    if (identical(.Platform$r_arch, "x64")) {
-        keyname <- paste(keyname,"-x64", sep="")
+  ## Returns the registry key corresponding to the latest release of
+  ## JAGS-major.x.y, or NULL if no release is found
+  
+  regkey <- try(readRegistry("SOFTWARE\\JAGS", hive = hive, maxdepth = 2,
+                             view="32-bit"), silent = TRUE)
+  if (inherits(regkey, "try-error")) {
+    return(NULL)
+  }
+  keynames <- names(regkey)
+  keynames <- keynames[substr(keynames, 1, 7)==paste("JAGS-",major,".",sep="")]
+  if (length(keynames) == 0) {
+    return(NULL)
+  }
+  else {
+    regkey <- regkey[keynames]
+    for (i in seq(along=keynames)) {
+      if (!is.null(regkey[[i]][["InstallDir"]])) {
+        return(regkey[i])
+      }
     }
-    ## Look for multi-user installation in registry
-    regkey <- try(readRegistry(keyname, hive = "HLM", maxdepth = 1),
-                  silent = TRUE)
-    if (inherits(regkey, "try-error")) {
-        ## Look for single-user installation in registry
-        regkey <- try(readRegistry(keyname, hive = "HCU", maxdepth = 1),
-                      silent = TRUE)
-    }
-    if (inherits(regkey, "try-error") || is.null(regkey[["InstallDir"]])) {
-        ##Give up
-        return(NULL)
-    }
-    return (regkey[["InstallDir"]])
+    return(NULL)
+  }
 }
-                    
+
+.noJAGS <- function(major)
+{
+  paste("Failed to locate any version of JAGS version ", major, "\n\n",
+        "The rjags package is just an interface to the JAGS library\n",
+        "Make sure you have installed JAGS-", major,
+        ".0.0.exe or higher from\n",
+        "http://www.sourceforge.net/projects/mcmc-jags/files\n", sep="")
+}
+
 .onLoad <- function(lib, pkg)
 {
 ### First task is to get installation directory of JAGS
@@ -25,22 +40,35 @@
     ## Try environment variable first
     jags.home <- Sys.getenv("JAGS_HOME")
     if (nchar(jags.home)==0) {
-        jags.home <- .findKey("SOFTWARE\\JAGS\\JAGS-2.2.0")
-        if (is.null(jags.home)) {
-            jags.home <- .findKey("SOFTWARE\\JAGS\\JAGS-2.2.0")
-        }
-        if (is.null(jags.home)) {
-            stop("Failed to locate JAGS 2.2.0 installation.\n",
-                 "The rjags package is just an interface to the JAGS library\n",
-                 "which must be separately installed\n",
-                 "See http://www.sourceforge.net/projects/mcmc-jags/files\n")
-        }
-    }
+      ## Search the registry. We need to look for both machine-wide and
+      ## user-specific installations
 
+      jags.major <- 3
+      
+      key1 <- .findJAGS("HLM", jags.major)
+      key2 <- .findJAGS("HCU", jags.major)
+
+      if (is.null(key1)) {
+        if (is.null(key2)) {
+          stop(.noJAGS(jags.major))
+        }
+        else {
+          latest <- key2
+        }
+      }
+      else if (is.null(key2) || names(key2) < names(key1)) {
+        latest <- key1
+      }
+      else {
+        latest <- key2
+      }
+
+      jags.home <- latest[[1]][["InstallDir"]]
+    }
     
 ### Add jags.home to the windows PATH, if not already present
 
-    bindir <- file.path(jags.home, "bin")
+    bindir <- file.path(jags.home, .Platform$r_arch, "bin")
     path <- Sys.getenv("PATH")
     split.path <- strsplit(path, .Platform$path.sep)$PATH
     if (!any(split.path == bindir)) {
@@ -51,7 +79,8 @@
 ### Set the module directory, if the option jags.moddir is not already set
     
     if (is.null(getOption("jags.moddir"))) {
-        options("jags.moddir" = file.path(jags.home, "modules"))
+        options("jags.moddir" = file.path(jags.home, .Platform$r_arch,
+                "modules"))
     }
     library.dynam("rjags", pkg, lib)
     load.module("basemod")
