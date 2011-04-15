@@ -9,7 +9,7 @@
     return(NULL)
   }
   keynames <- names(regkey)
-  keynames <- keynames[substr(keynames, 1, 7)==paste("JAGS-",major,".",sep="")]
+  keynames <- keynames[grep(paste("^JAGS-", major, "\\.", sep=""), keynames)]
   if (length(keynames) == 0) {
     return(NULL)
   }
@@ -83,6 +83,8 @@
                 "modules"))
     }
     library.dynam("rjags", pkg, lib)
+    packageStartupMessage("linking to JAGS ",
+                          .Call(get_version(), PACKAGE="rjags"))
     load.module("basemod")
     load.module("bugs")
     

@@ -492,7 +492,7 @@ load.module <- function(name, path, quiet=FALSE)
         stop(paste("module", name, "not found\n"))
     }
     else if (!quiet) {
-        cat("module", name, "loaded\n", sep=" ")
+        message("module ", name, " loaded")
     }
     invisible()
 }

@@ -6,6 +6,7 @@
 #include <stdexcept>
 
 #include <Console.h>
+#include <version.h>
 #include <util/nainf.h>
 
 #include <R.h>
@@ -680,4 +681,10 @@ extern "C" {
 	UNPROTECT(1); //mod_list
 	return mod_list;
     }
+    
+    SEXP get_version()
+    {
+	return mkString(jags_version());
+    }
+
 }
