@@ -19,7 +19,7 @@ print.jags <- function(x, ...)
 }
 
 jags.model <- function(file, data=sys.frame(sys.parent()), inits,
-                       n.chains = 1, n.adapt=1000, nchain)
+                       n.chains = 1, n.adapt=1000, nchain, quiet=FALSE)
 {
     if (missing(file)) {
         stop("Model file name missing")

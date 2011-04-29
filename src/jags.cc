@@ -117,6 +117,12 @@ static void setSArrayValue(SArray &sarray, SEXP e)
 {
     vector<double> v(length(e));
     copy(NUMERIC_POINTER(e), NUMERIC_POINTER(e) + length(e), v.begin());
+    //Replace R missing values with JAGS missing values
+    for (vector<double>::iterator p = v.begin(); p != v.end(); ++p) {
+	if (ISNA(*p)) {
+	    *p = JAGS_NA;
+	}
+    }
     sarray.setValue(v);
 }
 
@@ -132,19 +138,9 @@ static void writeDataTable(SEXP data, map<string,SArray> &table)
     }
 
     for (int i = 0; i < length(data); ++i) {
-	SEXP e;
-	PROTECT(e = AS_NUMERIC(VECTOR_ELT(data, i)));
+	SEXP e = AS_NUMERIC(VECTOR_ELT(data, i));
 	if (length(e) > 0) {
-
-	    //Replace R missing values in e with JAGS missing values
-	    for (int j = 0; j < length(e); ++j) {
-		if (ISNA(NUMERIC_POINTER(e)[j])) {
-		    NUMERIC_POINTER(e)[j] = JAGS_NA;
-		}
-	    }
-	    
 	    string ename = CHAR(STRING_ELT(names, i));
-
 	    SEXP dim = getAttrib(VECTOR_ELT(data, i), R_DimSymbol); 
 	    if (dim == R_NilValue) {
 		// Scalar or vector entry.
@@ -161,10 +157,9 @@ static void writeDataTable(SEXP data, map<string,SArray> &table)
 		}
 		SArray sarray(idim);
 		setSArrayValue(sarray, e);
-		table.insert(pair<string,SArray>(ename,sarray));
+		table.insert(pair<string,SArray>(ename, sarray));
 	    }
 	}
-	UNPROTECT(1); //e
     }
 }
 
@@ -474,7 +469,7 @@ extern "C" {
 	}
 	if (i < n) {
 	    //Failure to set monitor i: unwind the others
-	    for (int j = i - 1; j > 0; --j) {
+	    for (int j = i - 1; j >= 0; --j) {
 		Range range = makeRange(VECTOR_ELT(lower, j), 
 					VECTOR_ELT(upper, j));
 		ptrArg(ptr)->clearMonitor(stringArg(names, j), range,
