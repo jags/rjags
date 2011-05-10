@@ -1,3 +1,8 @@
+.quiet.messages <- function(quiet)
+{
+    .Call("quietMessages", quiet, PACKAGE="rjags")
+}
+
 print.jags <- function(x, ...)
 {
   cat("JAGS model:\n\n")
@@ -19,7 +24,7 @@ print.jags <- function(x, ...)
 }
 
 jags.model <- function(file, data=sys.frame(sys.parent()), inits,
-                       n.chains = 1, n.adapt=1000, nchain, quiet=FALSE)
+                       n.chains = 1, n.adapt=1000, quiet=FALSE)
 {
     if (missing(file)) {
         stop("Model file name missing")
@@ -42,11 +47,9 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
     modfile <- tempfile()
     writeLines(model.code, modfile)
 
-    if (!missing(nchain)) {
-        warning("Argument nchain in jags.model is deprecated. Use n.chains.")
-        if (missing(n.chains)) {
-            n.chains = nchain
-        }
+    if (quiet) {
+        .quiet.messages(TRUE)
+        on.exit(.quiet.messages(FALSE), add=TRUE)
     }
     
     p <- .Call("make_console", PACKAGE="rjags") 

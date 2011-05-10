@@ -38,6 +38,7 @@ int min2(int a, int b)
 std::ostringstream jags_out; //Output stream
 std::ostringstream jags_err; //Error stream
 static SEXP JAGS_console_tag; //Run-time type checking for external pointer
+static bool quiet=false; //Suppress information messages
 
 static void checkConsole (SEXP s)
 {				  
@@ -89,7 +90,7 @@ static void printMessages(bool status)
 {
     /* Print any messages from JAGS and clear the stream buffer */
     if(!jags_out.str().empty()) {
-	Rprintf("%s\n", jags_out.str().c_str());
+	if (!quiet) Rprintf("%s\n", jags_out.str().c_str());
 	jags_out.str("");
     }
     string msg;
@@ -323,7 +324,12 @@ static FactoryType asFactoryType(SEXP type)
 }
 
 extern "C" {
-    
+
+    void quietMessages(SEXP s)
+    {
+	quiet = boolArg(s);
+    }
+
     void R_init_rjags(DllInfo *info)
     {
 	JAGS_console_tag = install("JAGS_CONSOLE_TAG");	
