@@ -428,6 +428,14 @@ extern "C" {
 	return R_NilValue;
     }
 
+    SEXP check_adaptation(SEXP ptr)
+    {
+	Console *console = ptrArg(ptr);
+	bool status = true;
+	console->checkAdaptation(status);
+	return ScalarLogical(status);
+    }
+
     SEXP is_adapting(SEXP ptr)
     {
 	Console *console = ptrArg(ptr);
@@ -437,9 +445,8 @@ extern "C" {
     SEXP adapt_off(SEXP ptr)
     {
 	Console *console = ptrArg(ptr);
-	bool status = true;
-	console->adaptOff(status);
-	return ScalarLogical(status);
+	console->adaptOff();
+	return R_NilValue;
     }
 
     SEXP update(SEXP ptr, SEXP rniter)
