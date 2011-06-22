@@ -247,7 +247,12 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
 
     if (n.adapt > 0) {
         ok <- adapt(model, n.adapt)
-        if (!ok) warning("Adaptation incomplete")
+        if (ok) {
+            .Call("adapt_off", p, PACKAGE="rjags")
+        }
+        else {
+            warning("Adaptation incomplete")
+        }
     }
     return(model)
 }

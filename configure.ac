@@ -85,7 +85,7 @@ fi
 
 OLDFLAGS=${LDFLAGS}
 AC_LANG_PUSH(C)
-LDFLAGS=-L${JAGS_LIB} -rpath ${JAGS_LIB}
+LDFLAGS="-L${JAGS_LIB} -Wl,-rpath ${JAGS_LIB}"
 AC_CHECK_LIB(jags, jags_version, [],
              [AC_MSG_ERROR("Cannot load JAGS library in ${JAGS_LIB}")])
 
