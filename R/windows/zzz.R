@@ -84,7 +84,7 @@
     }
     library.dynam("rjags", pkg, lib)
     packageStartupMessage("linking to JAGS ",
-                          .Call(get_version(), PACKAGE="rjags"))
+                          .Call("get_version", PACKAGE="rjags"))
     load.module("basemod")
     load.module("bugs")
     
