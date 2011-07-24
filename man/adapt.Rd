@@ -5,13 +5,13 @@
   Update the model in adaptive mode.
 }
 \usage{
-adapt(object, n.iter, end.adaptation=TRUE, \dots)
+adapt(object, n.iter, end.adaptation=FALSE, \ldots)
 }
 \arguments{
   \item{object}{a \code{jags} model object}
   \item{n.iter}{length of the adaptive phase}
   \item{end.adaptation}{logical flag. If \code{TRUE} then adaptive
-    mode will be automatically on exit.
+    mode will be automatically on exit.}
   \item{\ldots}{additional arguments to the update method}
 }
 \value{

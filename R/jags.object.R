@@ -53,7 +53,7 @@ update.jags <- function(object, n.iter = 1, by, progress.bar, ...)
     invisible(NULL)
 }
 
-adapt <- function(object, n.iter, end.adaptation = TRUE, ...)
+adapt <- function(object, n.iter, end.adaptation = FALSE, ...)
 {
     if(.Call("is_adapting", object$ptr(), PACKAGE="rjags")) {
         update(object, n.iter, ...)
