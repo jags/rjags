@@ -172,6 +172,10 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
                 stop("Invalid parameters for chain ", i)
             }
             setParameters(init.values[[i]], i)
+            unused.inits <- setdiff(names(init.values[[i]]), varnames)
+            for (j in seq(along=unused.inits)) {
+                warning("Unused initial value for \"", unused.inits[j], "\" in chain ", i)
+            }
         }
     }
 
