@@ -173,6 +173,8 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
             }
             setParameters(init.values[[i]], i)
             unused.inits <- setdiff(names(init.values[[i]]), varnames)
+            unused.inits <- setdiff(unused.inits,
+                                    c(".RNG.seed", ".RNG.state", ".RNG.name"))
             for (j in seq(along=unused.inits)) {
                 warning("Unused initial value for \"", unused.inits[j], "\" in chain ", i)
             }
