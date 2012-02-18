@@ -81,6 +81,18 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
         for (i in seq(along=unused.variables)) {
             warning("Unused variable \"", unused.variables[i], "\" in data")
         }
+        ### Check for data frames
+        df <- which(sapply(data, is.data.frame))
+        for (i in seq(along=df)) {
+            if (all(sapply(data[[df[i]]], is.numeric))) {
+                #Turn numeric data frames into matrices
+                data[[df[i]]] <- as.matrix(data[[df[i]]])
+            }
+            else {
+                stop("Data frame with non-numeric elements provided as data: ",
+                     names(data)[df[i]])
+            }
+        }
     }
     else {
         stop("data must be a list or environment")
