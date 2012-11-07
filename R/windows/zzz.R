@@ -44,7 +44,7 @@
       ## Search the registry. We need to look for both machine-wide and
       ## user-specific installations
 
-      jags.major <- 3
+      jags.major <- 4
       
       key1 <- .findJAGS("HLM", jags.major)
       key2 <- .findJAGS("HCU", jags.major)
