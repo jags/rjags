@@ -54,7 +54,8 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
 
     p <- .Call("make_console", PACKAGE="rjags")
     .Call("check_model", p, modfile, PACKAGE="rjags")
-
+    unlink(modfile)
+    
     varnames <- .Call("get_variable_names", p, PACKAGE="rjags")
     if (is.environment(data)) {
         ##Get a list of numeric objects from the supplied environment
