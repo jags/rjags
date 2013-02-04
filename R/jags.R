@@ -66,7 +66,7 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
     }
     else if (is.list(data)) {
         v <- names(data)
-        if (is.null(v)) {
+        if (is.null(v) && length(v) != 0) {
             stop("data must be a named list")
         }
         if (any(nchar(v)==0)) {
