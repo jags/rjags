@@ -66,7 +66,7 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
     }
     else if (is.list(data)) {
         v <- names(data)
-        if (is.null(v)) {
+        if (is.null(v) && length(v) != 0) {
             stop("data must be a named list")
         }
         if (any(nchar(v)==0)) {
@@ -83,7 +83,7 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
             warning("Unused variable \"", unused.variables[i], "\" in data")
         }
         ### Check for data frames
-        df <- which(sapply(data, is.data.frame))
+        df <- which(as.logical(sapply(data, is.data.frame)))
         for (i in seq(along=df)) {
             if (all(sapply(data[[df[i]]], is.numeric))) {
                 #Turn numeric data frames into matrices
@@ -94,6 +94,9 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
                      names(data)[df[i]])
             }
         }
+    }
+    else if (is.null(data)) {
+        data <- list()
     }
     else {
         stop("data must be a list or environment")
@@ -358,16 +361,19 @@ jags.samples <-
       stop("type must be a character vector")
 
     pn <- parse.varnames(variable.names)
-    .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper,
-          as.integer(thin), type, PACKAGE="rjags")
+    status <- .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper,
+                    as.integer(thin), type, PACKAGE="rjags")
+    if (!any(status)) stop("No valid monitors set")
     update(model, n.iter, ...)
     ans <- .Call("get_monitored_values", model$ptr(), type, PACKAGE="rjags")
     for (i in seq(along=ans)) {
         class(ans[[i]]) <- "mcarray"
     }
     for (i in seq(along=variable.names)) {
-      .Call("clear_monitor", model$ptr(), pn$names[i], pn$lower[[i]],
-            pn$upper[[i]], type, PACKAGE="rjags")
+        if (status[i]) {
+            .Call("clear_monitor", model$ptr(), pn$names[i], pn$lower[[i]],
+                  pn$upper[[i]], type, PACKAGE="rjags")
+        }
     }
     return(ans)
 }
