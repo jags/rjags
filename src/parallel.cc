@@ -18,6 +18,10 @@ using std::pair;
 using std::vector;
 using std::list;
 
+using jags::RNG;
+using jags::RNGFactory;
+using jags::Model;
+
 #include <R.h>
 #include <Rinternals.h>
 #include <Rdefines.h>

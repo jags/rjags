@@ -17,6 +17,17 @@ using std::pair;
 using std::vector;
 using std::copy;
 
+using jags::SArray;
+using jags::Console;
+using jags::Range;
+using jags::DUMP_DATA;
+using jags::DUMP_PARAMETERS;
+using jags::FactoryType;
+using jags::SAMPLER_FACTORY;
+using jags::MONITOR_FACTORY;
+using jags::RNG_FACTORY;
+using jags::RNG;
+
 /* Workaround length being remapped to Rf_length
    by the preprocessor */
 
