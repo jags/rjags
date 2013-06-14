@@ -1311,11 +1311,11 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-jags-prefix=PREFIX_PATH
-                          the prefix used when installing JAGS
+                          the prefix used when JAGS was installed
   --with-jags-includedir=INCLUDE_PATH
-                          the location of JAGS header files
+                          the value of includedir used when JAGS was installed
   --with-jags-libdir=LIB_PATH
-                          the location of the JAGS library
+                          the value of libdir used when JAGS was installed
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -2200,7 +2200,7 @@ if test  -n "$jags_prefix_path"  ; then
 else
    if test  -z "${JAGS_PREFIX}"  ; then
       if test  "$prefix" = "NONE" ; then
-         as_fn_error $? "\"Cannot find JAGS installation. See the file README for help.\"" "$LINENO" 5
+         as_fn_error $? "\"Automatic detection of JAGS failed. Please supply the prefix for JAGS with the --with-jags-prefix option. See the README file for details.\"" "$LINENO" 5
       else
          JAGS_PREFIX=${prefix}
       fi
@@ -3139,10 +3139,7 @@ ac_fn_cxx_check_header_mongrel "$LINENO" "Console.h" "ac_cv_header_Console_h" "$
 if test "x$ac_cv_header_Console_h" = xyes; then :
 
 else
-  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "\"Cannot find header file ${JAGS_PKGINCLUDEDIR}/Console.h \"
-See \`config.log' for more details" "$LINENO" 5; }
+  as_fn_error $? "\"Cannot find header file ${JAGS_PKGINCLUDEDIR}/Console.h. See the README file for help.\"" "$LINENO" 5
 fi
 
 
@@ -3797,9 +3794,8 @@ _ACEOF
   LIBS="-ljags $LIBS"
 
 else
-  as_fn_error $? "\"Cannot load JAGS library in ${JAGS_LIBDIR}\"" "$LINENO" 5
+  as_fn_error $? "\"Cannot load JAGS library in ${JAGS_LIBDIR}. See the README file for help.\"" "$LINENO" 5
 fi
-
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'

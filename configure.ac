@@ -20,14 +20,14 @@ AC_PREFIX_PROGRAM(jags)
 
 AC_ARG_WITH([jags-prefix],
             AC_HELP_STRING([--with-jags-prefix=PREFIX_PATH],
-                           [the prefix used when installing JAGS]),
+                           [the prefix used when JAGS was installed]),
             [jags_prefix_path=$withval])
 if test [ -n "$jags_prefix_path" ] ; then
    JAGS_PREFIX=${jags_prefix_path}
 else
    if test [ -z "${JAGS_PREFIX}" ] ; then
       if test [ "$prefix" = "NONE" ]; then
-         AC_MSG_ERROR("Cannot find JAGS installation. See the file README for help.")
+         AC_MSG_ERROR("Automatic detection of JAGS failed. Please supply the prefix for JAGS with the --with-jags-prefix option. See the README file for details.")
       else
          JAGS_PREFIX=${prefix}
       fi
@@ -40,7 +40,7 @@ fi
 
 AC_ARG_WITH([jags-includedir],
             AC_HELP_STRING([--with-jags-includedir=INCLUDE_PATH],
-                           [the location of JAGS header files]),
+                           [the value of includedir used when JAGS was installed]),
             [jags_include_path=$withval])
 if test [ -n "$jags_include_path" ] ; then
    JAGS_INCLUDEDIR=${jags_include_path}
@@ -55,7 +55,7 @@ AC_LANG_PUSH(C++)
 OCPPFLAGS=${CPPFLAGS}
 CPPFLAGS=-I${JAGS_PKGINCLUDEDIR}
 AC_CHECK_HEADER(Console.h, [],
-             [AC_MSG_FAILURE("Cannot find header file ${JAGS_PKGINCLUDEDIR}/Console.h ")])
+             [AC_MSG_ERROR("Cannot find header file ${JAGS_PKGINCLUDEDIR}/Console.h. See the README file for help.")])
 CPPFLAGS=${OCPPFLAGS}
 AC_LANG_POP()
 
@@ -80,7 +80,7 @@ fi
 
 AC_ARG_WITH([jags-libdir],
             AC_HELP_STRING([--with-jags-libdir=LIB_PATH],
-                           [the location of the JAGS library]),
+                           [the value of libdir used when JAGS was installed]),
             [jags_lib_path=$withval])
 if test [ -n "$jags_lib_path" ] ; then
    JAGS_LIBDIR=$jags_lib_path
@@ -110,8 +110,7 @@ OLDFLAGS=${LDFLAGS}
 AC_LANG_PUSH(C)
 LDFLAGS="-L${JAGS_LIBDIR}"
 AC_CHECK_LIB(jags, jags_version, [],
-             [AC_MSG_ERROR("Cannot load JAGS library in ${JAGS_LIBDIR}")])
-
+             [AC_MSG_ERROR("Cannot load JAGS library in ${JAGS_LIBDIR}. See the README file for help.")])
 AC_LANG_POP()
 LDFLAGS=${OLDFLAGS}
 

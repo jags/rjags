@@ -21,8 +21,9 @@ JAGS_ROOT=c:\Program Files\JAGS\JAGS-3.3.0
 ------------
 
 The configure script will try to guess the location of the JAGS
-library. It does this by querying the R and jags executables, and
-should work if both are on your PATH.
+library. It does this by querying the R and jags executables, so both
+of these need to be on your PATH for automatic detection to work
+properly.
 
 Recall that most Linux distributions divide software into `user' and
 `developer' versions, so if you are using a pre-built JAGS binary
@@ -46,8 +47,18 @@ option          option                 variable
 By default LIBnn is the value returned by `R CMD config LIBnn`.
 This can be overridden by setting the environment variable LIBnn.
 
-Example 1
----------
+2.1 Setting the prefix
+----------------------
+
+By default, all JAGS files are installed in subdirectories of /usr/local.
+This is the prefix of the installation, and it can be changed to any
+value by supplying the --prefix argument when installing JAGS.
+
+- The jags script goes in ${prefix}/bin
+- The jags executable launched by the script goes in ${prefix}/libexec
+- The libraries go in ${prefix}/lib
+- The modules go in ${prefix}/lib/JAGS
+- The headers go in ${prefix}/include/JAGS
 
 Suppose that when you installed JAGS, you used the configure argument
 '--prefix=/opt' to install JAGS in the directory /opt instead of the
@@ -61,12 +72,12 @@ before building rjags:
 
 export JAGS_PREFIX=/opt
 
-Example 2
----------
+2.2 Setting the library directory
+---------------------------------
 
 Suppose you are on a 64-bit system and installed the JAGS library in
-in /usr/local/lib64 instead of the default /usr/local/lib.  If R_HOME
-is /usr/lib64/R then the configure script should automatically look in
+/usr/local/lib64 instead of the default /usr/local/lib.  If R_HOME is
+/usr/lib64/R then the configure script should automatically look in
 the right place for the JAGS library.  Otherwise, you need to supply
 the configure argument '--with-jags-libdir=/usr/local/lib64' when
 installing rjags.
@@ -76,11 +87,30 @@ before building rjags:
 
 export JAGS_LIBDIR=/usr/local/lib64
 
-or set the variable LIBnn
+If the library directory is in the right prefix, but just has a
+different name (e.g. ${prefix}/lib64 or ${prefix}/lib32 instead of the
+default ${prefix}/lib), then you can just set the environment variable
+LIBnn.
 
 export LIBnn=lib64
 
-2.1 Passing configure arguments
+2.3 Setting the include directory
+-----------------------------
+
+It is unlikely that you will need to set the include directory, as
+there is no good reason for changing the default. Nevertheless,
+this option is included for completeness.
+
+By default, the header files go into ${prefix}/include, in a
+sub-directory JAGS. If you have put this subdirectory somewhere other
+than ${prefix}/include by supplying the --includedir option to
+configure when you built JAGS, then the corresponding option for rjags
+is --with-jags-includedir.
+
+Alternatively, you may set the environment variable JAGS_INCLUDEDIR.
+
+
+2.4 Passing configure arguments
 -------------------------------
 
 Configure options for rjags are passed via the --configure-args
@@ -88,8 +118,8 @@ argument to R CMD INSTALL:
 
   R CMD INSTALL --configure-args='--with-jags...'
 
-or, using the install.packages() function from within R, using
-the configure.args argument:
+or, if you are using the install.packages() function from an R
+session, using the configure.args argument:
 
   install.packages("rjags", configure.args="--with-jags...")
 
@@ -113,5 +143,4 @@ your system. In this case you need to set the environment variable
 LD_LIBRARY_PATH to include the directory containing the jags libraries
 before starting R, e.g
 
-LD_LIBRARY_PATH=/opt/lib:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/opt/lib:$LD_LIBRARY_PATH
