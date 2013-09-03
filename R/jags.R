@@ -30,23 +30,25 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
         stop("Model file name missing")
     }
     if (is.character(file)) {
-      fname <- file
-      file <- try(file(fname, "rt"))
-      if (inherits(file, "try-error")) {
-        stop(paste("Cannot open model file \"", fname, "\"", sep=""))
+      modfile <- file
+      ## Check file exists and can be opened in text mode
+      con <- try(file(modfile, "rt"))
+      if (inherits(con, "try-error")) {
+        stop(paste("Cannot open model file \"", modfile, "\"", sep=""))
       }
-      on.exit(close(file))
+      close(con)
     }
-    else if (!inherits(file, "connection")) {
-      stop("'file' must be a character string or connection")
+    else if (inherits(file, "connection")) {
+        modfile <- tempfile()
+        ## JAGS library requires a physical file, so we need to copy
+        ## the contents of the connection to a temporary file
+        model.code <- readLines(file, warn=FALSE)
+        writeLines(model.code, modfile)
     }
-
-    ## JAGS library requires a physical file, so we need to copy
-    ## the contents of the connection to a temporary file
-    model.code <- readLines(file, warn=FALSE)
-    modfile <- tempfile()
-    writeLines(model.code, modfile)
-
+    else {
+        stop("'file' must be a character string or connection")
+    }
+    
     if (quiet) {
         .quiet.messages(TRUE)
         on.exit(.quiet.messages(FALSE), add=TRUE)
@@ -54,7 +56,9 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
 
     p <- .Call("make_console", PACKAGE="rjags")
     .Call("check_model", p, modfile, PACKAGE="rjags")
-    unlink(modfile)
+    if (!is.character(file)) {
+        unlink(modfile) #Remove temporary copy
+    }
     
     varnames <- .Call("get_variable_names", p, PACKAGE="rjags")
     if (is.environment(data)) {
