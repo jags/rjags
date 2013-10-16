@@ -39,7 +39,7 @@ print.jags <- function(x, ...)
   }
 }
 
-jags.model <- function(file, data=sys.frame(sys.parent()), inits,
+jags.model <- function(file, data=NULL, inits,
                        n.chains = 1, n.adapt=1000, quiet=FALSE)
 {
     if (missing(file)) {
@@ -77,7 +77,10 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
     }
     
     varnames <- .Call("get_variable_names", p, PACKAGE="rjags")
-    if (is.environment(data)) {
+    if (missing(data) || is.null(data)) {
+        data <- list()
+    }
+    else if (is.environment(data)) {
         ##Get a list of numeric objects from the supplied environment
         data <- mget(varnames, envir=data, mode="numeric",
                      ifnotfound=list(NULL))
@@ -114,9 +117,6 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
                      names(data)[df[i]])
             }
         }
-    }
-    else if (is.null(data)) {
-        data <- list()
     }
     else {
         stop("data must be a list or environment")

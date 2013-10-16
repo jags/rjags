@@ -7,7 +7,7 @@
   of the prior distribution, and a set of data.
 }
 \usage{
- jags.model(file, data=sys.frame(sys.parent()), inits,
+ jags.model(file, data, inits,
             n.chains = 1, n.adapt=1000, quiet=FALSE)
 }
 \arguments{
@@ -19,7 +19,7 @@
   \item{data}{a list or environment containing the data. Any numeric
     objects in \code{data} corresponding to node arrays used in
     \code{file} are taken to represent the values of observed nodes
-    in the model}
+    in the model.}
   \item{inits}{optional specification of initial values in the form of a
     list or a function (see \code{Initialization} below). If omitted,
     initial values will be generated automatically.  It is an error to
