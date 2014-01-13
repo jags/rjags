@@ -298,7 +298,8 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
     class(model) <- "jags"
 
     if (n.adapt > 0) {
-        ok <- adapt(model, n.adapt, end.adaptation=FALSE)
+        pb <- if(quiet) NULL else getOption("jags.pb")
+        ok <- adapt(model, n.adapt, end.adaptation=FALSE, progress.bar=pb)
         if (ok) {
             .Call("adapt_off", p, PACKAGE="rjags")
         }
