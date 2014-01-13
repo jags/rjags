@@ -73,14 +73,25 @@
             
 "diffdic" <- function(dic1,dic2)
 {
-    if(!identical(names(dic1$deviance),names(dic2$deviance))) {
-        stop("incompatible dic objects: variable names differ")
-    }
     if (!identical(dic1$type, dic2$type)) {
         stop("incompatible dic object: different penalty types")
     }
+    n1 <- names(dic1$deviance)
+    n2 <- names(dic2$deviance)
+    if (!identical(n1, n2)) {
+
+        ### Try matching names in lexicographic order
+        if(!identical(sort(n1), sort(n2))) {
+            stop("incompatible dic objects: variable names differ")
+        }
+        ### Reset names to order of the first argument
+        ord1 <- order(n1)
+        ord2 <- order(n2)
+        dic2$deviance[ord1] <- dic2$deviance[ord2]
+        dic2$penalty[ord1] <- dic2$penalty[ord2]
+    }
     delta <- sapply(dic1$deviance, mean) + sapply(dic1$penalty, mean) -
-      sapply(dic2$deviance, mean) - sapply(dic2$penalty, mean)
+        sapply(dic2$deviance, mean) - sapply(dic2$penalty, mean)
     class(delta) <- "diffdic"
     return(delta)
 }
