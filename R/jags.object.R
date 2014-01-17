@@ -45,7 +45,11 @@ update.jags <- function(object, n.iter = 1, by, progress.bar, ...)
     
     ## Set refresh frequency for progress bar
     if (missing(by) || by <= 0) {
-        by <- min(ceiling(n.iter/50), 100)
+        ##In JAGS 3.x.y there is a memory reallocation bug when
+        ##monitoring that slows down updates. Drop refresh
+        ##frequency to avoid triggering memory reallocations.
+        ##by <- min(ceiling(n.iter/50), 100)
+        by <- ceiling(n.iter/50)
     }
     else {
         by <- ceiling(by)
