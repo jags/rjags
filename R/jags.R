@@ -53,7 +53,9 @@ jags.model <- function(file, data=sys.frame(sys.parent()), inits,
         stop(paste("Cannot open model file \"", modfile, "\"", sep=""))
       }
       close(con)
-    }
+      ## Need this for print method and for recompile function
+      model.code <- readLines(file, warn=FALSE)  
+    } 
     else if (inherits(file, "connection")) {
         modfile <- tempfile()
         ## JAGS library requires a physical file, so we need to copy
