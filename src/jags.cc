@@ -25,6 +25,7 @@
 #include <Console.h>
 #include <version.h>
 #include <util/nainf.h>
+#include <sarray/SimpleRange.h>
 
 #include <R.h>
 
@@ -36,7 +37,7 @@ using std::copy;
 
 using jags::SArray;
 using jags::Console;
-using jags::Range;
+using jags::SimpleRange;
 using jags::DUMP_DATA;
 using jags::DUMP_PARAMETERS;
 using jags::FactoryType;
@@ -48,14 +49,9 @@ using jags::RNG;
 /* Workaround length being remapped to Rf_length
    by the preprocessor */
 
-unsigned long sarray_len(SArray const &s)
+static unsigned int sarray_len(SArray const &s)
 {
   return s.length();
-}
-
-int min2(int a, int b)
-{
-  return std::min(a,b);
 }
 
 #include <R.h>
@@ -192,10 +188,10 @@ static void writeDataTable(SEXP data, map<string,SArray> &table)
     }
 }
 
-static Range makeRange(SEXP lower, SEXP upper)
+static SimpleRange makeRange(SEXP lower, SEXP upper)
 {
     if (lower == R_NilValue || upper == R_NilValue) {
-	return Range();
+	return SimpleRange();
     }
     if (length(lower) != length(upper)) {
 	error("length mismatch between lower and upper limits");
@@ -210,9 +206,9 @@ static Range makeRange(SEXP lower, SEXP upper)
     copy(INTEGER(iu), INTEGER(iu) + n, uvec.begin());
     UNPROTECT(2); //il, iu
 
-    Range r;
+    SimpleRange r;
     try {
-	r = Range(lvec, uvec);
+	r = SimpleRange(lvec, uvec);
     }
     catch (std::logic_error except) {                                   
 	error("Invalid range");
@@ -503,7 +499,8 @@ extern "C" {
 	SEXP status; //Was attempt to set monitor successful?
 	PROTECT(status = allocVector(LGLSXP, n));
 	for (int i = 0; i < n; ++i) {
-	    Range range = makeRange(VECTOR_ELT(lower, i), VECTOR_ELT(upper, i));
+	    SimpleRange range = makeRange(VECTOR_ELT(lower, i), 
+					  VECTOR_ELT(upper, i));
 	    bool ok = ptrArg(ptr)->setMonitor(stringArg(names,i), range, 
 					      intArg(thin), 
 					      stringArg(type));
@@ -516,7 +513,7 @@ extern "C" {
 
     SEXP clear_monitor(SEXP ptr, SEXP name, SEXP lower, SEXP upper, SEXP type)
     {
-        Range range = makeRange(lower, upper);
+        SimpleRange range = makeRange(lower, upper);
 	bool status = ptrArg(ptr)->clearMonitor(stringArg(name), range, 
 						stringArg(type));
 	printMessages(status);
