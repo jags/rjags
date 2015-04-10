@@ -397,7 +397,7 @@ jags.samples <-
     status <- .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper,
                     as.integer(thin), type, PACKAGE="rjags")
     if (!any(status)) stop("No valid monitors set")
-    update(model, n.iter, ...)
+    update.jags(model, n.iter, ...)
     ans <- .Call("get_monitored_values", model$ptr(), type, PACKAGE="rjags")
     for (i in seq(along=ans)) {
         class(ans[[i]]) <- "mcarray"
