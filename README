@@ -15,7 +15,10 @@ If you are compiling the rjags package from source then you must
 supply the location of JAGS yourself using the make variable
 JAGS_ROOT, defining it in the file HOME/.R/Makevars.win, e.g.
 
-JAGS_ROOT=c:\Program Files\JAGS\JAGS-3.3.0
+JAGS_ROOT=c:/Program Files/JAGS/JAGS-4.0.0
+
+where HOME is the default starting directory for an R session launched
+from the start menu (typically your Documents folder).
 
 2 Unix/Linux
 ------------
