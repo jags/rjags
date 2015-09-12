@@ -527,7 +527,12 @@ coda.samples <- function(model, variable.names=NULL, n.iter, thin=1,
         ## Drop variables that are missing for all iterations in at least
         ## one chain
         all.missing <- sapply(ans, function(x) {apply(is.na(x), 2, any)})
-        drop.vars <- apply(all.missing, 1, any)
+        drop.vars <- if (is.matrix(all.missing)) {
+            apply(all.missing, 1, any)
+        }
+        else {
+            any(all.missing)
+        }
         ans <- lapply(ans, function(x) return(x[,!drop.vars]))
     }
 
