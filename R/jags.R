@@ -533,7 +533,7 @@ coda.samples <- function(model, variable.names=NULL, n.iter, thin=1,
         else {
             any(all.missing)
         }
-        ans <- lapply(ans, function(x) return(x[,!drop.vars]))
+        ans <- lapply(ans, function(x) return(x[, !drop.vars, drop=FALSE]))
     }
 
     mcmc.list(ans)
