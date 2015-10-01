@@ -111,6 +111,9 @@
     \item{\code{.RNG.seed}}{a numeric vector of length 1 containing an
     integer value.}
   }
+  
+  Note that it is also possible to specify \dQuote{.RNG.state} rather than 
+  \dQuote{.RNG.seed} - see for example the output of \code{\link{parallel.seeds}}
 }
 \author{Martyn Plummer}
 \keyword{models}
