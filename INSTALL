@@ -5,11 +5,15 @@ The rjags package is an interface to the JAGS library.  In order to
 build a binary package, or install from source, you must have a matching
 installation of the JAGS library.
 
+Contents:
+
+1 Windows
+2 Unix/Linux: pkg-config
+3 Unix/Linux: legacy configuration
+4 Failure to load
+
 1 Windows
 ---------
-
-If you are installing the Windows binary rjags package, then R will
-consult the Windows registry to find the location of JAGS.
 
 If you are compiling the rjags package from source then you must
 supply the location of JAGS yourself using the make variable
@@ -20,14 +24,23 @@ JAGS_ROOT=c:/Progra~1/JAGS/JAGS-4.0.0
 where HOME is the default starting directory for an R session launched
 from the start menu (typically your Documents folder).
 
+If you are installing the Windows binary rjags package, then R will
+consult the Windows registry to find the location of
+JAGS. Alternatively, you can specify the location of JAGS by setting
+the environment variable JAGS_HOME.
+
 2 Unix/Linux: pkg-config
 ------------------------
 
 If you have pkg-config installed then you can use it to detect the
-JAGS library and set the compiler and linker flags for rjags.
+JAGS library and set the compiler and linker flags for rjags. You
+can test this capability in a unix shell by typing
 
-If the file 'jags.pc' installed by JAGS is not on the search path of
-pkg-config, then you should add it by setting the environment variable
+pkg-config --modversion jags
+
+If this does not detect your JAGS installation then it means that the
+file 'jags.pc' installed is not on the search path of pkg-config. In
+this case you should add it by setting the environment variable
 PKG_CONFIG_PATH. For example if the full path to 'jags.pc' is
 '/usr/local/lib64/pkgconfig/jags.pc', then set
 
@@ -38,7 +51,7 @@ before installing rjags.
 Recall that most Linux distributions divide software into `user' and
 `developer' versions, so if you are using a pre-built JAGS binary
 package for your Linux distribution then remember to install the
-developer version.
+developer version before attempting to install the rjags package.
 
 3 Unix/Linux: legacy configuration
 ----------------------------------
