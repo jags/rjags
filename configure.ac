@@ -9,28 +9,60 @@ CFLAGS=`"${R_HOME}/bin/R" CMD config CFLAGS`
 CXXFLAGS=`"${R_HOME}/bin/R" CMD config CXXFLAGS`
 CPPFLAGS=`"${R_HOME}/bin/R" CMD config CPPFLAGS`
 
-# Guess the installation prefix from location of the jags executable
+# Try using pkg-config to set compiler flags
 
-AC_PREFIX_PROGRAM(jags)
+PKG_CONFIG_OK="FALSE"
 
-# For installations in a non-standard location, set the prefix
-# manually, using either option --with-jags-prefix or environment
-# variable JAGS_PREFIX. Otherwise we accept the guess from
-# AC_PREFIX_PROGRAM.
+AC_PATH_PROG([PKG_CONFIG], [pkg-config], [], [$PATH:/usr/local/bin])
+if test [ -n "${PKG_CONFIG}" ] ; then
+    if `${PKG_CONFIG} --exists --atleast-version=${PACKAGE_VERSION}.0.0 jags` &&
+       `${PKG_CONFIG} --exists --max-version=${PACKAGE_VERSION}.99.99 jags`; then
+      JAGS_LIBS=`${PKG_CONFIG} --libs jags`
+      JAGS_CFLAGS=`${PKG_CONFIG} --cflags jags`
+      JAGS_LIBDIR=`${PKG_CONFIG} --variable libdir jags`
+      if test [ -z "${JAGS_LIBS}" -a -z "${JAGS_CFLAGS}" ] ; then
+         AC_MSG_NOTICE([Cannot get information about jags ${PACKAGE_VERSION} from pkg-config])
+      else
+         AC_MSG_NOTICE([Setting compile and link flags according to pkg-config])
+         AC_MSG_NOTICE([Compile flags are $JAGS_CFLAGS])
+         AC_MSG_NOTICE([Link flags are $JAGS_LIBS])
+         PKG_CONFIG_OK="TRUE"
+      fi
+   else
+      AC_MSG_NOTICE([pkg-config file for jags ${PACKAGE_VERSION} unavailable])
+      AC_MSG_NOTICE([Consider adding the directory containing `jags.pc`])
+      AC_MSG_NOTICE([to the PKG_CONFIG_PATH environment variable])
+   fi
+fi
+
+
+########################## Begin manual configuration #####################
+if test "${PKG_CONFIG_OK}" != TRUE; then
+
+AC_MSG_NOTICE([Attempting manual configuration of rjags])
+
+# Set JAGS_PREFIX
+#
+# For installations in a non-standard location, set the prefix for
+# JAGS manually, using either option --with-jags-prefix or environment
+# variable JAGS_PREFIX. Otherwise we get the prefix from the jags
+# executable.
 
 AC_ARG_WITH([jags-prefix],
             AC_HELP_STRING([--with-jags-prefix=PREFIX_PATH],
-                           [the prefix used when JAGS was installed]),
-            [jags_prefix_path=$withval])
+                           [Prefix used when JAGS was installed]),
+            [jags_prefix_path=$withval], [jags_prefix_path=""])
 if test [ -n "$jags_prefix_path" ] ; then
    JAGS_PREFIX=${jags_prefix_path}
 else
    if test [ -z "${JAGS_PREFIX}" ] ; then
-      if test [ "$prefix" = "NONE" ]; then
-         AC_MSG_ERROR("Automatic detection of JAGS failed. Please supply the prefix for JAGS with the --with-jags-prefix option. See the README file for details.")
-      else
-         JAGS_PREFIX=${prefix}
-      fi
+   AC_PATH_PROG(jags_bin_path, [jags])
+   if test -n "$jags_bin_path"; then
+      jags_bin_path=`AS_DIRNAME(["$jags_bin_path"])`
+      JAGS_PREFIX=`AS_DIRNAME(["$jags_bin_path"])`
+   else
+       AC_MSG_ERROR("Automatic detection of JAGS failed. Please supply the prefix for JAGS with the --with-jags-prefix option. See the README file for details.")
+       fi
    fi
 fi
 
@@ -41,7 +73,7 @@ fi
 AC_ARG_WITH([jags-includedir],
             AC_HELP_STRING([--with-jags-includedir=INCLUDE_PATH],
                            [the value of includedir used when JAGS was installed]),
-            [jags_include_path=$withval])
+            [jags_include_path=$withval], [jags_include_path=""])
 if test [ -n "$jags_include_path" ] ; then
    JAGS_INCLUDEDIR=${jags_include_path}
 else
@@ -58,7 +90,6 @@ AC_CHECK_HEADER(Console.h, [],
              [AC_MSG_ERROR("Cannot find header file ${JAGS_PKGINCLUDEDIR}/Console.h. See the README file for help.")])
 CPPFLAGS=${OCPPFLAGS}
 AC_LANG_POP()
-
 
 # There is no consensus on where 64- versus 32-bit libraries should be
 # installed.  We take a hint from R, assuming that if R is installed
@@ -90,6 +121,22 @@ else
    fi
 fi
 
+# Sanity check. Can we load the library?
+OLDFLAGS=${LDFLAGS}
+AC_LANG_PUSH(C)
+LDFLAGS="-L${JAGS_LIBDIR}"
+AC_CHECK_LIB(jags, jags_version, [],
+             [AC_MSG_ERROR("Cannot load JAGS library in ${JAGS_LIBDIR}. See the README file for help.")])
+AC_LANG_POP()
+LDFLAGS=${OLDFLAGS}
+
+JAGS_CFLAGS="-I${JAGS_PKGINCLUDEDIR}"
+JAGS_LIBS="-L${JAGS_LIBDIR} -ljags"
+AC_MSG_NOTICE([Compile flags are $JAGS_CFLAGS])
+AC_MSG_NOTICE([Link flags are $JAGS_LIBS])
+
+fi
+####################### END manual configuration ##########################
 
 # Set location of modules
 
@@ -106,16 +153,8 @@ if test [ "x$enable_rpath" = "xyes"]; then
    JAGS_RPATH="-Wl,-rpath ${JAGS_LIBDIR}"
 fi
 
-OLDFLAGS=${LDFLAGS}
-AC_LANG_PUSH(C)
-LDFLAGS="-L${JAGS_LIBDIR}"
-AC_CHECK_LIB(jags, jags_version, [],
-             [AC_MSG_ERROR("Cannot load JAGS library in ${JAGS_LIBDIR}. See the README file for help.")])
-AC_LANG_POP()
-LDFLAGS=${OLDFLAGS}
-
-AC_SUBST(JAGS_PKGINCLUDEDIR)
-AC_SUBST(JAGS_LIBDIR)
+AC_SUBST(JAGS_LIBS)
+AC_SUBST(JAGS_CFLAGS)
 AC_SUBST(JAGS_MODDIR)
 AC_SUBST(JAGS_RPATH)
 

@@ -1,6 +1,6 @@
 Package: rjags
-Version: 4-3
-Date: 2015-09-22
+Version: 4-4
+Date: 2015-10-19
 Title: Bayesian Graphical Models using MCMC
 Authors@R: c(person("Martyn", "Plummer", role=c("aut","cre"),
                     email="plummerm@iarc.fr"),
