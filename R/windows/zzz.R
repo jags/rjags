@@ -79,7 +79,7 @@
 			  paste("libjags-", jags.major, .Platform$dynlib.ext,
                                 sep=""))
     if (!file.exists(jags.dll)) {
-        stop(jags.dll, " not found")
+        stop(jags.dll, " not found in ", jags.home)
     }
 
 ### Add the JAGS bin to the windows PATH, if not already present

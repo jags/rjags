@@ -2136,39 +2136,44 @@ fi
 
 
 if test  -n "${PKG_CONFIG}"  ; then
-    if `${PKG_CONFIG} --exists --atleast-version=${PACKAGE_VERSION}.0.0 jags` &&
-       `${PKG_CONFIG} --exists --max-version=${PACKAGE_VERSION}.99.99 jags`; then
-      JAGS_LIBS=`${PKG_CONFIG} --libs jags`
-      JAGS_CFLAGS=`${PKG_CONFIG} --cflags jags`
-      JAGS_LIBDIR=`${PKG_CONFIG} --variable libdir jags`
-      if test  -z "${JAGS_LIBS}" -a -z "${JAGS_CFLAGS}"  ; then
-         { $as_echo "$as_me:${as_lineno-$LINENO}: Cannot get information about jags ${PACKAGE_VERSION} from pkg-config" >&5
-$as_echo "$as_me: Cannot get information about jags ${PACKAGE_VERSION} from pkg-config" >&6;}
-      else
-         { $as_echo "$as_me:${as_lineno-$LINENO}: Setting compile and link flags according to pkg-config" >&5
+   if `${PKG_CONFIG} --exists jags`; then
+       if `${PKG_CONFIG} --exists --atleast-version=${PACKAGE_VERSION}.0.0 jags` &&
+          `${PKG_CONFIG} --exists --max-version=${PACKAGE_VERSION}.99.99 jags`; then
+         JAGS_LIBS=`${PKG_CONFIG} --libs jags`
+         JAGS_CFLAGS=`${PKG_CONFIG} --cflags jags`
+         JAGS_LIBDIR=`${PKG_CONFIG} --variable libdir jags`
+         if test  -z "${JAGS_LIBS}" -a -z "${JAGS_CFLAGS}"  ; then
+            { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Cannot get information about jags ${PACKAGE_VERSION} from pkg-config" >&5
+$as_echo "$as_me: WARNING: Cannot get information about jags ${PACKAGE_VERSION} from pkg-config" >&2;}
+         else
+            { $as_echo "$as_me:${as_lineno-$LINENO}: Setting compile and link flags according to pkg-config" >&5
 $as_echo "$as_me: Setting compile and link flags according to pkg-config" >&6;}
-         { $as_echo "$as_me:${as_lineno-$LINENO}: Compile flags are $JAGS_CFLAGS" >&5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: Compile flags are $JAGS_CFLAGS" >&5
 $as_echo "$as_me: Compile flags are $JAGS_CFLAGS" >&6;}
-         { $as_echo "$as_me:${as_lineno-$LINENO}: Link flags are $JAGS_LIBS" >&5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: Link flags are $JAGS_LIBS" >&5
 $as_echo "$as_me: Link flags are $JAGS_LIBS" >&6;}
-         PKG_CONFIG_OK="TRUE"
+            PKG_CONFIG_OK="TRUE"
+         fi
+      else
+         jags_installed_version=`${PKG_CONFIG} --modversion jags`
+         as_fn_error $? "pkg-config found JAGS ${jags_installed_version} but rjags requires JAGS ${PACKAGE_VERSION}.x.y" "$LINENO" 5
       fi
    else
-      { $as_echo "$as_me:${as_lineno-$LINENO}: pkg-config file for jags ${PACKAGE_VERSION} unavailable" >&5
-$as_echo "$as_me: pkg-config file for jags ${PACKAGE_VERSION} unavailable" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: Consider adding the directory containing \`jags.pc\`" >&5
-$as_echo "$as_me: Consider adding the directory containing \`jags.pc\`" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: to the PKG_CONFIG_PATH environment variable" >&5
-$as_echo "$as_me: to the PKG_CONFIG_PATH environment variable" >&6;}
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: pkg-config file for jags ${PACKAGE_VERSION} unavailable" >&5
+$as_echo "$as_me: WARNING: pkg-config file for jags ${PACKAGE_VERSION} unavailable" >&2;}
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Consider adding the directory containing \`jags.pc\`" >&5
+$as_echo "$as_me: WARNING: Consider adding the directory containing \`jags.pc\`" >&2;}
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: to the PKG_CONFIG_PATH environment variable" >&5
+$as_echo "$as_me: WARNING: to the PKG_CONFIG_PATH environment variable" >&2;}
    fi
 fi
 
 
-########################## Begin manual configuration #####################
+########################## Begin legacy configuration #####################
 if test "${PKG_CONFIG_OK}" != TRUE; then
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: Attempting manual configuration of rjags" >&5
-$as_echo "$as_me: Attempting manual configuration of rjags" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}: Attempting legacy configuration of rjags" >&5
+$as_echo "$as_me: Attempting legacy configuration of rjags" >&6;}
 
 # Set JAGS_PREFIX
 #
@@ -2277,7 +2282,7 @@ $as_echo X"$jags_bin_path" |
 	  }
 	  s/.*/./; q'`
    else
-       as_fn_error $? "\"Automatic detection of JAGS failed. Please supply the prefix for JAGS with the --with-jags-prefix option. See the README file for details.\"" "$LINENO" 5
+       as_fn_error $? "\"automatic detection of JAGS failed. Please supply the prefix for JAGS with the --with-jags-prefix option. See the README file for details.\"" "$LINENO" 5
        fi
    fi
 fi
@@ -3216,7 +3221,7 @@ ac_fn_cxx_check_header_mongrel "$LINENO" "Console.h" "ac_cv_header_Console_h" "$
 if test "x$ac_cv_header_Console_h" = xyes; then :
 
 else
-  as_fn_error $? "\"Cannot find header file ${JAGS_PKGINCLUDEDIR}/Console.h. See the README file for help.\"" "$LINENO" 5
+  as_fn_error $? "\"cannot find header file ${JAGS_PKGINCLUDEDIR}/Console.h. See the README file for help.\"" "$LINENO" 5
 fi
 
 
@@ -3260,14 +3265,24 @@ else
    fi
 fi
 
-# Sanity check. Can we load the library?
+JAGS_CFLAGS="-I${JAGS_PKGINCLUDEDIR}"
+JAGS_LIBS="-L${JAGS_LIBDIR} -ljags"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: Compile flags are $JAGS_CFLAGS" >&5
+$as_echo "$as_me: Compile flags are $JAGS_CFLAGS" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}: Link flags are $JAGS_LIBS" >&5
+$as_echo "$as_me: Link flags are $JAGS_LIBS" >&6;}
+
+# Sanity checks.
 OLDFLAGS=${LDFLAGS}
+OCFLAGS=${CFLAGS}
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
+CFLAGS=${JAGS_CFLAGS}
+# Can we load the library?
 LDFLAGS="-L${JAGS_LIBDIR}"
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -3853,7 +3868,50 @@ _ACEOF
   LIBS="-ljags $LIBS"
 
 else
-  as_fn_error $? "\"Cannot load JAGS library in ${JAGS_LIBDIR}. See the README file for help.\"" "$LINENO" 5
+  as_fn_error $? "\"cannot load JAGS library in ${JAGS_LIBDIR}. See the README file for help.\"" "$LINENO" 5
+fi
+
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+CFLAGS=${OCFLAGS}
+# Does the library have the correct major version number?
+ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+OCXXFLAGS=${CXXFLAGS}
+CXXFLAGS=${JAGS_CFLAGS}
+LDFLAGS=${JAGS_LIBS}
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking version of JAGS library" >&5
+$as_echo_n "checking version of JAGS library... " >&6; }
+if test "$cross_compiling" = yes; then :
+  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "cannot run test program while cross compiling
+See \`config.log' for more details" "$LINENO" 5; }
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+      #include <version.h>
+      int main() { return JAGS_MAJOR == ${PACKAGE_VERSION} ? 0 : 1; }
+_ACEOF
+if ac_fn_cxx_try_run "$LINENO"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: OK" >&5
+$as_echo "OK" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: wrong version" >&5
+$as_echo "wrong version" >&6; }
+    as_fn_error $? "rjags requires JAGS version ${PACKAGE_VERSION}.x.y" "$LINENO" 5
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
 fi
 
 ac_ext=c
@@ -3863,13 +3921,7 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 LDFLAGS=${OLDFLAGS}
-
-JAGS_CFLAGS="-I${JAGS_PKGINCLUDEDIR}"
-JAGS_LIBS="-L${JAGS_LIBDIR} -ljags"
-{ $as_echo "$as_me:${as_lineno-$LINENO}: Compile flags are $JAGS_CFLAGS" >&5
-$as_echo "$as_me: Compile flags are $JAGS_CFLAGS" >&6;}
-{ $as_echo "$as_me:${as_lineno-$LINENO}: Link flags are $JAGS_LIBS" >&5
-$as_echo "$as_me: Link flags are $JAGS_LIBS" >&6;}
+CXXFLAGS=${OCXXFLAGS}
 
 fi
 ####################### END manual configuration ##########################

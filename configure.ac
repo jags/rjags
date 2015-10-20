@@ -15,31 +15,36 @@ PKG_CONFIG_OK="FALSE"
 
 AC_PATH_PROG([PKG_CONFIG], [pkg-config], [], [$PATH:/usr/local/bin])
 if test [ -n "${PKG_CONFIG}" ] ; then
-    if `${PKG_CONFIG} --exists --atleast-version=${PACKAGE_VERSION}.0.0 jags` &&
-       `${PKG_CONFIG} --exists --max-version=${PACKAGE_VERSION}.99.99 jags`; then
-      JAGS_LIBS=`${PKG_CONFIG} --libs jags`
-      JAGS_CFLAGS=`${PKG_CONFIG} --cflags jags`
-      JAGS_LIBDIR=`${PKG_CONFIG} --variable libdir jags`
-      if test [ -z "${JAGS_LIBS}" -a -z "${JAGS_CFLAGS}" ] ; then
-         AC_MSG_NOTICE([Cannot get information about jags ${PACKAGE_VERSION} from pkg-config])
+   if `${PKG_CONFIG} --exists jags`; then
+       if `${PKG_CONFIG} --exists --atleast-version=${PACKAGE_VERSION}.0.0 jags` &&
+          `${PKG_CONFIG} --exists --max-version=${PACKAGE_VERSION}.99.99 jags`; then
+         JAGS_LIBS=`${PKG_CONFIG} --libs jags`
+         JAGS_CFLAGS=`${PKG_CONFIG} --cflags jags`
+         JAGS_LIBDIR=`${PKG_CONFIG} --variable libdir jags`
+         if test [ -z "${JAGS_LIBS}" -a -z "${JAGS_CFLAGS}" ] ; then
+            AC_MSG_WARN([Cannot get information about jags ${PACKAGE_VERSION} from pkg-config])
+         else
+            AC_MSG_NOTICE([Setting compile and link flags according to pkg-config])
+            AC_MSG_NOTICE([Compile flags are $JAGS_CFLAGS])
+            AC_MSG_NOTICE([Link flags are $JAGS_LIBS])
+            PKG_CONFIG_OK="TRUE"
+         fi
       else
-         AC_MSG_NOTICE([Setting compile and link flags according to pkg-config])
-         AC_MSG_NOTICE([Compile flags are $JAGS_CFLAGS])
-         AC_MSG_NOTICE([Link flags are $JAGS_LIBS])
-         PKG_CONFIG_OK="TRUE"
+         jags_installed_version=`${PKG_CONFIG} --modversion jags`
+         AC_MSG_ERROR([pkg-config found JAGS ${jags_installed_version} but rjags requires JAGS ${PACKAGE_VERSION}.x.y])
       fi
-   else
-      AC_MSG_NOTICE([pkg-config file for jags ${PACKAGE_VERSION} unavailable])
-      AC_MSG_NOTICE([Consider adding the directory containing `jags.pc`])
-      AC_MSG_NOTICE([to the PKG_CONFIG_PATH environment variable])
+   else 
+      AC_MSG_WARN([pkg-config file for jags ${PACKAGE_VERSION} unavailable])
+      AC_MSG_WARN([Consider adding the directory containing `jags.pc`])
+      AC_MSG_WARN([to the PKG_CONFIG_PATH environment variable])
    fi
 fi
 
 
-########################## Begin manual configuration #####################
+########################## Begin legacy configuration #####################
 if test "${PKG_CONFIG_OK}" != TRUE; then
 
-AC_MSG_NOTICE([Attempting manual configuration of rjags])
+AC_MSG_NOTICE([Attempting legacy configuration of rjags])
 
 # Set JAGS_PREFIX
 #
@@ -61,7 +66,7 @@ else
       jags_bin_path=`AS_DIRNAME(["$jags_bin_path"])`
       JAGS_PREFIX=`AS_DIRNAME(["$jags_bin_path"])`
    else
-       AC_MSG_ERROR("Automatic detection of JAGS failed. Please supply the prefix for JAGS with the --with-jags-prefix option. See the README file for details.")
+       AC_MSG_ERROR("automatic detection of JAGS failed. Please supply the prefix for JAGS with the --with-jags-prefix option. See the README file for details.")
        fi
    fi
 fi
@@ -87,7 +92,7 @@ AC_LANG_PUSH(C++)
 OCPPFLAGS=${CPPFLAGS}
 CPPFLAGS=-I${JAGS_PKGINCLUDEDIR}
 AC_CHECK_HEADER(Console.h, [],
-             [AC_MSG_ERROR("Cannot find header file ${JAGS_PKGINCLUDEDIR}/Console.h. See the README file for help.")])
+             [AC_MSG_ERROR("cannot find header file ${JAGS_PKGINCLUDEDIR}/Console.h. See the README file for help.")])
 CPPFLAGS=${OCPPFLAGS}
 AC_LANG_POP()
 
@@ -121,19 +126,38 @@ else
    fi
 fi
 
-# Sanity check. Can we load the library?
-OLDFLAGS=${LDFLAGS}
-AC_LANG_PUSH(C)
-LDFLAGS="-L${JAGS_LIBDIR}"
-AC_CHECK_LIB(jags, jags_version, [],
-             [AC_MSG_ERROR("Cannot load JAGS library in ${JAGS_LIBDIR}. See the README file for help.")])
-AC_LANG_POP()
-LDFLAGS=${OLDFLAGS}
-
 JAGS_CFLAGS="-I${JAGS_PKGINCLUDEDIR}"
 JAGS_LIBS="-L${JAGS_LIBDIR} -ljags"
 AC_MSG_NOTICE([Compile flags are $JAGS_CFLAGS])
 AC_MSG_NOTICE([Link flags are $JAGS_LIBS])
+
+# Sanity checks. 
+OLDFLAGS=${LDFLAGS}
+OCFLAGS=${CFLAGS}
+AC_LANG_PUSH(C)
+CFLAGS=${JAGS_CFLAGS}
+# Can we load the library?
+LDFLAGS="-L${JAGS_LIBDIR}"
+AC_CHECK_LIB(jags, jags_version, [],
+             [AC_MSG_ERROR("cannot load JAGS library in ${JAGS_LIBDIR}. See the README file for help.")])
+AC_LANG_POP(C)
+CFLAGS=${OCFLAGS}
+# Does the library have the correct major version number?
+AC_LANG_PUSH(C++)
+OCXXFLAGS=${CXXFLAGS}
+CXXFLAGS=${JAGS_CFLAGS}
+LDFLAGS=${JAGS_LIBS}
+AC_MSG_CHECKING([version of JAGS library])
+AC_RUN_IFELSE(
+   [AC_LANG_SOURCE([
+      #include <version.h>
+      int main() { return JAGS_MAJOR == ${PACKAGE_VERSION} ? 0 : 1; }])],
+   [AC_MSG_RESULT([OK])],
+   [AC_MSG_RESULT([wrong version])
+    AC_MSG_ERROR([rjags requires JAGS version ${PACKAGE_VERSION}.x.y])])
+AC_LANG_POP()
+LDFLAGS=${OLDFLAGS}
+CXXFLAGS=${OCXXFLAGS}
 
 fi
 ####################### END manual configuration ##########################
