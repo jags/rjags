@@ -3272,6 +3272,9 @@ $as_echo "$as_me: Compile flags are $JAGS_CFLAGS" >&6;}
 { $as_echo "$as_me:${as_lineno-$LINENO}: Link flags are $JAGS_LIBS" >&5
 $as_echo "$as_me: Link flags are $JAGS_LIBS" >&6;}
 
+fi
+####################### END manual configuration ##########################
+
 # Sanity checks.
 OLDFLAGS=${LDFLAGS}
 OCFLAGS=${CFLAGS}
@@ -3922,9 +3925,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 LDFLAGS=${OLDFLAGS}
 CXXFLAGS=${OCXXFLAGS}
-
-fi
-####################### END manual configuration ##########################
 
 # Set location of modules
 

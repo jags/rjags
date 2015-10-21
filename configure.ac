@@ -131,6 +131,9 @@ JAGS_LIBS="-L${JAGS_LIBDIR} -ljags"
 AC_MSG_NOTICE([Compile flags are $JAGS_CFLAGS])
 AC_MSG_NOTICE([Link flags are $JAGS_LIBS])
 
+fi
+####################### END manual configuration ##########################
+
 # Sanity checks. 
 OLDFLAGS=${LDFLAGS}
 OCFLAGS=${CFLAGS}
@@ -158,9 +161,6 @@ AC_RUN_IFELSE(
 AC_LANG_POP()
 LDFLAGS=${OLDFLAGS}
 CXXFLAGS=${OCXXFLAGS}
-
-fi
-####################### END manual configuration ##########################
 
 # Set location of modules
 
