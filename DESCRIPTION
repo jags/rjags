@@ -7,7 +7,7 @@ Authors@R: c(person("Martyn", "Plummer", role=c("aut","cre"),
              person("Alexey", "Stukalov", role="ctb"),
              person("Matt", "Denwood", role="ctb"))
 Depends: R (>= 2.14.0), coda (>= 0.13)
-SystemRequirements: jags (>= 4.0.0)
+SystemRequirements: JAGS 4.x.y 
 URL: http://www.sourceforge.net/projects/mcmc-jags
 Suggests: tcltk
 Description: Interface to the JAGS MCMC library.
