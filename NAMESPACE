@@ -1,6 +1,6 @@
 if(.Platform$OS.type == "windows") {
     importFrom(utils, readRegistry, winProgressBar, setWinProgressBar,
-               packageVersion)
+               packageVersion, file_test)
 }
 importFrom(utils, txtProgressBar, setTxtProgressBar)
 importFrom(stats, variable.names, sd, update)
