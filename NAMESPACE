@@ -1,5 +1,6 @@
-if(tools:::.OStype() == "windows") {
-importFrom(utils, readRegistry, winProgressBar, setWinProgressBar)
+if(.Platform$OS.type == "windows") {
+    importFrom(utils, readRegistry, winProgressBar, setWinProgressBar,
+               packageVersion)
 }
 importFrom(utils, txtProgressBar, setTxtProgressBar)
 importFrom(stats, variable.names, sd, update)
