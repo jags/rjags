@@ -132,7 +132,7 @@ AC_MSG_NOTICE([Compile flags are $JAGS_CFLAGS])
 AC_MSG_NOTICE([Link flags are $JAGS_LIBS])
 
 fi
-####################### END manual configuration ##########################
+####################### END legacy configuration ##########################
 
 # Sanity checks. 
 OLDFLAGS=${LDFLAGS}

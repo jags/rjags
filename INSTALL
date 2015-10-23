@@ -14,12 +14,10 @@ Contents:
 
 1 Windows
 ---------
-where HOME is the Folder that is the default working directory when
-you launch R.
 
 If you are compiling the rjags package from source then you must
-supply the location of JAGS yourself using the make variable
-JAGS_ROOT, defining it in the file HOME/.R/Makevars.win, e.g.
+supply the location of JAGS using the make variable JAGS_ROOT,
+defining it in the file HOME/.R/Makevars.win, e.g.
 
 JAGS_ROOT=c:/Progra~1/JAGS/JAGS-4.0.0
 
@@ -27,23 +25,23 @@ where HOME is the default starting directory for an R session launched
 from the start menu (typically your Documents folder).
 
 If you are installing the Windows binary rjags package, then R will
-consult the Windows registry to find the location of
-JAGS. Alternatively, you can specify the location of JAGS by setting
-the environment variable JAGS_HOME.
+consult the Windows registry to find the location of JAGS.
+Alternatively, you can specify the location of JAGS by setting the
+environment variable JAGS_HOME.
 
 2 Unix/Linux: pkg-config
 ------------------------
 
-If you have pkg-config installed then you can use it to detect the
-JAGS library and set the compiler and linker flags for rjags. You
-can test this capability in a unix shell by typing
+If you have pkg-config installed then the configure script will use it
+to detect the JAGS library and set the compiler and linker flags for
+rjags. You can test this capability in a unix shell by typing
 
 pkg-config --modversion jags
 
 If this does not detect your JAGS installation then it means that the
-file 'jags.pc' installed is not on the search path of pkg-config. In
-this case you should add it by setting the environment variable
-PKG_CONFIG_PATH. For example if the full path to 'jags.pc' is
+file 'jags.pc' is not on the search path of pkg-config. In this case
+you should add it by setting the environment variable PKG_CONFIG_PATH.
+For example if the full path to 'jags.pc' is
 '/usr/local/lib64/pkgconfig/jags.pc', then set
 
 export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig
@@ -58,8 +56,8 @@ developer version before attempting to install the rjags package.
 3 Unix/Linux: legacy configuration
 ----------------------------------
 
-Legacy configuration is used whenever pkg-config fails to detect the
-JAGS library.
+Legacy configuration is used whenever pkg-config is not installed or
+otherwise fails to detect the JAGS library.
 
 The configure script will try to guess the location of the JAGS
 library. It does this by querying the R and jags executables, so both

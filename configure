@@ -3273,7 +3273,7 @@ $as_echo "$as_me: Compile flags are $JAGS_CFLAGS" >&6;}
 $as_echo "$as_me: Link flags are $JAGS_LIBS" >&6;}
 
 fi
-####################### END manual configuration ##########################
+####################### END legacy configuration ##########################
 
 # Sanity checks.
 OLDFLAGS=${LDFLAGS}
