@@ -160,8 +160,8 @@ session, using the configure.args argument:
 If configure arguments are set, they always override the corresponding
 environment variables.
 
-4 Failure to load 
--------------------
+4 Runtime link errors 
+---------------------
 
 The rjags package may compile correctly but then fail with the message
 "ERROR:loading failed". When this happens, it is because the JAGS
