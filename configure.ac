@@ -160,7 +160,7 @@ CFLAGS=${OCFLAGS}
 AC_LANG_PUSH(C++)
 OCXXFLAGS=${CXXFLAGS}
 CXXFLAGS=${JAGS_CFLAGS}
-LDFLAGS=${JAGS_LIBS} ${JAGS_RPATH}
+LDFLAGS="${JAGS_LIBS} ${JAGS_RPATH}"
 AC_MSG_CHECKING([version of JAGS library])
 # Need to run this trivial test program first to detect runtime linkage problems
 AC_RUN_IFELSE(
