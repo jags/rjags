@@ -15,7 +15,8 @@ jags.samples(model, variable.names, n.iter, thin = 1,
     to be monitored}
   \item{n.iter}{number of iterations to monitor}
   \item{thin}{thinning interval for monitors}
-  \item{type}{type of monitor}
+  \item{type}{type of monitor - can be either length 1, or a vector
+	with length equal to length(variable.names)}
   \item{...}{optional arguments passed to the update method for jags
              model objects}
 }
@@ -26,7 +27,9 @@ jags.samples(model, variable.names, n.iter, thin = 1,
 }
 \value{
   A list of \code{mcarray} objects, with one element for each 
-  element of the \code{variable.names} argument.
+  element of the \code{variable.names} argument. If more than 
+  one different monitor type is requested, the return value
+  will be a (named) list of lists for each monitor type.
 }
 \examples{
   data(LINE)
@@ -34,6 +37,10 @@ jags.samples(model, variable.names, n.iter, thin = 1,
   LINE.samples <- jags.samples(LINE, c("alpha","beta","sigma"),
   n.iter=1000)
   LINE.samples
+  LINE.samples <- jags.samples(LINE, c("alpha","alpha"),
+  n.iter=1000, type=c("trace","mean"))
+  LINE.samples$trace
+  LINE.samples$mean
 }
 \author{Martyn Plummer}
 \seealso{\code{\link{jags.model}}, \code{\link{coda.samples}}}
