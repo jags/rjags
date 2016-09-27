@@ -614,3 +614,8 @@ parallel.seeds <- function(factory, nchain)
 {
     .Call("parallel_seeds", factory, nchain, PACKAGE="rjags")
 }
+
+jags.seed <- function(seed) {
+    .Call("set_seed", seed, PACKAGE="rjags")
+}
+    

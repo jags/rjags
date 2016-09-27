@@ -709,4 +709,11 @@ extern "C" {
 	return mkString(jags_version());
     }
 
+    SEXP set_seed(SEXP s)
+    {
+	unsigned int seed = intArg(s);
+	Console::setRNGSeed(seed);
+	return R_NilValue;
+    }
+    
 }
