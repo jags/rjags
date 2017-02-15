@@ -56,7 +56,7 @@ CXXFLAGS=${JAGS_CFLAGS}
 LDFLAGS="${JAGS_LIBS} ${JAGS_RPATH}"
 # Can we link to the library?
 AC_CHECK_LIB(jags, jags_version, [],
-             [AC_MSG_ERROR("cannot link to JAGS library in ${JAGS_LIBDIR}. See the INSTALL file for help.")])
+             [AC_MSG_ERROR("cannot link to JAGS library in ${JAGS_LIBDIR}.")])
 # Does the library have the correct major version number?
 AC_MSG_CHECKING([version of JAGS library])
 # Need to run this trivial test program first to detect runtime linkage problems
@@ -66,7 +66,7 @@ AC_RUN_IFELSE(
       int main() { return 0; }])],
    [],
    [AC_MSG_RESULT([link error])
-    AC_MSG_ERROR([Runtime link error: See INSTALL file for details])])
+    AC_MSG_ERROR([Runtime link error: See the INSTALL file for help])])
 # Now we can test
 AC_RUN_IFELSE(
    [AC_LANG_SOURCE([
@@ -82,7 +82,6 @@ CXXFLAGS=${OCXXFLAGS}
 # Set location of modules
 
 JAGS_MODDIR=${JAGS_LIBDIR}/JAGS/modules-${PACKAGE_VERSION}
-
 
 AC_SUBST(JAGS_LIBS)
 AC_SUBST(JAGS_CFLAGS)

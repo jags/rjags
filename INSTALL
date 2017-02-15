@@ -66,17 +66,17 @@ then you may take the following actions to fix the problem:
 If you have administrative privileges (sudo or root access):
 
 1) Add the directory containing the JAGS library to the linker path,
-   typically by editing the file /etc/ld.so.conf
+   typically by editing the file /etc/ld.so.conf.
 
 2) If the directory is already on the linker path then you may 
    need to run /sbin/ldconfig as root to update the linker cache.
 
 If you do not have administrative privileges:
 
-1) Set the environment variable LD_RUN_PATH to the directory
+3) Set the environment variable LD_RUN_PATH to the directory
    containing the JAGS library before installing rjags, or
 
-2) Use the --enable-rpath option when installing rjags, i.e. from
+4) Use the --enable-rpath option when installing rjags, i.e. from
    the unix shell:
 
    R CMD INSTALL --configure-args='--enable-rpath' rjags
@@ -84,3 +84,13 @@ If you do not have administrative privileges:
    or, within R
 
    > install.packages("rjags", configure.args="--enable-rpath")
+
+You may also consider:
+
+5) Set the environment variable LD_LIBRARY_PATH to the directory
+   containing the JAGS library.
+
+   Unlike options 3) and 4) if you use LD_LIBRARY_PATH then it must be
+   set every time you load the rjags package, not just at compile
+   time. Thus it is best to set this in the file .bash_profile (or
+   the equivalent file if you using another shell).
