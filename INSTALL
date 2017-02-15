@@ -66,17 +66,17 @@ then you may take the following actions to fix the problem:
 If you have administrative privileges (sudo or root access):
 
 1) Add the directory containing the JAGS library to the linker path,
-   typically by editing the file /etc/ld.so.conf
+   typically by editing the file /etc/ld.so.conf.
 
 2) If the directory is already on the linker path then you may 
    need to run /sbin/ldconfig as root to update the linker cache.
 
 If you do not have administrative privileges:
 
-1) Set the environment variable LD_RUN_PATH to the directory
+3) Set the environment variable LD_RUN_PATH to the directory
    containing the JAGS library before installing rjags, or
 
-2) Use the --enable-rpath option when installing rjags, i.e. from
+4) Use the --enable-rpath option when installing rjags, i.e. from
    the unix shell:
 
    R CMD INSTALL --configure-args='--enable-rpath' rjags
@@ -85,12 +85,24 @@ If you do not have administrative privileges:
 
    > install.packages("rjags", configure.args="--enable-rpath")
 
+You may also consider:
+
+5) Set the environment variable LD_LIBRARY_PATH to the directory
+   containing the JAGS library.
+
+   Unlike options 3) and 4) if you use LD_LIBRARY_PATH then it must be
+   set every time you load the rjags package, not just at compile
+   time. Thus it is best to set this in the file .bash_profile (or
+   the equivalent file if you using another shell).
 
 4 Unix/Linux: legacy configuration
 ----------------------------------
 
 Legacy configuration is used whenever pkg-config is not installed or
-otherwise fails to detect the JAGS library.
+otherwise fails to detect the JAGS library. Legacy configuration is
+deprecated and will be removed in a future version. If you experience
+problems with installing rjags then it is strongly recommended that
+you try to get pkg-config working rather than use the options below.
 
 The configure script will try to guess the location of the JAGS
 library. It does this by querying the R and jags executables, so both

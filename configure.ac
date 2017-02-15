@@ -66,7 +66,7 @@ else
       jags_bin_path=`AS_DIRNAME(["$jags_bin_path"])`
       JAGS_PREFIX=`AS_DIRNAME(["$jags_bin_path"])`
    else
-       AC_MSG_ERROR("automatic detection of JAGS failed. Please supply the prefix for JAGS with the --with-jags-prefix option. See the README file for details.")
+       AC_MSG_ERROR("automatic detection of JAGS failed. Please use pkg-config to locate the JAGS library. See the INSTALL file for details.")
        fi
    fi
 fi
@@ -92,7 +92,7 @@ AC_LANG_PUSH(C++)
 OCPPFLAGS=${CPPFLAGS}
 CPPFLAGS=-I${JAGS_PKGINCLUDEDIR}
 AC_CHECK_HEADER(Console.h, [],
-             [AC_MSG_ERROR("cannot find header file ${JAGS_PKGINCLUDEDIR}/Console.h. See the README file for help.")])
+             [AC_MSG_ERROR("cannot find header file ${JAGS_PKGINCLUDEDIR}/Console.h. Please use pkg-config to locate the JAGS library. See the INSTALL file for details.")])
 CPPFLAGS=${OCPPFLAGS}
 AC_LANG_POP()
 
@@ -153,7 +153,7 @@ CFLAGS=${JAGS_CFLAGS}
 # Can we link to the library?
 LDFLAGS="-L${JAGS_LIBDIR}"
 AC_CHECK_LIB(jags, jags_version, [],
-             [AC_MSG_ERROR("cannot link to JAGS library in ${JAGS_LIBDIR}. See the INSTALL file for help.")])
+             [AC_MSG_ERROR("cannot link to JAGS library in ${JAGS_LIBDIR}.")])
 AC_LANG_POP(C)
 CFLAGS=${OCFLAGS}
 # Does the library have the correct major version number?
@@ -169,7 +169,7 @@ AC_RUN_IFELSE(
       int main() { return 0; }])],
    [],
    [AC_MSG_RESULT([link error])
-    AC_MSG_ERROR([Runtime link error: See INSTALL file for details])])
+    AC_MSG_ERROR([Runtime link error: See the INSTALL file for help])])
 # Now we can test
 AC_RUN_IFELSE(
    [AC_LANG_SOURCE([
@@ -185,7 +185,6 @@ CXXFLAGS=${OCXXFLAGS}
 # Set location of modules
 
 JAGS_MODDIR=${JAGS_LIBDIR}/JAGS/modules-${PACKAGE_VERSION}
-
 
 AC_SUBST(JAGS_LIBS)
 AC_SUBST(JAGS_CFLAGS)
