@@ -393,23 +393,48 @@ jags.samples <-
     if (!is.character(type))
       stop("type must be a character vector")
 
-    pn <- parse.varnames(variable.names)
-    status <- .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper,
-                    as.integer(thin), type, PACKAGE="rjags")
-    if (!any(status)) stop("No valid monitors set")
+	####  Allow vectorisation of type argument
+	if(length(type)==1)
+		type <- rep(type, length(variable.names))
+	if(length(type)!=length(variable.names))
+		stop("non matching lengths of monitor type and variable.names")
+
+	####  Set monitors must be called for each relevant monitor type
+	status <- lapply(unique(type), function(t){
+	    pn <- parse.varnames(variable.names[type==t])
+	    status <- .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper,
+	                    as.integer(thin), t, PACKAGE="rjags")
+	})
+	names(status) <- unique(type)
+    if (!any(unlist(status))) stop("No valid monitors set")
+
     update.jags(model, n.iter, ...)
-    ans <- .Call("get_monitored_values", model$ptr(), type, PACKAGE="rjags")
-    for (i in seq(along=ans)) {
-        class(ans[[i]]) <- "mcarray"
-        attr(ans[[i]], "varname") <- names(ans)[i]
-    }
-    for (i in seq(along=variable.names)) {
-        if (status[i]) {
-            .Call("clear_monitor", model$ptr(), pn$names[i], pn$lower[[i]],
-                  pn$upper[[i]], type, PACKAGE="rjags")
-        }
-    }
-    return(ans)
+	
+	####  Retrieve values for each monitor type being used
+	usingtypes <- unique(type)[sapply(unique(type), function(t) return(any(status[[t]])))]
+    allans <- lapply(usingtypes, function(t){
+		ans <- .Call("get_monitored_values", model$ptr(), t, PACKAGE="rjags")
+	    for (i in seq(along=ans)) {
+	        class(ans[[i]]) <- "mcarray"
+	    }
+		pn <- parse.varnames(variable.names[type==t])
+	    for (i in seq(along=variable.names[type==t])) {
+	        if (status[[t]][i]) {
+	            .Call("clear_monitor", model$ptr(), pn$names[i], pn$lower[[i]],
+	                  pn$upper[[i]], t, PACKAGE="rjags")
+	        }
+	    }
+		return(ans)
+	})
+
+	####  The return value is a named list of monitor types
+	names(allans) <- usingtypes	
+	####  ... but if all monitors are of the same type then return just that element
+	####  for back compatibility with rjags <= 4-6
+	if(length(usingtypes)==1)
+		allans <- allans[[1]]
+	
+    return(allans)
 }
 
 list.samplers <- function(object)
