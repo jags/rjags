@@ -416,6 +416,7 @@ jags.samples <-
 		ans <- .Call("get_monitored_values", model$ptr(), t, PACKAGE="rjags")
 	    for (i in seq(along=ans)) {
 	        class(ans[[i]]) <- "mcarray"
+			attr(ans[[i]], "varname") <- names(ans)[i]
 	    }
 		pn <- parse.varnames(variable.names[type==t])
 	    for (i in seq(along=variable.names[type==t])) {
