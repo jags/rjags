@@ -20,7 +20,7 @@ if test [ -n "${PKG_CONFIG}" ] ; then
          JAGS_CFLAGS=`${PKG_CONFIG} --cflags jags`
          JAGS_LIBDIR=`${PKG_CONFIG} --variable libdir jags`
          if test [ -z "${JAGS_LIBS}" -a -z "${JAGS_CFLAGS}" ] ; then
-            AC_MSG_WARN([Cannot get information about jags ${PACKAGE_VERSION} from pkg-config])
+            AC_MSG_ERROR([Cannot get information about jags ${PACKAGE_VERSION} from pkg-config])
          else
             AC_MSG_NOTICE([Setting compile and link flags according to pkg-config])
             AC_MSG_NOTICE([Compile flags are $JAGS_CFLAGS])
@@ -35,6 +35,8 @@ if test [ -n "${PKG_CONFIG}" ] ; then
                    [Try adding the directory containing 'jags.pc']
                    [to the PKG_CONFIG_PATH environment variable])
    fi
+else
+   AC_MSG_ERROR([pkg-config is required to configure rjags])
 fi
 
 # Support for private installations of JAGS. If the jags library is not
@@ -53,7 +55,7 @@ OLDFLAGS=${LDFLAGS}
 OCXXFLAGS=${CXXFLAGS}
 AC_LANG_PUSH(C++)
 CXXFLAGS=${JAGS_CFLAGS}
-LDFLAGS="${JAGS_LIBS} ${JAGS_RPATH}"
+LDFLAGS="-L${JAGS_LIBDIR} ${JAGS_RPATH}"
 # Can we link to the library?
 AC_CHECK_LIB(jags, jags_version, [],
              [AC_MSG_ERROR("cannot link to JAGS library in ${JAGS_LIBDIR}.")])

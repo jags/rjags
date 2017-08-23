@@ -1885,8 +1885,7 @@ if test  -n "${PKG_CONFIG}"  ; then
          JAGS_CFLAGS=`${PKG_CONFIG} --cflags jags`
          JAGS_LIBDIR=`${PKG_CONFIG} --variable libdir jags`
          if test  -z "${JAGS_LIBS}" -a -z "${JAGS_CFLAGS}"  ; then
-            { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Cannot get information about jags ${PACKAGE_VERSION} from pkg-config" >&5
-$as_echo "$as_me: WARNING: Cannot get information about jags ${PACKAGE_VERSION} from pkg-config" >&2;}
+            as_fn_error $? "Cannot get information about jags ${PACKAGE_VERSION} from pkg-config" "$LINENO" 5
          else
             { $as_echo "$as_me:${as_lineno-$LINENO}: Setting compile and link flags according to pkg-config" >&5
 $as_echo "$as_me: Setting compile and link flags according to pkg-config" >&6;}
@@ -1904,6 +1903,8 @@ $as_echo "$as_me: Link flags are $JAGS_LIBS" >&6;}
                    Try adding the directory containing 'jags.pc'
                    to the PKG_CONFIG_PATH environment variable" "$LINENO" 5
    fi
+else
+   as_fn_error $? "pkg-config is required to configure rjags" "$LINENO" 5
 fi
 
 # Support for private installations of JAGS. If the jags library is not
@@ -1929,7 +1930,7 @@ ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ex
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 CXXFLAGS=${JAGS_CFLAGS}
-LDFLAGS="${JAGS_LIBS} ${JAGS_RPATH}"
+LDFLAGS="-L${JAGS_LIBDIR} ${JAGS_RPATH}"
 # Can we link to the library?
 ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
