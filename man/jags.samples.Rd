@@ -7,7 +7,7 @@
 }
 \usage{
 jags.samples(model, variable.names, n.iter, thin = 1,
-             type="trace", ...)
+             type="trace", force.list=FALSE, ...)
 }
 \arguments{
   \item{model}{a jags model object}
@@ -16,6 +16,8 @@ jags.samples(model, variable.names, n.iter, thin = 1,
   \item{n.iter}{number of iterations to monitor}
   \item{thin}{thinning interval for monitors}
   \item{type}{type of monitor (can be vectorised)}
+  \item{force.list}{option to consistently return a named list of monitor
+             types even if a single monitor type is requested}
   \item{...}{optional arguments passed to the update method for jags
              model objects}
 }
@@ -27,15 +29,18 @@ jags.samples(model, variable.names, n.iter, thin = 1,
 \value{
   A list of \code{mcarray} objects, with one element for each 
   element of the \code{variable.names} argument.  If more than 
-  one type of monitor is requested then the return value
-  will be a (named) list of lists of \code{mcarray} objects, 
-  with one element for each monitor type.
+  one type of monitor is requested (or if force.list is TRUE)
+  then the return value will be a (named) list of lists of 
+  \code{mcarray} objects, with one element for each monitor type.
 }
 \examples{
   data(LINE)
   LINE$recompile()
   LINE.samples <- jags.samples(LINE, c("alpha","beta","sigma"),
   n.iter=1000)
+  LINE.samples
+  LINE.samples <- jags.samples(LINE, c("alpha","beta","sigma"),
+  force.list=TRUE, n.iter=1000)
   LINE.samples
   LINE.samples <- jags.samples(LINE, c("alpha","alpha"),
   n.iter=1000, type=c("trace","mean"))

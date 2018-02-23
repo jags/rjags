@@ -119,8 +119,9 @@
 	if(is.null(node)){
 		node <- "deviance"
 	}else{
-		if(is.character(node) && any(node == "deviance") && any(node %in% observed.stochastic.nodes(model))){
-			warning("One or more of the provided node names overlaps with those given by 'deviance'")
+		if(is.character(node) && any(node == "deviance")
+			&& !all(node == "deviance")){
+			stop("node name 'deviance' cannot be used: pass node=NULL for all observed stochastic nodes")
 		}
 	}
 	
@@ -164,13 +165,13 @@
 
 		# Ensure dim and dimnames are correctly set:
 		if(is.null(curdim)){
-			curdim <- c(variable=length(density_mean[[i]]))
+			curdim <- length(density_mean[[i]])
 			dim(density_mean[[i]]) <- curdim
 		}
 
 		# If this is a deviance-type monitor then set the stochastic node names:
 		if(tname=='deviance'){
-	        attr(density_mean[[i]], "elementnames") <- observed.stochastic.nodes(model)
+	        attr(density_mean[[i]], "elementnames") <- observed.stochastic.nodes(model, curdim[1])
 		# If a partial node array then extract the precise element names:
 		}else if(!tname %in% node.names(model)){
 			attr(density_mean[[i]], "elementnames") <- expand.varname(tname, dim(density_mean[[i]])[1])
@@ -194,7 +195,7 @@
 
 		# If this is a deviance-type monitor then set the stochastic node names:
 		if(tname=='deviance'){
-	        attr(logdensity_variance[[i]], "elementnames") <- observed.stochastic.nodes(model)
+	        attr(logdensity_variance[[i]], "elementnames") <- observed.stochastic.nodes(model, curdim[1])
 		# If a partial node array then extract the precise element names:
 		}else if(!tname %in% node.names(model)){
 			attr(logdensity_variance[[i]], "elementnames") <- expand.varname(tname, dim(logdensity_variance[[i]])[1])
@@ -223,7 +224,7 @@
 
 			# If this is a deviance-type monitor then set the stochastic node names:
 			if(tname=='deviance'){
-		        attr(logdensity_trace[[i]], "elementnames") <- observed.stochastic.nodes(model)
+		        attr(logdensity_trace[[i]], "elementnames") <- observed.stochastic.nodes(model, curdim[1])
 			# If a partial node array then extract the precise element names:
 			}else if(!tname %in% node.names(model)){
 				attr(logdensity_trace[[i]], "elementnames") <- expand.varname(tname, dim(logdensity_trace[[i]])[1])

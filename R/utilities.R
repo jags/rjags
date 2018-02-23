@@ -23,15 +23,19 @@ jags.version <- function(){
 	return(package_version(vers))	
 }
 
-# Requires JAGS >4.3.0 (i.e. >=4.3.1 or >=4.4.0?)
-observed.stochastic.nodes <- function(model){
-	if(! jags.version() > 4.3 ) {
-		stop('This function cannot be used with the version of JAGS on your system: consider updating')
-	}
+# Not exported yet:
+observed.stochastic.nodes <- function(model, dim){
     if (!inherits(model, "jags")) {
 		stop("Invalid JAGS model")
 	}
 	vars <- .Call("get_obs_stoch_names", model$ptr(), PACKAGE="rjags")
+
+	# Currently just a stub unless compiled against JAGS 4.4.0
+	# so it is necessary to also supply dim for now:
+	if(identical(vars, "deviance")){
+		stopifnot(is.numeric(dim) && length(dim)==1)
+		vars <- coda.names("deviance", dim)
+	}
 	return(vars)
 }
 

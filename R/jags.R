@@ -424,13 +424,13 @@ jags.samples <-
 
 			# Ensure dim and dimnames are correctly set:
 			if(is.null(curdim)){
-				curdim <- c(variable=length(ans[[i]]))
+				curdim <- length(ans[[i]])
 				dim(ans[[i]]) <- curdim
 			}
 			
 			# If this is a deviance-related monitor type where variables are NOT pooled:
 			if(tname=='deviance' && !grepl('_total', t, fixed=TRUE) && !t=='trace'){
-		        attr(ans[[i]], "elementnames") <- observed.stochastic.nodes(model)
+				attr(ans[[i]], "elementnames") <- observed.stochastic.nodes(model, curdim[1])
 			# If a partial node array then extract the precise element names:
 			}else if(!tname %in% node.names(model)){
 				attr(ans[[i]], "elementnames") <- expand.varname(tname, dim(ans[[i]])[1])
