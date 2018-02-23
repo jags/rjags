@@ -606,6 +606,19 @@ extern "C" {
 	return varnames;
     }
 
+    SEXP get_obs_stoch_names(SEXP ptr)
+    {
+	Console *console = ptrArg(ptr);
+	vector<string> const &namevec = console->observedStochasticNodeNames();
+	SEXP varnames;
+	PROTECT(varnames = allocVector(STRSXP,namevec.size()));
+	for (unsigned int i = 0; i < namevec.size(); ++i) {
+	    SET_STRING_ELT(varnames, i, mkChar(namevec[i].c_str()));
+	}
+	UNPROTECT(1); //varnames
+	return varnames;
+    }
+
     SEXP get_samplers(SEXP ptr)
     {
 	Console *console = ptrArg(ptr);
