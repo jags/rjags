@@ -380,7 +380,7 @@ parse.varnames <- function(varnames)
 
 
 jags.samples <-
-  function(model, variable.names, n.iter, thin=1, type="trace", ...)
+  function(model, variable.names, n.iter, thin=1, type="trace", force.list=FALSE, ...)
 {
     if (class(model) != "jags")
       stop("Invalid JAGS model")
@@ -398,7 +398,10 @@ jags.samples <-
       type <- rep(type, length(variable.names))
     if(length(type)!=length(variable.names))
       stop("non matching lengths of monitor type and variable.names")
-
+	
+	#### Catch equivalent var and variance types:
+	type[type=="var"] <- "variance"
+	
     ####  Set monitors must be called for each relevant monitor type
     status <- lapply(unique(type), function(t){
         pn <- parse.varnames(variable.names[type==t])
@@ -415,8 +418,27 @@ jags.samples <-
     allans <- lapply(usingtypes, function(t){
         ans <- .Call("get_monitored_values", model$ptr(), t, PACKAGE="rjags")
         for (i in seq(along=ans)) {
-            class(ans[[i]]) <- "mcarray"
-            attr(ans[[i]], "varname") <- names(ans)[i]
+			tname <- names(ans)[i]
+			curdim <- dim(ans[[i]])
+	        class(ans[[i]]) <- "mcarray"
+
+			# Ensure dim and dimnames are correctly set:
+			if(is.null(curdim)){
+				curdim <- length(ans[[i]])
+				dim(ans[[i]]) <- curdim
+			}
+			
+			# If this is a deviance-related monitor type where variables are NOT pooled:
+			if(tname=='deviance' && !grepl('_total', t, fixed=TRUE) && !t=='trace'){
+				attr(ans[[i]], "elementnames") <- observed.stochastic.nodes(model, curdim[1])
+			# If a partial node array then extract the precise element names:
+			}else if(!tname %in% node.names(model)){
+				attr(ans[[i]], "elementnames") <- expand.varname(tname, dim(ans[[i]])[1])
+			# Otherwise just set the varname as the whole array:
+			}else{
+		        attr(ans[[i]], "varname") <- tname
+			}
+			
         }
         pn <- parse.varnames(variable.names[type==t])
         for (i in seq(along=variable.names[type==t])) {
@@ -429,10 +451,14 @@ jags.samples <-
     })
 
     ####  The return value is a named list of monitor types
-    names(allans) <- usingtypes	
-    ####  ... but if all monitors are of the same type then return just that element
-    ####  for back compatibility with rjags <= 4-6
-    if(length(usingtypes)==1)
+    names(allans) <- usingtypes
+	
+	####  Remove any that are empty:
+	allans[lapply(allans, length) > 0]
+	
+    ####  And if all monitors are of the same type and !force.list then return 
+    ####  just a single element for back compatibility with rjags <= 4-6
+    if(!force.list && length(usingtypes)==1)
       allans <- allans[[1]]
 
     return(allans)
