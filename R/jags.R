@@ -83,15 +83,15 @@ jags.model <- function(file, data=NULL, inits,
         data <- list()
     }
     else if (is.environment(data)) {
-        ##Get a list of numeric objects from the supplied environment
+        ## Get a list of numeric objects from the supplied environment
         data <- mget(varnames, envir=data, mode="numeric",
                      ifnotfound=list(NULL))
-        ##Strip null entries
+        ## Strip null entries
         data <- data[!sapply(data, is.null)]
     }
     else if (is.list(data)) {
         v <- names(data)
-        if (is.null(v) && length(v) != 0) {
+        if (is.null(v) && length(data) != 0) {
             stop("data must be a named list")
         }
         if (any(nchar(v)==0)) {
@@ -107,11 +107,10 @@ jags.model <- function(file, data=NULL, inits,
         for (i in seq(along=unused.variables)) {
             warning("Unused variable \"", unused.variables[i], "\" in data")
         }
-        ### Check for data frames
+        ## Coerce data frames to numeric matrices
         df <- which(as.logical(sapply(data, is.data.frame)))
         for (i in seq(along=df)) {
             if (all(sapply(data[[df[i]]], is.numeric))) {
-                #Turn numeric data frames into matrices
                 data[[df[i]]] <- as.matrix(data[[df[i]]])
             }
             else {
@@ -122,6 +121,13 @@ jags.model <- function(file, data=NULL, inits,
     }
     else {
         stop("data must be a list or environment")
+    }
+
+    ## Reject any non-numeric data
+    num_vals <- sapply(data, is.numeric)
+    if (any(!num_vals)) {
+        stop(paste("Non-numeric data values supplied for variable(s) ",
+                   paste(names(data)[!num_vals], collapse=", "), sep=""))
     }
 
     .Call("compile", p, data, as.integer(n.chains), TRUE, PACKAGE="rjags")
