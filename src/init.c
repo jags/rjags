@@ -24,7 +24,6 @@ extern SEXP get_nchain(SEXP);
 extern SEXP get_samplers(SEXP);
 extern SEXP get_state(SEXP);
 extern SEXP get_variable_names(SEXP);
-extern SEXP get_obs_stoch_names(SEXP);
 extern SEXP get_version();
 extern SEXP initialize(SEXP);
 extern SEXP is_adapting(SEXP);
@@ -57,7 +56,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"get_samplers",              (DL_FUNC) &get_samplers,              1},
     {"get_state",                 (DL_FUNC) &get_state,                 1},
     {"get_variable_names",        (DL_FUNC) &get_variable_names,        1},
-    {"get_obs_stoch_names",       (DL_FUNC) &get_obs_stoch_names,       1},
     {"get_version",               (DL_FUNC) &get_version,               0},
     {"initialize",                (DL_FUNC) &initialize,                1},
     {"is_adapting",               (DL_FUNC) &is_adapting,               1},

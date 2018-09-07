@@ -16,7 +16,7 @@
 
 print.mcarray <- function(x, ...)
 {
-    if (is.null(dim(x)) || is.null(names(dim(x)))) {
+    if (is.null(dim(x))) {
         NextMethod()
     }
     print(summary(x, mean))
@@ -24,9 +24,22 @@ print.mcarray <- function(x, ...)
 
 summary.mcarray <- function(object, FUN, ...)
 {
-    if (is.null(dim(object)) || is.null(names(dim(object)))) {
+	
+    if (is.null(dim(object))) {
         NextMethod()
     }
+	
+	# In case it is already pooled over chains and iterations (no dimnames):
+	if(length(dim(object))==1 || is.null(names(dim(object))) 
+		|| !any(c("iteration","chain") %in% names(dim(object)))){
+	    dims <- dim(object)
+	    attributes(object) <- NULL
+	    dim(object) <- dims
+	    ans <- list("stat"=object,
+	                "drop.dims" = character(0))
+	    class(ans) <- "summary.mcarray"
+	    return(ans)
+	}
 	
     dn <- names(dim(object))
     drop.dims <- dn %in% c("iteration","chain")
@@ -102,7 +115,7 @@ as.mcmc.list.mcarray <- function(x, ...)
         ans <- mcmc.list(ans)
     }
 	
-	# If elementnames is set this takes precedence over varname (for use with deviance monitor):
+	# If elementnames is set this takes precedence over varname (for eventual use with new monitor types in JAGS 5):
 	elt.names <- NULL
 	if(!is.null(attr(x, 'elementnames', exact=TRUE))){
 		elt.names <- attr(x, 'elementnames')
@@ -111,7 +124,7 @@ as.mcmc.list.mcarray <- function(x, ...)
 		}
 	}
 	else if(!is.null(attr(x, "varname", exact=TRUE))){
-        elt.names <-  make.coda.names(attr(x, "varname", exact=TRUE),
+        elt.names <- coda.names(attr(x, "varname", exact=TRUE),
                                xdim[-c(which.iter, which.chain)])
 	}
 	

@@ -14,7 +14,6 @@ export (
   unload.module,
   list.modules,
   dic.samples,
-  waic.samples,
   diffdic,
   adapt,
   list.samplers,
@@ -24,11 +23,7 @@ export (
   read.jagsdata,
   read.bugsdata,
   parallel.seeds,
-  jags.version,
-#  Might be exported when it is more than a stub:
-#  observed.stochastic.nodes,
-  node.names,
-  expand.varname
+  jags.version
 )
 S3method(print, jags)
 S3method(coef, jags)
@@ -41,4 +36,3 @@ S3method(as.mcmc.list, mcarray)
 S3method("-", dic)
 S3method(print, dic)
 S3method(print, diffdic)
-S3method(print, JAGSwaic)
