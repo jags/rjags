@@ -175,14 +175,14 @@ static void writeDataTable(SEXP data, map<string,SArray> &table)
 	    SEXP dim = getAttrib(VECTOR_ELT(data, i), R_DimSymbol); 
 	    if (dim == R_NilValue) {
 		// Scalar or vector entry.
-		SArray sarray(vector<unsigned int>(1, length(e)));
+		SArray sarray(vector<unsigned long>(1, length(e)));
 		setSArrayValue(sarray, e);
 		table.insert(pair<string,SArray>(ename, sarray));
 	    }
 	    else {
 		// Array entry
 		int ndim = length(dim);
-		vector<unsigned int> idim(ndim);
+		vector<unsigned long> idim(ndim);
 		for (int j = 0; j < ndim; ++j) {
 		    idim[j] = INTEGER(dim)[j];
 		}
@@ -207,7 +207,7 @@ static SimpleRange makeRange(SEXP lower, SEXP upper)
     SEXP il, iu;
     PROTECT(il = AS_INTEGER(lower));
     PROTECT(iu = AS_INTEGER(upper));
-    vector<int> lvec(n), uvec(n);
+    vector<unsigned long> lvec(n), uvec(n);
     copy(INTEGER(il), INTEGER(il) + n, lvec.begin());
     copy(INTEGER(iu), INTEGER(iu) + n, uvec.begin());
     UNPROTECT(2); //il, iu
@@ -254,7 +254,7 @@ static SEXP readDataTable(map<string,SArray> const &table)
 	if (p->second.ndim(false) > 1) {
 
 	    //Set dim attribute
-	    vector<unsigned int> const &idim = p->second.dim(false);
+	    vector<unsigned long> const &idim = p->second.dim(false);
 	    unsigned int ndim = idim.size();
 	    SEXP dim;
 	    PROTECT(dim = allocVector(INTSXP, ndim));
