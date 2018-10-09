@@ -1,6 +1,6 @@
 #include <R.h>
 #include <Rinternals.h>
-#include <stdlib.h> // for NULL
+#include <stdlib.h> 
 #include <R_ext/Rdynload.h>
 
 /* FIXME: 
@@ -35,7 +35,7 @@ extern SEXP set_factory_active(SEXP, SEXP, SEXP);
 extern SEXP set_monitors(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP set_parameters(SEXP, SEXP, SEXP);
 extern SEXP set_rng_name(SEXP, SEXP, SEXP);
-//extern SEXP set_seed(SEXP); //JAGS >= 5.0
+/* extern SEXP set_seed(SEXP); JAGS >= 5.0 */
 extern SEXP unload_module(SEXP);
 extern SEXP update(SEXP, SEXP);
 
@@ -67,7 +67,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"set_monitors",              (DL_FUNC) &set_monitors,              6},
     {"set_parameters",            (DL_FUNC) &set_parameters,            3},
     {"set_rng_name",              (DL_FUNC) &set_rng_name,              3},
-//    {"set_seed",                  (DL_FUNC) &set_seed,                  1},
+/*  {"set_seed",                  (DL_FUNC) &set_seed,                  1}, */
     {"unload_module",             (DL_FUNC) &unload_module,             1},
     {"update",                    (DL_FUNC) &update,                    2},
     {NULL, NULL, 0}
