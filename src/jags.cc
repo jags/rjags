@@ -216,7 +216,7 @@ static SimpleRange makeRange(SEXP lower, SEXP upper)
     try {
 	r = SimpleRange(lvec, uvec);
     }
-    catch (std::logic_error except) {                                   
+    catch (std::logic_error const &except) {                                   
 	error("Invalid range");
     }
     return r;
