@@ -62,6 +62,7 @@ static unsigned int sarray_len(SArray const &s)
 #include <Rinternals.h>
 #include <Rdefines.h>
 #include <R_ext/Rdynload.h>
+#include "init.h"
 
 std::ostringstream jags_out; //Output stream
 std::ostringstream jags_err; //Error stream
@@ -355,9 +356,10 @@ static FactoryType asFactoryType(SEXP type)
 
 extern "C" {
 
-    void quietMessages(SEXP s)
+    SEXP quietMessages(SEXP s)
     {
 	quiet = boolArg(s);
+	return R_NilValue;
     }
 
     void R_unload_rjags(DllInfo *info)
