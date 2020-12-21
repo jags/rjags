@@ -43,11 +43,23 @@ fi
 # on the linker path then it helps to hard-code the location of JAGS into
 # the DSO for rjags. Suggested by Doug Bates, April 2011.
 
+# Options passed to the linker are not portable, so the current version is
+# Linux only. There is scope for adding other platforms with the right
+# incantation.
+
 AC_ARG_ENABLE([rpath],
-            AC_HELP_STRING([--enable-rpath],
-                           [Hard link the location of the JAGS library]))
-if test [ "x$enable_rpath" = "xyes"]; then
-   JAGS_RPATH="-Wl,-rpath ${JAGS_LIBDIR}"
+   AC_HELP_STRING([--enable-rpath],
+                  [Hard link the location of the JAGS library (Linux only)]))
+if test ["x$enable_rpath" = "xyes"]; then
+   host_os=`uname`;
+   case "${host_os}" in
+      Linux*)
+         JAGS_RPATH="-Wl,-rpath=${JAGS_LIBDIR}"
+      ;;
+   *)
+      AC_MSG_ERROR([Option --enable-rpath is not available for OS $host_os])
+      ;;
+   esac
 fi
 
 # Sanity checks. 

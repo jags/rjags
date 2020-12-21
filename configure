@@ -1256,7 +1256,8 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-rpath          Hard link the location of the JAGS library
+  --enable-rpath          Hard link the location of the JAGS library (Linux
+                          only)
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -1911,13 +1912,25 @@ fi
 # on the linker path then it helps to hard-code the location of JAGS into
 # the DSO for rjags. Suggested by Doug Bates, April 2011.
 
+# Options passed to the linker are not portable, so the current version is
+# Linux only. There is scope for adding other platforms with the right
+# incantation.
+
 # Check whether --enable-rpath was given.
 if test "${enable_rpath+set}" = set; then :
   enableval=$enable_rpath;
 fi
 
-if test  "x$enable_rpath" = "xyes"; then
-   JAGS_RPATH="-Wl,-rpath ${JAGS_LIBDIR}"
+if test "x$enable_rpath" = "xyes"; then
+   host_os=`uname`;
+   case "${host_os}" in
+      Linux*)
+         JAGS_RPATH="-Wl,-rpath=${JAGS_LIBDIR}"
+      ;;
+   *)
+      as_fn_error $? "Option --enable-rpath is not available for OS $host_os" "$LINENO" 5
+      ;;
+   esac
 fi
 
 # Sanity checks.

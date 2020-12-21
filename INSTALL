@@ -76,7 +76,7 @@ If you do not have administrative privileges:
 3) Set the environment variable LD_RUN_PATH to the directory
    containing the JAGS library before installing rjags, or
 
-4) Use the --enable-rpath option when installing rjags, i.e. from
+4) On Linux, you may use the --enable-rpath option, i.e. from
    the unix shell:
 
    R CMD INSTALL --configure-args='--enable-rpath' rjags
