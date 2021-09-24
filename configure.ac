@@ -1,4 +1,4 @@
-AC_INIT([rjags], [5])
+AC_INIT([rjags],[5])
 
 if test -z "${R_HOME}"; then
    AC_MSG_ERROR("R_HOME is not defined")
@@ -48,8 +48,7 @@ fi
 # incantation.
 
 AC_ARG_ENABLE([rpath],
-   AC_HELP_STRING([--enable-rpath],
-                  [Hard link the location of the JAGS library (Linux only)]))
+   AS_HELP_STRING([--enable-rpath],[Hard link the location of the JAGS library (Linux only)]))
 if test ["x$enable_rpath" = "xyes"]; then
    host_os=`uname`;
    case "${host_os}" in
@@ -102,5 +101,7 @@ AC_SUBST(JAGS_CFLAGS)
 AC_SUBST(JAGS_MODDIR)
 AC_SUBST(JAGS_RPATH)
 
-AC_OUTPUT(src/Makevars)
-AC_OUTPUT(R/unix/zzz.R)
+AC_CONFIG_FILES([src/Makevars])
+AC_OUTPUT
+AC_CONFIG_FILES([R/unix/zzz.R])
+AC_OUTPUT
