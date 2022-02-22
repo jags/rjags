@@ -20,7 +20,7 @@
 # Required to check availability of new features but also useful to export:
 jags.version <- function(){
 	vers <- .Call("get_version", PACKAGE="rjags")	
-	return(package_version(vers))	
+	return(numeric_version(vers))	
 }
 
 # Not exported yet:
