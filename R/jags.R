@@ -123,6 +123,13 @@ jags.model <- function(file, data=NULL, inits,
         stop("data must be a list or environment")
     }
 
+    ## An entry consisting entirely of NAs is logical, not numeric.
+    ## We coerce it to numeric to avoid failing the numeric test below.
+    na_vals <- sapply(data, function(x) all(is.na(x)))
+    for (i in which(na_vals)) {
+        mode(data[[i]]) <- "numeric"
+    }
+    
     ## Reject any non-numeric data
     num_vals <- sapply(data, is.numeric)
     if (any(!num_vals)) {
@@ -168,6 +175,12 @@ jags.model <- function(file, data=NULL, inits,
                 warning(paste("NULL initial value supplied for variable(s) ",
                         paste(inames[null.inits], collapse=", "), sep=""))
                 inits <- inits[!null.inits]
+            }
+
+            ## Coerce entries consisting entirely of NAs to numeric.
+            na.inits <- sapply(inits, function(x) all(is.na(x)))
+            for (i in which(na.inits)) {
+                mode(inits[[i]]) <- "numeric"
             }
 
             num_vals <- sapply(inits, is.numeric)
