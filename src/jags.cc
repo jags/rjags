@@ -40,8 +40,8 @@ using std::FILE;
 using jags::SArray;
 using jags::Console;
 using jags::SimpleRange;
-using jags::DUMP_DATA;
-using jags::DUMP_PARAMETERS;
+using jags::DATA_VALUES;
+using jags::PARAMETER_VALUES;
 using jags::FactoryType;
 using jags::SAMPLER_FACTORY;
 using jags::MONITOR_FACTORY;
@@ -545,7 +545,7 @@ extern "C" {
     {
 	map<string,SArray> data_table;
 	string rngname; //Not actually needed
-	bool status = ptrArg(ptr)->dumpState(data_table, rngname, DUMP_DATA, 1);
+	bool status = ptrArg(ptr)->dumpState(data_table, rngname, DATA_VALUES, 1);
 	printMessages(status);
 	return readDataTable(data_table);
     }
@@ -564,7 +564,7 @@ extern "C" {
 	for (unsigned int n = 0; n < nchain; ++n) {
 	    string srng;
 	    map<string,SArray> param_table;
-	    console->dumpState(param_table, srng, DUMP_PARAMETERS, n+1);
+	    console->dumpState(param_table, srng, PARAMETER_VALUES, n+1);
 	    //Read the parameter values into an R list
 	    SEXP params;
 	    PROTECT(params = readDataTable(param_table));
