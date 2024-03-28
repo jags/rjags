@@ -125,9 +125,10 @@ jags.model <- function(file, data=NULL, inits,
 
     ## An entry consisting entirely of NAs is logical, not numeric.
     ## We coerce it to numeric to avoid failing the numeric test below.
-    na_vals <- sapply(data, function(x) all(is.na(x)))
-    for (i in which(na_vals)) {
-        mode(data[[i]]) <- "numeric"
+    for (i in seq_along(data)) {
+        if (all(is.na(data[[i]]))) {
+            mode(data[[i]]) <- "numeric"
+        }
     }
     
     ## Reject any non-numeric data
