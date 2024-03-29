@@ -71,23 +71,26 @@ LDFLAGS="-L${JAGS_LIBDIR} ${JAGS_RPATH}"
 AC_CHECK_LIB(jags, jags_version, [],
              [AC_MSG_ERROR("cannot link to JAGS library in ${JAGS_LIBDIR}.")])
 # Does the library have the correct major version number?
-AC_MSG_CHECKING([version of JAGS library])
-# Need to run this trivial test program first to detect runtime linkage problems
+# Need to run this trivial test program first
+AC_MSG_CHECKING([runtime link to JAGS library])
 AC_RUN_IFELSE(
    [AC_LANG_SOURCE([
       #include <version.h>
       int main() { return 0; }])],
-   [],
+   [AC_MSG_RESULT([OK])],
    [AC_MSG_RESULT([link error])
-    AC_MSG_ERROR([Runtime link error: See the INSTALL file for help])])
+    AC_MSG_ERROR([runtime link error: See the INSTALL file for help])],
+   [AC_MSG_RESULT([skipped for cross compilation])])
 # Now we can test
+AC_MSG_CHECKING([version of JAGS library])
 AC_RUN_IFELSE(
    [AC_LANG_SOURCE([
       #include <version.h>
       int main() { return JAGS_MAJOR == ${PACKAGE_VERSION} ? 0 : 1; }])],
    [AC_MSG_RESULT([OK])],
    [AC_MSG_RESULT([wrong version])
-    AC_MSG_ERROR([rjags requires JAGS version ${PACKAGE_VERSION}.x.y])])
+    AC_MSG_ERROR([rjags requires JAGS version ${PACKAGE_VERSION}.x.y])],
+   [AC_MSG_RESULT([skipped for cross compilation])])
 AC_LANG_POP(C++)
 LDFLAGS=${OLDFLAGS}
 CXXFLAGS=${OCXXFLAGS}
