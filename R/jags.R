@@ -1,18 +1,18 @@
-#  R package rjags file R/jags.R
-#  Copyright (C) 2006-2013 Martyn Plummer
-#
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License version
-#  2 as published by the Free Software Foundation.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  A copy of the GNU General Public License is available at
-#  http://www.r-project.org/Licenses/
-#
+##  R package rjags file R/jags.R
+##  Copyright (C) 2006-2024 Martyn Plummer
+##
+##  This program is free software; you can redistribute it and/or
+##  modify it under the terms of the GNU General Public License version
+##  2 as published by the Free Software Foundation.
+##
+##  This program is distributed in the hope that it will be useful,
+##  but WITHOUT ANY WARRANTY; without even the implied warranty of
+##  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##  GNU General Public License for more details.
+##
+##  A copy of the GNU General Public License is available at
+##  http://www.r-project.org/Licenses/
+##
 
 .quiet.messages <- function(quiet)
 {
@@ -402,7 +402,7 @@ parse.varnames <- function(varnames)
 jags.samples <-
   function(model, variable.names, n.iter, thin=1, type="trace", force.list=FALSE, ...)
 {
-    if (class(model) != "jags")
+    if (!inherits(model, "jags"))
       stop("Invalid JAGS model")
 
     if (!is.character(variable.names) || length(variable.names) == 0)
@@ -410,17 +410,25 @@ jags.samples <-
 
     if (!is.numeric(n.iter) || length(n.iter) != 1 || n.iter <= 0)
       stop("n.iter must be a positive integer")
-    if (!is.character(type))
+    if (!is.numeric(thin) || length(thin) != 1 || thin <= 0)
+      stop("thin must be a positive integer")
+    if (!is.character(type) || length(type) == 0)
       stop("type must be a character vector")
-
-    ####  Allow vectorisation of type argument
-    if(length(type)==1)
-      type <- rep(type, length(variable.names))
-    if(length(type)!=length(variable.names))
-      stop("non matching lengths of monitor type and variable.names")
-	
-	#### Catch equivalent var and variance types:
-	type[type=="var"] <- "variance"
+    if (!is.character(variable.names) || length(variable.names) == 0)
+        stop("variable.names must be a character vector")
+    
+    ##  Allow vectorisation of type argument and variable.names argument
+    if (length(type) == 1) {
+        type <- rep(type, length(variable.names))
+    }
+    else if (length(variable.names) == 1) {
+        variable.names <- rep(variable.names, length(type))
+    }
+    if (length(type) != length(variable.names))
+        stop("non matching lengths of monitor type and variable.names")
+    
+    ## Catch equivalent var and variance types:
+    type[type=="var"] <- "variance"
 	
     ####  Set monitors must be called for each relevant monitor type
     status <- lapply(unique(type), function(t){
@@ -431,6 +439,9 @@ jags.samples <-
     names(status) <- unique(type)
     if (!any(unlist(status))) stop("No valid monitors set")
 
+    startiter <- model$iter()
+    n.iter <- n.iter - n.iter%%thin
+    
     update.jags(model, n.iter, ...)
 
     ####  Retrieve values for each monitor type being used
@@ -458,6 +469,10 @@ jags.samples <-
 			}else{
 		        attr(ans[[i]], "varname") <- tname
 			}
+                        ## New attributes for rjags 5:
+                        attr(ans[[i]], "type") <- t
+                        attr(ans[[i]], "iterations") <- c(start=startiter+thin, end=startiter+n.iter, thin=thin)
+
 			
         }
         pn <- parse.varnames(variable.names[type==t])
@@ -473,11 +488,11 @@ jags.samples <-
     ####  The return value is a named list of monitor types
     names(allans) <- usingtypes
 	
-	####  Remove any that are empty:
-	allans[lapply(allans, length) > 0]
+    ####  Remove any that are empty:
+    allans <- allans[lapply(allans, length) > 0]
 	
     ####  And if all monitors are of the same type and !force.list then return 
-    ####  just a single element for back compatibility with rjags <= 4-6
+    ####  just a single element for back compatibility with rjags 4
     if(!force.list && length(usingtypes)==1)
       allans <- allans[[1]]
 
