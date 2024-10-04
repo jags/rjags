@@ -19,46 +19,44 @@
 
 # Required to check availability of new features but also useful to export:
 jags.version <- function(){
-	vers <- .Call("get_version", PACKAGE="rjags")	
-	return(numeric_version(vers))	
+    vers <- .Call("get_version", PACKAGE="rjags")	
+    return(numeric_version(vers))	
 }
 
 # Not exported yet:
 observed.stochastic.nodes <- function(model, dim){
     if (!inherits(model, "jags")) {
-		stop("Invalid JAGS model")
-	}
-	vars <- .Call("get_obs_stoch_names", model$ptr(), PACKAGE="rjags")
-
-	# Currently just a stub unless compiled against JAGS 4.4.0
-	# so it is necessary to also supply dim for now:
-	if(identical(vars, "deviance")){
-		stopifnot(is.numeric(dim) && length(dim)==1)
-		vars <- coda.names("deviance", dim)
-	}
-	return(vars)
+        stop("Invalid JAGS model")
+    }
+    vars <- .Call("get_obs_stoch_names", model$ptr(), PACKAGE="rjags")
+    
+    ## Currently just a stub unless compiled against JAGS 4.4.0
+    ## so it is necessary to also supply dim for now:
+    if(identical(vars, "deviance")){
+        stopifnot(is.numeric(dim) && length(dim)==1)
+        vars <- coda.names("deviance", dim)
+    }
+    return(vars)
 }
 
 node.names <- function(model){
     if (!inherits(model, "jags")) {
-		stop("Invalid JAGS model")
-	}
-	vars <- .Call("get_variable_names", model$ptr(), PACKAGE="rjags")
-	return(vars)
+        stop("Invalid JAGS model")
+    }
+    vars <- .Call("get_variable_names", model$ptr(), PACKAGE="rjags")
+    return(vars)
 }
 
 expand.varname <- function(varname, dimensions=NULL){
 	
-	if(!is.character(varname) || length(varname)!=1){
-		stop("varnames must be a character of length 1")
-	}
+    if(!is.character(varname) || length(varname)!=1){
+        stop("varnames must be a character of length 1")
+    }
 	
-	# TODO: implement
-	if(is.null(dimensions)){
-		# If dimensions aren't provided then attempt to guess:
-		dimensions <- c(1)
-	}
-	
-	return(coda.names(varname, dimensions))
-	
+    ## TODO: implement
+    if (is.null(dimensions)){
+        ## If dimensions aren't provided then attempt to guess:
+        dimensions <- c(1)
+    }
+    return(coda.names(varname, dimensions))
 }

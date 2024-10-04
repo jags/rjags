@@ -403,17 +403,17 @@ jags.samples <-
   function(model, variable.names, n.iter, thin=1, type="trace", force.list=FALSE, ...)
 {
     if (!inherits(model, "jags"))
-      stop("Invalid JAGS model")
+        stop("Invalid JAGS model")
 
     if (!is.character(variable.names) || length(variable.names) == 0)
-      stop("variable.names must be a character vector")
+        stop("variable.names must be a character vector")
 
     if (!is.numeric(n.iter) || length(n.iter) != 1 || n.iter <= 0)
-      stop("n.iter must be a positive integer")
+        stop("n.iter must be a positive integer")
     if (!is.numeric(thin) || length(thin) != 1 || thin <= 0)
-      stop("thin must be a positive integer")
+        stop("thin must be a positive integer")
     if (!is.character(type) || length(type) == 0)
-      stop("type must be a character vector")
+        stop("type must be a character vector")
     if (!is.character(variable.names) || length(variable.names) == 0)
         stop("variable.names must be a character vector")
     
@@ -430,50 +430,48 @@ jags.samples <-
     ## Catch equivalent var and variance types:
     type[type=="var"] <- "variance"
 	
-    ####  Set monitors must be called for each relevant monitor type
+    ##  Set monitors must be called for each relevant monitor type
     status <- lapply(unique(type), function(t){
         pn <- parse.varnames(variable.names[type==t])
         status <- .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper,
-            as.integer(thin), t, PACKAGE="rjags")
+                        as.integer(thin), t, PACKAGE="rjags")
     })
     names(status) <- unique(type)
     if (!any(unlist(status))) stop("No valid monitors set")
-
+    
     startiter <- model$iter()
     n.iter <- n.iter - n.iter%%thin
     
     update.jags(model, n.iter, ...)
-
-    ####  Retrieve values for each monitor type being used
+    
+    ##  Retrieve values for each monitor type being used
     usingtypes <- unique(type)[sapply(unique(type), function(t) return(any(status[[t]])))]
     allans <- lapply(usingtypes, function(t){
         ans <- .Call("get_monitored_values", model$ptr(), t, PACKAGE="rjags")
         for (i in seq(along=ans)) {
-			tname <- names(ans)[i]
-			curdim <- dim(ans[[i]])
-	        class(ans[[i]]) <- "mcarray"
-
-			# Ensure dim and dimnames are correctly set:
-			if(is.null(curdim)){
-				curdim <- length(ans[[i]])
-				dim(ans[[i]]) <- curdim
-			}
-			
-			# If this is a deviance-related monitor type where variables are NOT pooled:
-			if(tname=='deviance' && !grepl('_total', t, fixed=TRUE) && !t=='trace'){
-				attr(ans[[i]], "elementnames") <- observed.stochastic.nodes(model, curdim[1])
-			# If a partial node array then extract the precise element names:
-			}else if(!tname %in% node.names(model)){
-				attr(ans[[i]], "elementnames") <- expand.varname(tname, dim(ans[[i]])[1])
-			# Otherwise just set the varname as the whole array:
-			}else{
-		        attr(ans[[i]], "varname") <- tname
-			}
-                        ## New attributes for rjags 5:
-                        attr(ans[[i]], "type") <- t
-                        attr(ans[[i]], "iterations") <- c(start=startiter+thin, end=startiter+n.iter, thin=thin)
-
-			
+            tname <- names(ans)[i]
+            curdim <- dim(ans[[i]])
+            class(ans[[i]]) <- "mcarray"
+            
+            ## Ensure dim and dimnames are correctly set:
+            if(is.null(curdim)){
+                curdim <- length(ans[[i]])
+                dim(ans[[i]]) <- curdim
+            }
+            
+            ## If this is a deviance-related monitor type where variables are NOT pooled:
+            if(tname=='deviance' && !grepl('_total', t, fixed=TRUE) && !t=='trace'){
+                attr(ans[[i]], "elementnames") <- observed.stochastic.nodes(model, curdim[1])
+                ## If a partial node array then extract the precise element names:
+            }else if(!tname %in% node.names(model)){
+                attr(ans[[i]], "elementnames") <- expand.varname(tname, dim(ans[[i]])[1])
+                ## Otherwise just set the varname as the whole array:
+            }else{
+                attr(ans[[i]], "varname") <- tname
+            }
+            ## New attributes for rjags 5:
+            attr(ans[[i]], "type") <- t
+            attr(ans[[i]], "iterations") <- c(start=startiter+thin, end=startiter+n.iter, thin=thin)
         }
         pn <- parse.varnames(variable.names[type==t])
         for (i in seq(along=variable.names[type==t])) {
@@ -484,18 +482,18 @@ jags.samples <-
         }
         return(ans)
     })
-
-    ####  The return value is a named list of monitor types
+    
+    ##  The return value is a named list of monitor types
     names(allans) <- usingtypes
 	
-    ####  Remove any that are empty:
+    ##  Remove any that are empty:
     allans <- allans[lapply(allans, length) > 0]
 	
-    ####  And if all monitors are of the same type and !force.list then return 
-    ####  just a single element for back compatibility with rjags 4
+    ##  And if all monitors are of the same type and !force.list then return 
+    ##  just a single element for back compatibility with rjags 4
     if(!force.list && length(usingtypes)==1)
-      allans <- allans[[1]]
-
+        allans <- allans[[1]]
+    
     return(allans)
 }
 

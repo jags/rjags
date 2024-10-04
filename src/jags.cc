@@ -599,18 +599,12 @@ extern "C" {
 	return varnames;
     }
 
+
     SEXP get_obs_stoch_names(SEXP ptr)
     {
-	/* This is a stub for now - it introduces a compile-time dependency
-	on the next version of JAGS.  The feature would be nice but is not
-	essential:
 	Console *console = ptrArg(ptr);
-	vector<string> const &namevec = console->observedStochasticNodeNames();
-	*/
-	// Placeholder:
 	vector<string> namevec;
-	namevec.push_back("deviance");
-	
+	console->dumpNodeNames(namevec, "observed");
 	SEXP varnames;
 	PROTECT(varnames = Rf_allocVector(STRSXP,namevec.size()));
 	for (unsigned int i = 0; i < namevec.size(); ++i) {
