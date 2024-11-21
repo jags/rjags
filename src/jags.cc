@@ -480,7 +480,7 @@ extern "C" {
     }
 
     SEXP set_monitors(SEXP ptr, SEXP names, SEXP lower, SEXP upper, 
-		      SEXP thin, SEXP type)
+		      SEXP thin, SEXP stat, SEXP summary)
     {
 	if (!Rf_isString(names)) {
 	    Rf_error("names must be a character vector");
@@ -490,15 +490,19 @@ extern "C" {
 	if (Rf_length(lower) != n || Rf_length(upper) != n) {
 	    Rf_error("length of names must match length of lower and upper");
 	}
-
+	if (Rf_length(stat) != n || Rf_length(summary) != n) {
+	    Rf_error("length of names must match length of stat and summary");
+	}
+	
 	SEXP status; //Was attempt to set monitor successful?
 	PROTECT(status = Rf_allocVector(LGLSXP, n));
 	for (int i = 0; i < n; ++i) {
 	    SimpleRange range = makeRange(VECTOR_ELT(lower, i), 
 					  VECTOR_ELT(upper, i));
-	    bool ok = ptrArg(ptr)->setMonitor(stringArg(names,i), range, 
+	    bool ok = ptrArg(ptr)->setMonitor(stringArg(names, i), range, 
 					      intArg(thin), 
-					      stringArg(type));
+					      stringArg(stat, i),
+					      stringArg(summary, i));
 	    printMessages(true);
 	    LOGICAL_POINTER(status)[i] = ok;
 	}
@@ -506,29 +510,29 @@ extern "C" {
 	return status;
     }
 
-    SEXP clear_monitor(SEXP ptr, SEXP name, SEXP lower, SEXP upper, SEXP type)
+    SEXP clear_monitor(SEXP ptr, SEXP name, SEXP lower, SEXP upper, SEXP stat, SEXP summary)
     {
         SimpleRange range = makeRange(lower, upper);
 	bool status = ptrArg(ptr)->clearMonitor(stringArg(name), range, 
-						stringArg(type));
+						stringArg(stat),
+						stringArg(summary));
 	printMessages(status);
 	return R_NilValue;
     }
 
-    SEXP get_monitored_values(SEXP ptr, SEXP type)
+    SEXP get_monitored_values(SEXP ptr, SEXP stat, SEXP summary)
     {
 	map<string,SArray> data_table;
-	bool status = ptrArg(ptr)->dumpMonitors(data_table, stringArg(type),
-						false);
+	bool status = ptrArg(ptr)->dumpMonitors(data_table, stringArg(stat), stringArg(summary), false);
 	printMessages(status);
 	return readDataTable(data_table);
     }
 
     //FIXME: lazy cut-and-paste here
-    SEXP get_monitored_values_flat(SEXP ptr, SEXP type)
+    SEXP get_monitored_values_flat(SEXP ptr, SEXP stat, SEXP summary)
     {
 	map<string,SArray> data_table;
-	bool status = ptrArg(ptr)->dumpMonitors(data_table, stringArg(type),
+	bool status = ptrArg(ptr)->dumpMonitors(data_table, stringArg(stat), stringArg(summary),
 						true);
 	printMessages(status);
 	return readDataTable(data_table);
