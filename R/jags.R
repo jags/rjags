@@ -631,6 +631,10 @@ coda.samples <- function(model, variable.names=NULL, n.iter, thin=1,
 
 load.module <- function(name, path, quiet=FALSE)
 {
+    if (name == "dic") {
+        name <- "diag"
+    }
+    
     if (name %in% list.modules()) {
         ## This is a stop-gap measure as JAGS 2.1.0 does allow you
         ## to load the same module twice. This should be fixed in
@@ -672,6 +676,10 @@ load.module <- function(name, path, quiet=FALSE)
 
 unload.module <- function(name, quiet=FALSE)
 {
+    if (name == "dic") {
+        name <- "diag"
+    }
+    
     if (!is.character(name) || length(name) != 1)
         stop("invalid name")
 
