@@ -6,20 +6,21 @@
   of the parameters of a \code{jags} model. 
 }
 \usage{
-jags.samples(model, variable.names, n.iter, thin = 1,
-             type="trace", force.list=FALSE, ...)
+jags.samples(model, variable.names, n.iter,  = 1, thin = 1,
+             stat="value", summary = "trace", force.list=FALSE, ...)
 }
 \arguments{
-  \item{model}{a jags model object}
-  \item{variable.names}{a character vector giving the names of variables
+  \item{model}{A jags model object}
+  \item{variable.names}{A character vector giving the names of variables
     to be monitored}
   \item{n.iter}{number of iterations to monitor}
   \item{thin}{thinning interval for monitors}
-  \item{type}{type of monitor (can be vectorised)}
+  \item{stat}{character vector of statistics to be monitored}
+  \item{summary}{character vector of summaries}
   \item{force.list}{option to consistently return a named list of monitor
-             types even if a single monitor type is requested}
+    types even if a single monitor type is requested}
   \item{...}{optional arguments passed to the update method for jags
-             model objects}
+    model objects}
 }
 \details{
   The \code{jags.samples} function creates monitors for the given
@@ -27,11 +28,13 @@ jags.samples(model, variable.names, n.iter, thin = 1,
   the monitored samples.
 }
 \value{
-  A list of \code{mcarray} objects, with one element for each 
-  element of the \code{variable.names} argument.  If more than 
-  one type of monitor is requested (or if force.list is TRUE)
-  then the return value will be a (named) list of lists of 
-  \code{mcarray} objects, with one element for each monitor type.
+  A recursive list of \code{mcarray} objects is returned.  The top level
+  denotes the requested stat, the second level the summary, and the
+  third level the monitored variable. Individual \code{mcarray} objects can be
+  extrected with \code{samples$stat$summary$variable}. If only a single
+  stat/summary/variable combination is monitored then a single
+  \code{mcarray} object is returned directly unless the option
+  \code{force.list=TRUE} is used.
 }
 \examples{
   data(LINE)
@@ -42,8 +45,8 @@ jags.samples(model, variable.names, n.iter, thin = 1,
   LINE.samples <- jags.samples(LINE, c("alpha","beta","sigma"),
   force.list=TRUE, n.iter=1000)
   LINE.samples
-  LINE.samples <- jags.samples(LINE, c("alpha","alpha"),
-  n.iter=1000, type=c("trace","mean"))
+  LINE.samples <- jags.samples(LINE, "alpha",
+  n.iter=1000, summary=c("trace","mean"))
   LINE.samples$trace
   LINE.samples$mean
 }

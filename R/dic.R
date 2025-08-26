@@ -104,7 +104,7 @@
 }
 
 "waic.samples" <-
-  function(model, n.iter, node=NULL, trace=FALSE, thin=1, ...)
+  function(model, n.iter, node="_observed_", trace=FALSE, thin=1, ...)
 {
     if (!inherits(model, "jags"))
         stop("Invalid JAGS model")
@@ -116,36 +116,36 @@
         stop("trace must logical of length 1")
 
     if (is.null(node)) {
-        pn <- list(names="_observations_", lower=list(NULL), upper=list(NULL))
+        pn <- list(names="_observed_", lower=list(NULL), upper=list(NULL))
     }
     else {
         if (!is.character(node) || length(node)==0)
             stop("node must either be NULL or a character string of length >=1")
         if (any(node == "deviance")) {
-            stop("node name 'deviance' cannot be used: pass node=NULL for all observed stochastic nodes")
+            stop("node name 'deviance' cannot be used: pass node='_observed_' for all observed stochastic nodes")
         }
         pn <- parse.varnames(node)
     }
     
-    load.module("dic", quiet=TRUE)
+    load.module("diag", quiet=TRUE)
     
     status <- .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper, 
-                    as.integer(thin), "density_mean", PACKAGE="rjags")
+                    as.integer(thin), "density", "mean", PACKAGE="rjags")
     if (!all(unlist(status))) stop("Failed to set a necessary monitor")
     
     status <- .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper, 
-                    as.integer(thin), "logdensity_variance", PACKAGE="rjags")
+                    as.integer(thin), "logdensity", "var", PACKAGE="rjags")
     if (!all(unlist(status))) stop("Failed to set a necessary monitor")
     
     if (trace){
         status <- .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper, 
-                        as.integer(thin), "logdensity_trace", PACKAGE="rjags")
+                        as.integer(thin), "logdensity", "trace", PACKAGE="rjags")
         if (!all(unlist(status))) stop("Failed to set the optional trace monitor")
     }
     
     update(model, n.iter = as.integer(n.iter), ...)
     
-    density_mean <- .Call("get_monitored_values", model$ptr(), "density_mean", PACKAGE="rjags")
+    density_mean <- .Call("get_monitored_values", model$ptr(), "density", "mean", PACKAGE="rjags")
     for(i in seq(along=density_mean)){
         tname <- names(density_mean)[i]
         curdim <- dim(density_mean[[i]])
@@ -169,8 +169,8 @@
         }
         .Call("clear_monitor", model$ptr(), pn$names[i], pn$lower[[i]], pn$upper[[i]], "density_mean", PACKAGE="rjags")    
     }
-    logdensity_variance <- .Call("get_monitored_values", model$ptr(), "logdensity_variance", PACKAGE="rjags")
 
+    logdensity_variance <- .Call("get_monitored_values", model$ptr(), "logdensity", "var", PACKAGE="rjags")
     for (i in seq(along=pn$names)){
         tname <- names(logdensity_variance)[i]
         curdim <- dim(logdensity_variance[[i]])
@@ -192,14 +192,14 @@
         }else{
             attr(logdensity_variance[[i]], "varname") <- tname
         }
-        .Call("clear_monitor", model$ptr(), pn$names[i], pn$lower[[i]], pn$upper[[i]], "logdensity_variance", PACKAGE="rjags")    
+        .Call("clear_monitor", model$ptr(), pn$names[i], pn$lower[[i]], pn$upper[[i]], "logdensity", "var", PACKAGE="rjags")    
     }
     
     raw <- list(density_mean, logdensity_variance)
     names(raw) <- c('density_mean', 'logdensity_variance')
     
     if(trace){
-        logdensity_trace <- .Call("get_monitored_values", model$ptr(), "logdensity_trace", PACKAGE="rjags")
+        logdensity_trace <- .Call("get_monitored_values", model$ptr(), "logdensity", "trace", PACKAGE="rjags")
         for(i in seq(along=pn$names)){
             tname <- names(logdensity_trace)[i]
             curdim <- dim(logdensity_trace[[i]])
