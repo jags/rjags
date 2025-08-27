@@ -25,11 +25,11 @@ export (
   read.bugsdata,
   parallel.seeds,
   jags.seed,
-  jags.version,
+  jags.version
 #  Might be exported when it is more than a stub:
 #  observed.stochastic.nodes,
-  node.names,
-  expand.varname
+#  node.names,
+#  expand.varname
 )
 S3method(print, jags)
 S3method(coef, jags)

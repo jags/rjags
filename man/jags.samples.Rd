@@ -6,7 +6,7 @@
   of the parameters of a \code{jags} model. 
 }
 \usage{
-jags.samples(model, variable.names, n.iter,  = 1, thin = 1,
+jags.samples(model, variable.names, n.iter, thin = 1,
              stat="value", summary = "trace", force.list=FALSE, ...)
 }
 \arguments{
