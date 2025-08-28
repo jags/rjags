@@ -237,7 +237,7 @@
 
 waic.table <- function(density_mean, logdensity_variance){
 	
-    if(missing(density_mean) || missing(logdensity_variance)){
+    if (missing(density_mean) || missing(logdensity_variance)){
         stop('Missing arguments to density_mean and logdensity_variance are not allowed')
     }
 
