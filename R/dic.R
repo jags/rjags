@@ -113,7 +113,7 @@
         stop("n.iter must be a positive integer")
 
     if (!is.logical(trace) || length(trace)!=1)
-        stop("trace must logical of length 1")
+        stop("trace must be logical of length 1")
 
     if (is.null(node)) {
         pn <- list(names="_observed_", lower=list(NULL), upper=list(NULL))
@@ -157,13 +157,13 @@
             dim(density_mean[[i]]) <- curdim
         }
 
-        if(tname=='deviance'){
+        if (tname=='deviance') {
             ## If this is a deviance-type monitor then set the stochastic node names:
             attr(density_mean[[i]], "elementnames") <- observed.stochastic.nodes(model, curdim[1])
-        }else if(!tname %in% node.names(model)){
+        } else if(!tname %in% node.names(model)){
             ## If a partial node array then extract the precise element names:
             attr(density_mean[[i]], "elementnames") <- expand.varname(tname, dim(density_mean[[i]])[1])
-        }else{
+        } else {
             ## Otherwise just set the varname as the whole array:
             attr(density_mean[[i]], "varname") <- tname
         }
