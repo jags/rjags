@@ -288,9 +288,10 @@ static SEXP readDataTable(map<string,SArray> const &table)
 			SEXP snames_k;
 			PROTECT(snames_k = Rf_allocVector(STRSXP, names_k.size()));
 			for (unsigned int l = 0; l < names_k.size(); ++l) {
-			    SET_STRING_ELT(sdimnames, l, 
+			    SET_STRING_ELT(snames_k, l, 
 					   Rf_mkChar(names_k[l].c_str()));
 			}
+			SET_VECTOR_ELT(sdimnames, k, snames_k);
 			UNPROTECT(1); //snames_k
 		    }
 		}
