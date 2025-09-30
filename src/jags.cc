@@ -254,16 +254,16 @@ static SEXP readDataTable(map<string,SArray> const &table)
 		INTEGER(dim)[k] = idim[k];
 	    }
 
-	    //Set names of the dimensions 
-	    vector<string> const &names = p->second.dimNames();
-	    if (!names.empty()) {
-		SEXP dimnames;
-		PROTECT(dimnames = Rf_allocVector(STRSXP, ndim));
+	    //Set names attribute of the dim vector 
+	    vector<string> const &tags = p->second.dimTags();
+	    if (!tags.empty()) {
+		SEXP stags;
+		PROTECT(stags = Rf_allocVector(STRSXP, ndim));
 		for (unsigned int k = 0; k < ndim; ++k) {
-		    SET_STRING_ELT(dimnames, k, Rf_mkChar(names[k].c_str()));
+		    SET_STRING_ELT(stags, k, Rf_mkChar(tags[k].c_str()));
 		}
-		Rf_setAttrib(dim, R_NamesSymbol, dimnames);
-		UNPROTECT(1); //dimnames
+		Rf_setAttrib(dim, R_NamesSymbol, stags);
+		UNPROTECT(1); //stags
 	    }
 	    SET_DIM(e, dim);
 	    UNPROTECT(1); //dim
@@ -271,7 +271,7 @@ static SEXP readDataTable(map<string,SArray> const &table)
 	    //Set S dimnames
 	    bool set_s_dimnames = false;
 	    for (unsigned int k = 0; k < ndim; ++k) {
-		if (!p->second.getSDimNames(k).empty()) {
+		if (!p->second.dimNames(k).empty()) {
 		    set_s_dimnames = true;
 		    break;
 		}
@@ -280,7 +280,7 @@ static SEXP readDataTable(map<string,SArray> const &table)
 		SEXP sdimnames;
 		PROTECT(sdimnames = Rf_allocVector(VECSXP, ndim));
 		for (unsigned int k = 0; k < ndim; ++k) {
-		    vector<string> const &names_k = p->second.getSDimNames(k);
+		    vector<string> const &names_k = p->second.dimNames(k);
 		    if (names_k.empty()) {
 			SET_VECTOR_ELT(sdimnames, k, R_NilValue);
 		    }
@@ -299,11 +299,11 @@ static SEXP readDataTable(map<string,SArray> const &table)
 		UNPROTECT(1); //sdimnames
 	    }
 	}
-	else if (!p->second.getSDimNames(0).empty()) {
+	else if (!p->second.dimNames(0).empty()) {
 
 	    //Set names attribute
 	    SEXP snames;
-	    vector<string> const &names = p->second.getSDimNames(0);
+	    vector<string> const &names = p->second.dimNames(0);
 	    PROTECT(snames = Rf_allocVector(STRSXP, names.size()));
 	    for (unsigned int l = 0; l < names.size(); ++l) {
 		SET_STRING_ELT(snames, l,  Rf_mkChar(names[l].c_str()));
