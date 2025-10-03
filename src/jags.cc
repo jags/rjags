@@ -47,6 +47,7 @@ using jags::SAMPLER_FACTORY;
 using jags::MONITOR_FACTORY;
 using jags::RNG_FACTORY;
 using jags::RNG;
+using jags::DimTag;
 
 #define R_NO_REMAP
 #include <R.h>
@@ -255,12 +256,12 @@ static SEXP readDataTable(map<string,SArray> const &table)
 	    }
 
 	    //Set names attribute of the dim vector 
-	    vector<string> const &tags = p->second.dimTags();
+	    vector<DimTag> const &tags = p->second.dimTags();
 	    if (!tags.empty()) {
 		SEXP stags;
 		PROTECT(stags = Rf_allocVector(STRSXP, ndim));
 		for (unsigned int k = 0; k < ndim; ++k) {
-		    SET_STRING_ELT(stags, k, Rf_mkChar(tags[k].c_str()));
+		    SET_STRING_ELT(stags, k, Rf_mkChar(asChar(tags[k])));
 		}
 		Rf_setAttrib(dim, R_NamesSymbol, stags);
 		UNPROTECT(1); //stags
