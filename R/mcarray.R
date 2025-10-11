@@ -63,9 +63,21 @@ make.coda.names <- function(basename, dim)
     }
 }
 
+checkdimtags <- function(tags)
+{
+    if(is.null(tags)) {
+        return (FALSE)
+    }
+    else if (!all(tags %in% c("value", "iteration", "chain"))) {
+        return (FALSE)
+    }
+    return(TRUE)
+    
+}
+
 as.mcmc.list.mcarray <- function(x, ...)
 {
-    if (is.null(dim(x)) || is.null(names(dim(x)))) {
+    if (is.null(dim(x)) || !checkdimtags(names(dim(x)))) {
         NextMethod()
     }
 
@@ -73,55 +85,65 @@ as.mcmc.list.mcarray <- function(x, ...)
     ndim <- length(xdim)
     dn <- names(xdim)
 
+    which.val <- which(dn=="value")
+
     which.iter <- which(dn=="iteration")
-    if (length(which.iter) != 1) {
-        stop("Bad iteration dimension in mcarray")
+    if (length(which.iter) == 0) {
+        stop("mcarray has no iteration dimension")
+    }
+    if (length(which.iter) > 1) {
+        stop("Multiple iteration dimensions in mcarray")
     }
 
     which.chain <- which(dn=="chain")
     if (length(which.chain) > 1) {
-        stop("Bad chain dimension in mcarray")
+        stop("Multiple chain dimensions in mcarray")
     }
 
     niter <- xdim[which.iter]
     if (length(which.chain) == 0) {
-        perm <- c((1:ndim)[-which.iter], which.iter)
+        perm <- c(which.val, which.iter)
         y <- matrix(aperm(x, perm), nrow=niter, byrow=TRUE)
         ans <- mcmc.list(mcmc(y))
     }
     else {
         nchain <- xdim[which.chain]
-        ans <- vector("list",nchain)
+        ans <- vector("list", nchain)
         len <- prod(xdim[-which.chain])
-        perm <- c((1:ndim)[-c(which.iter,which.chain)], which.iter, which.chain)
+        perm <- c(which.val, which.iter, which.chain)
         y <- aperm(x,perm)
         for (i in 1:nchain) {
-            ans[[i]] <- mcmc(matrix(y[1:len + (i-1)*len], nrow=niter,
-                                    byrow=TRUE))
+            ans[[i]] <- mcmc(matrix(y[1:len + (i-1)*len], nrow=niter, byrow=TRUE))
         }
         ans <- mcmc.list(ans)
     }
-	
-	# If elementnames is set this takes precedence over varname (for use with deviance monitor):
-	elt.names <- NULL
-	if(!is.null(attr(x, 'elementnames', exact=TRUE))){
-		elt.names <- attr(x, 'elementnames')
-		if(length(elt.names) != nvar(ans)){
-			stop(paste0('The length of the elementnames attr (', length(elt.names), ') does not match the number of variables (', nvar(ans), ')'))
-		}
-	}
-	else if(!is.null(attr(x, "varname", exact=TRUE))){
-        elt.names <-  make.coda.names(attr(x, "varname", exact=TRUE),
-                               xdim[-c(which.iter, which.chain)])
-	}
-	
-	if(!is.null(elt.names)){
-        ### Work around bug in coda::varnames<-
-        for (i in 1:nchain) {
-            colnames(ans[[i]]) <-elt.names
+    
+    val.names <- NULL
+    if (!is.null(attr(x, 'valuenames', exact=TRUE))) {
+        ## If valuenames attribute is set then use this
+        val.names <- attr(x, 'valuenames')
+        if (length(val.names) != nvar(ans)){
+            stop(paste0('The length of the valuenames attr (', length(val.names), ') does not match the number of variables (', nvar(ans), ')'))
         }
     }
-
+    else {
+        ## Set default value names based on the varname attribute, if
+        ## set. Failing that fall back to "x" as a generic variable
+        ## name
+        varname <- attr(x, "varname", exact=TRUE)
+        if (is.null(varname)) {
+            varname <- "x"
+        }
+        val.names <-  make.coda.names(varname, xdim[which.val])
+    }
+    
+    if (!is.null(val.names)) {
+        ## Work around bug in coda::varnames<-
+        for (i in 1:nchain) {
+            colnames(ans[[i]]) <- val.names
+        }
+    }
+    
     return(ans)
 }
 

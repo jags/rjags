@@ -49,7 +49,7 @@ node.names <- function(model){
 
 expand.varname <- function(varname, dimensions=NULL){
 	
-    if(!is.character(varname) || length(varname)!=1){
+    if (!is.character(varname) || length(varname) != 1) {
         stop("varnames must be a character of length 1")
     }
 	

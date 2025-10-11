@@ -230,8 +230,7 @@ static SEXP readDataTable(map<string,SArray> const &table)
 	int len = p->second.length();
 
 	//Allocate new numeric vector
-	SEXP e;
-	PROTECT(e = Rf_allocVector(REALSXP, len));
+	SEXP e = PROTECT(Rf_allocVector(REALSXP, len));
 
 	//Copy values
 	vector<double> const &value = p->second.value();
@@ -243,7 +242,8 @@ static SEXP readDataTable(map<string,SArray> const &table)
 	       NUMERIC_POINTER(e)[j] = value[j];
             }
 	}
-    
+
+	
 	if (p->second.ndim(false) > 1) {
 
 	    //Set dim attribute
@@ -299,20 +299,19 @@ static SEXP readDataTable(map<string,SArray> const &table)
 		Rf_setAttrib(e, R_DimNamesSymbol, sdimnames);
 		UNPROTECT(1); //sdimnames
 	    }
-	}
-	else if (!p->second.dimNames(0).empty()) {
 
-	    //Set names attribute
-	    SEXP snames;
-	    vector<string> const &names = p->second.dimNames(0);
-	    PROTECT(snames = Rf_allocVector(STRSXP, names.size()));
-	    for (unsigned int l = 0; l < names.size(); ++l) {
-		SET_STRING_ELT(snames, l,  Rf_mkChar(names[l].c_str()));
+	    vector<string> const &value_names = p->second.valueNames();
+	    if (!value_names.empty()) {
+		//Set valuenames attribute
+		SEXP vnames;
+		PROTECT(vnames = Rf_allocVector(STRSXP, value_names.size()));
+		for (unsigned int l = 0; l < value_names.size(); ++l) {
+		    SET_STRING_ELT(vnames, l,  Rf_mkChar(value_names[l].c_str()));
+		}
+		Rf_setAttrib(e, Rf_install("valuenames"), vnames);
+		UNPROTECT(1); //vnames
 	    }
-	    Rf_setAttrib(e, R_NamesSymbol, snames);
-	    UNPROTECT(1); //snames
 	}
-	    
 	SET_ELEMENT(data, i, e);
 	UNPROTECT(1); //e
     }

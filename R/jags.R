@@ -427,12 +427,12 @@ jags.samples <-
         if (length(variable.names) == 1) variable.names <- rep(variable.names, Nmon)
     }
     if (length(stat) != length(summary) || length(stat) != length(variable.names))
-        stop("non-matching lengths of monitor stat, type, and variable.names")
+        stop("non-matching lengths of monitor stat, summary, and variable.names")
     
     ## Catch equivalent var and variance types:
     summary[stat=="variance"] <- "var"
 	
-    ##  Set monitors must be called for each relevant monitor type
+    ##  set_monitors must be called for each relevant monitor type
     pn <- parse.varnames(variable.names)
     status <- .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper,
                     as.integer(thin), stat, summary, PACKAGE="rjags")
