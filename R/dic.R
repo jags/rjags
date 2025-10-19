@@ -106,6 +106,39 @@
     invisible(x)
 }
 
+get_flat_monitors <- function(model, stat, summary)
+{
+    ## Utility function for waic.samples
+    ##
+    ## Only for use with monitors that do not have an iteration dimesion
+    ## and can therefore be represented as a matrix.
+    
+    if (!is.character(stat) || length(stat) != 1) stop("Invalid stat")
+    if (!is.character(summary) || length(summary) != 1) stop("Invalid summary")
+    
+    mlist <- .Call("get_monitored_values_flat", model$ptr(), stat, summary, PACKAGE="rjags")
+    dim1 <- dim(mlist[[1]])
+    if(length(dim1) != 2) stop("can only combine matrix-valued mcarrays")
+    
+    out <- do.call(rbind, mlist)
+
+    ## Set dim tags by setting the name attribute of the dim attribute
+    names(dim(out)) <- names(dim1)
+    ## Set the value names attribute
+    vnames <- unlist(lapply(mlist, function(x) attr(x, "valuenames")))
+    if (!is.null(vnames) && length(vnames) == nrow(out)) {
+        attr(out, "valuenames") <- vnames
+    }
+    ## Set the stat and summary attributes
+    attr(out, "stat") <- stat
+    attr(out, "summary") <- summary
+    ## Finally set the class
+    class(out) <- "mcarray"
+
+    return(out)
+}
+    
+                              
 "waic.samples" <-
     function(model, n.iter, thin=1, nodes="_observed_", scale=2*n, trace=FALSE, ...)
 {
@@ -148,18 +181,12 @@
     }
     
     update(model, n.iter = as.integer(n.iter), ...)
-    
-    likelihood_mean <- .Call("get_monitored_values_flat", model$ptr(), "likelihood", "mean", PACKAGE="rjags")
-    loglikelihood_var <- .Call("get_monitored_values_flat", model$ptr(), "loglikelihood", "var", PACKAGE="rjags")
-    if(trace){
-        loglikelihood_trace <- .Call("get_monitored_values_flat", model$ptr(), "loglikelihood", "trace", PACKAGE="rjags")
-    }
 
-    ## Combine results into single matrix
-    likelihood_mean <- do.call(rbind, likelihood_mean)
-    loglikelihood_var <- do.call(rbind, loglikelihood_var)
-    if (trace) {
-        loglikelihood_trace <- do.call(rbind, loglikelihood_trace)
+    ## Get monitored values
+    likelihood_mean <- get_flat_monitors(model, "likelihood", "mean")
+    loglikelihood_var <- get_flat_monitors(model, "loglikelihood", "var")
+    if(trace){
+        loglikelihood_trace <- get_flat_monitors(model, "loglikelihood", "trace")
     }
     
     ## Clear monitors
