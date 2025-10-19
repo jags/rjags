@@ -1,5 +1,6 @@
-#  R package rjags file R/dic.R
-#  Copyright (C) 2009-2024 Martyn Plummer and Matt Denwood
+
+                                        #  R package rjags file R/dic.R
+#  Copyright (C) 2009-2025 Martyn Plummer and Matt Denwood
 #
 #  This program is free software; you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License version
@@ -25,8 +26,10 @@
     
     if (!is.numeric(n.iter) || length(n.iter) != 1 || n.iter <= 0)
       stop("n.iter must be a positive integer")
+
     load.module("dic", quiet=TRUE)
-    limits <- vector("list",2)
+
+    limits <- vector("list", 2)
     pdtype <- match.arg(type, c("pD","popt"))
     status <- .Call("set_monitors", model$ptr(), c("deviance", pdtype),
                     limits, limits, as.integer(thin), "mean", PACKAGE="rjags")
@@ -104,7 +107,7 @@
 }
 
 "waic.samples" <-
-  function(model, n.iter, node="_observed_", trace=FALSE, thin=1, ...)
+    function(model, n.iter, thin=1, nodes="_observed_", scale=2*n, trace=FALSE, ...)
 {
     if (!inherits(model, "jags"))
         stop("Invalid JAGS model")
@@ -115,161 +118,85 @@
     if (!is.logical(trace) || length(trace)!=1)
         stop("trace must be logical of length 1")
 
-    if (is.null(node)) {
+    if (is.null(nodes)) {
         pn <- list(names="_observed_", lower=list(NULL), upper=list(NULL))
     }
     else {
-        if (!is.character(node) || length(node)==0)
-            stop("node must either be NULL or a character string of length >=1")
-        if (any(node == "deviance")) {
-            stop("node name 'deviance' cannot be used: pass node='_observed_' for all observed stochastic nodes")
+        if (!is.character(nodes) || length(nodes) == 0)
+            stop("nodes must either be NULL or a character string of length >=1")
+        if (any(nodes == "deviance")) {
+            stop("variable name 'deviance' cannot be used: pass nodes='_observed_' for all observed stochastic nodes")
         }
-        pn <- parse.varnames(node)
+        pn <- parse.varnames(nodes)
     }
+    nnames <- length(pn$names)
     
     load.module("diag", quiet=TRUE)
+
+    status1 <- .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper, 
+                     as.integer(thin), rep("likelihood", nnames), rep("mean", nnames), PACKAGE="rjags")
+    if (!all(unlist(status1))) stop("Failed to set a necessary monitor")
     
-    status <- .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper, 
-                    as.integer(thin), "density", "mean", PACKAGE="rjags")
-    if (!all(unlist(status))) stop("Failed to set a necessary monitor")
+    status2 <- .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper, 
+                     as.integer(thin), rep("loglikelihood", nnames), rep("var", nnames), PACKAGE="rjags")
+    if (!all(unlist(status2))) stop("Failed to set a necessary monitor")
     
-    status <- .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper, 
-                    as.integer(thin), "logdensity", "var", PACKAGE="rjags")
-    if (!all(unlist(status))) stop("Failed to set a necessary monitor")
-    
-    if (trace){
-        status <- .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper, 
-                        as.integer(thin), "logdensity", "trace", PACKAGE="rjags")
-        if (!all(unlist(status))) stop("Failed to set the optional trace monitor")
+    if (trace) {
+        status3 <- .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper, 
+                         as.integer(thin), rep("loglikelihood", nnames), rep("trace", nnames), PACKAGE="rjags")
+        if (!all(unlist(status3))) stop("Failed to set the optional trace monitor")
     }
     
     update(model, n.iter = as.integer(n.iter), ...)
     
-    density_mean <- .Call("get_monitored_values", model$ptr(), "density", "mean", PACKAGE="rjags")
-    for(i in seq(along=density_mean)){
-        tname <- names(density_mean)[i]
-        curdim <- dim(density_mean[[i]])
-        class(density_mean[[i]]) <- "mcarray"
-
-        ## Ensure dim and dimnames are correctly set:
-        if(is.null(curdim)){
-            curdim <- length(density_mean[[i]])
-            dim(density_mean[[i]]) <- curdim
-        }
-
-        if (tname=='deviance') {
-            ## If this is a deviance-type monitor then set the stochastic node names:
-            attr(density_mean[[i]], "elementnames") <- observed.stochastic.nodes(model, curdim[1])
-        } else if(!tname %in% node.names(model)){
-            ## If a partial node array then extract the precise element names:
-            attr(density_mean[[i]], "elementnames") <- expand.varname(tname, dim(density_mean[[i]])[1])
-        } else {
-            ## Otherwise just set the varname as the whole array:
-            attr(density_mean[[i]], "varname") <- tname
-        }
-        .Call("clear_monitor", model$ptr(), pn$names[i], pn$lower[[i]], pn$upper[[i]], "density_mean", PACKAGE="rjags")    
-    }
-
-    logdensity_variance <- .Call("get_monitored_values", model$ptr(), "logdensity", "var", PACKAGE="rjags")
-    for (i in seq(along=pn$names)){
-        tname <- names(logdensity_variance)[i]
-        curdim <- dim(logdensity_variance[[i]])
-        class(logdensity_variance[[i]]) <- "mcarray"
-        
-        ## Ensure dim and dimnames are correctly set:
-        if(is.null(curdim)){
-            curdim <- c(variable=length(logdensity_variance[[i]]))
-            dim(logdensity_variance[[i]]) <- curdim
-        }
-        
-        ## If this is a deviance-type monitor then set the stochastic node names:
-        if(tname=='deviance'){
-            attr(logdensity_variance[[i]], "elementnames") <- observed.stochastic.nodes(model, curdim[1])
-            ## If a partial node array then extract the precise element names:
-        }else if(!tname %in% node.names(model)){
-            attr(logdensity_variance[[i]], "elementnames") <- expand.varname(tname, dim(logdensity_variance[[i]])[1])
-            ## Otherwise just set the varname as the whole array:
-        }else{
-            attr(logdensity_variance[[i]], "varname") <- tname
-        }
-        .Call("clear_monitor", model$ptr(), pn$names[i], pn$lower[[i]], pn$upper[[i]], "logdensity", "var", PACKAGE="rjags")    
-    }
-    
-    raw <- list(density_mean, logdensity_variance)
-    names(raw) <- c('density_mean', 'logdensity_variance')
-    
+    likelihood_mean <- .Call("get_monitored_values_flat", model$ptr(), "likelihood", "mean", PACKAGE="rjags")
+    loglikelihood_var <- .Call("get_monitored_values_flat", model$ptr(), "loglikelihood", "var", PACKAGE="rjags")
     if(trace){
-        logdensity_trace <- .Call("get_monitored_values", model$ptr(), "logdensity", "trace", PACKAGE="rjags")
-        for(i in seq(along=pn$names)){
-            tname <- names(logdensity_trace)[i]
-            curdim <- dim(logdensity_trace[[i]])
-            class(logdensity_trace[[i]]) <- "mcarray"
+        loglikelihood_trace <- .Call("get_monitored_values_flat", model$ptr(), "loglikelihood", "trace", PACKAGE="rjags")
+    }
 
-            ## Ensure dim and dimnames are correctly set:
-            if(is.null(curdim)){
-                curdim <- c(variable=length(logdensity_trace[[i]]))
-                dim(logdensity_trace[[i]]) <- curdim
-            }
-
-            ## If this is a deviance-type monitor then set the stochastic node names:
-            if(tname=='deviance'){
-                attr(logdensity_trace[[i]], "elementnames") <- observed.stochastic.nodes(model, curdim[1])
-                ## If a partial node array then extract the precise element names:
-            }else if(!tname %in% node.names(model)){
-                attr(logdensity_trace[[i]], "elementnames") <- expand.varname(tname, dim(logdensity_trace[[i]])[1])
-                ## Otherwise just set the varname as the whole array:
-            }else{
-                attr(logdensity_trace[[i]], "varname") <- tname
-            }
-            .Call("clear_monitor", model$ptr(), pn$names[i], pn$lower[[i]], pn$upper[[i]], "logdensity_trace", PACKAGE="rjags")    
-        }
-        
-        raw <- c(raw, list(logdensity_trace = logdensity_trace))
+    ## Combine results into single matrix
+    likelihood_mean <- do.call(rbind, likelihood_mean)
+    loglikelihood_var <- do.call(rbind, loglikelihood_var)
+    if (trace) {
+        loglikelihood_trace <- do.call(rbind, loglikelihood_trace)
     }
     
-    ## Calculation is always done using running mean/variance:
-    waictable <- waic.table(density_mean, logdensity_variance)
+    ## Clear monitors
+    for(i in seq_along(pn$names)){
+        .Call("clear_monitor", model$ptr(), pn$names[i], pn$lower[[i]], pn$upper[[i]], "likelihood", "mean", PACKAGE="rjags")
+        .Call("clear_monitor", model$ptr(), pn$names[i], pn$lower[[i]], pn$upper[[i]], "loglikelihood", "var", PACKAGE="rjags")
+        if (trace) {
+            .Call("clear_monitor", model$ptr(), pn$names[i], pn$lower[[i]], pn$upper[[i]], "loglikelihood", "trace", PACKAGE="rjags")
+        }
+    }
+
+    raw <- list("likelihood_mean"=likelihood_mean, "loglikelihood_var"=loglikelihood_var)
+    if (trace) {
+        raw <- c(raw, list(loglikelihood_trace = loglikelihood_trace))
+    }
+
+    ## Calculate sample size n here for lazy evaluation of the default scale parameter
+    n <- nrow(likelihood_mean)
+    waictable <- waic.table(likelihood_mean, loglikelihood_var, scale)
     ans <- list(waictable=waictable, mcarray=raw)
     class(ans) <- 'JAGSwaic'	
     
     return(ans)
 }
 
-waic.table <- function(density_mean, logdensity_variance){
-	
-    if (missing(density_mean) || missing(logdensity_variance)){
-        stop('Missing arguments to density_mean and logdensity_variance are not allowed')
-    }
 
-    ## Collapse variable lists to single matrix:
-    dm_matrix <- do.call('cbind', lapply(density_mean, function(x){
-        if('iteration' %in% names(dim(x))){
-            stop('iteration numbers detected in the density_mean')
-        }
-        cdim <- dim(x)
-        dim(x) <- c(cdim[-length(cdim)], iteration=1, cdim[length(cdim)])
-        return(do.call('rbind', as.mcmc.list(x)))
-    }))
-    ldv_matrix <- do.call('cbind', lapply(logdensity_variance, function(x){
-        if('iteration' %in% names(dim(x))){
-            stop('iteration numbers detected in the logdensity_variance')
-        }
-        cdim <- dim(x)
-        dim(x) <- c(cdim[-length(cdim)], iteration=1, cdim[length(cdim)])
-        return(do.call('rbind', as.mcmc.list(x)))
-    }))
+waic.table <- function(likelihood_mean, loglikelihood_var, scale){
+
+    nsample <- nrow(likelihood_mean)
     
-    stopifnot(all(dim(dm_matrix)==dim(ldv_matrix)))
-    N <- ncol(dm_matrix)
-    result <- lapply(1:nrow(dm_matrix), function(chain){
-        lpd <- log(dm_matrix[chain,])
-        elpd <- lpd - ldv_matrix[chain,]
-        waic <- -2 * elpd
-        ans <- c(elpd_waic=sum(elpd), p_waic=sum(ldv_matrix[chain,]), waic=-2*sum(elpd))
-    })
-    result <- do.call('cbind', result)
-    dimnames(result)[[2]] <- paste0('chain', 1:ncol(result))
-    
+    training_loss <- scale * apply(-log(likelihood_mean), 2, sum)
+    p_waic <- apply(loglikelihood_var, 2, sum)
+    waic <- scale * (training_loss + scale * p_waic/nsample)
+
+    result <- rbind(training_loss, p_waic, waic)
+    dimnames(result) <- list(c("training_loss", "p_waic", "waic"), paste0('chain', 1:ncol(result)))
+
     return(result)
 }
 
