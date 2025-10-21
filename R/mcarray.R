@@ -16,7 +16,7 @@
 
 print.mcarray <- function(x, ...)
 {
-    if (is.null(dim(x)) || is.null(names(dim(x)))) {
+    if (is.null(dim(x)) || is.null(attr(x, "dimtags"))) {
         NextMethod()
     }
     print(summary(x, mean))
@@ -24,14 +24,17 @@ print.mcarray <- function(x, ...)
 
 summary.mcarray <- function(object, FUN, ...)
 {
-    if (is.null(dim(object)) || is.null(names(dim(object)))) {
+    if (is.null(dim(object)) || is.null(attr(object, "dimtags"))) {
         NextMethod()
     }
-	
-    dn <- names(dim(object))
-    drop.dims <- dn %in% c("iteration","chain")
 
-    ans <- list("stat"=apply(object, which(!drop.dims), FUN, ...),
+    dimtags <- attr(object, "dimtags")
+    if (length(dimtags) != length(dim(object))) {
+        stop("length mismatch between dimtags and dim")
+    }
+    drop.dims <- dimtags %in% c("iteration","chain")
+
+    ans <- list("stat" = apply(object, which(!drop.dims), FUN, ...),
                 "drop.dims" = dim(object)[drop.dims])
     class(ans) <- "summary.mcarray"
 
@@ -77,17 +80,17 @@ checkdimtags <- function(tags)
 
 as.mcmc.list.mcarray <- function(x, ...)
 {
-    if (is.null(dim(x)) || !checkdimtags(names(dim(x)))) {
+    if (is.null(dim(x)) || !checkdimtags(attr(x, "dimtags"))) {
         NextMethod()
     }
 
     xdim <- dim(x)
     ndim <- length(xdim)
-    dn <- names(xdim)
+    dimtags <- attr(x, "dimtags")
 
-    which.val <- which(dn=="value")
+    which.val <- which(dimtags == "value")
 
-    which.iter <- which(dn=="iteration")
+    which.iter <- which(dimtags == "iteration")
     if (length(which.iter) == 0) {
         stop("mcarray has no iteration dimension")
     }
@@ -95,7 +98,7 @@ as.mcmc.list.mcarray <- function(x, ...)
         stop("Multiple iteration dimensions in mcarray")
     }
 
-    which.chain <- which(dn=="chain")
+    which.chain <- which(dimtags == "chain")
     if (length(which.chain) > 1) {
         stop("Multiple chain dimensions in mcarray")
     }

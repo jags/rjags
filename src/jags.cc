@@ -254,20 +254,19 @@ static SEXP readDataTable(map<string,SArray> const &table)
 	    for (unsigned int k = 0; k < ndim; ++k) {
 		INTEGER(dim)[k] = idim[k];
 	    }
-
-	    //Set names attribute of the dim vector 
-	    vector<DimTag> const &tags = p->second.dimTags();
-	    if (!tags.empty()) {
-		SEXP stags;
-		PROTECT(stags = Rf_allocVector(STRSXP, ndim));
-		for (unsigned int k = 0; k < ndim; ++k) {
-		    SET_STRING_ELT(stags, k, Rf_mkChar(asChar(tags[k])));
-		}
-		Rf_setAttrib(dim, R_NamesSymbol, stags);
-		UNPROTECT(1); //stags
-	    }
 	    SET_DIM(e, dim);
 	    UNPROTECT(1); //dim
+
+	    //Set dim tags 
+	    vector<DimTag> const &tags = p->second.dimTags();
+	    if (!tags.empty()) {
+		SEXP stags = PROTECT(Rf_allocVector(STRSXP, tags.size()));
+		for (unsigned int k = 0; k < tags.size(); ++k) {
+		    SET_STRING_ELT(stags, k, Rf_mkChar(asChar(tags[k])));
+		}
+		Rf_setAttrib(e, Rf_install("dimtags"), stags);
+		UNPROTECT(1); //stags
+	    }
 
 	    //Set S dimnames
 	    bool set_s_dimnames = false;

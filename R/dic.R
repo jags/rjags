@@ -117,13 +117,16 @@ get_flat_monitors <- function(model, stat, summary)
     if (!is.character(summary) || length(summary) != 1) stop("Invalid summary")
     
     mlist <- .Call("get_monitored_values_flat", model$ptr(), stat, summary, PACKAGE="rjags")
-    dim1 <- dim(mlist[[1]])
-    if(length(dim1) != 2) stop("can only combine matrix-valued mcarrays")
+    if (!is.matrix(mlist[[1]])) stop("can only combine matrix-valued mcarrays")
     
     out <- do.call(rbind, mlist)
 
-    ## Set dim tags by setting the name attribute of the dim attribute
-    names(dim(out)) <- names(dim1)
+    ## Set dim tags
+    dimtags <- attr(mlist[[1]], "dimtags")
+    if (!is.null(dimtags) && length(dimtags) == 2) {
+        attr(out, "dimtags") <- dimtags
+    }
+    
     ## Set the value names attribute
     vnames <- unlist(lapply(mlist, function(x) attr(x, "valuenames")))
     if (!is.null(vnames) && length(vnames) == nrow(out)) {
@@ -188,7 +191,7 @@ get_flat_monitors <- function(model, stat, summary)
     if(trace){
         loglikelihood_trace <- get_flat_monitors(model, "loglikelihood", "trace")
     }
-    
+
     ## Clear monitors
     for(i in seq_along(pn$names)){
         .Call("clear_monitor", model$ptr(), pn$names[i], pn$lower[[i]], pn$upper[[i]], "likelihood", "mean", PACKAGE="rjags")
@@ -198,6 +201,12 @@ get_flat_monitors <- function(model, stat, summary)
         }
     }
 
+    ## We assume that monitored nodes are conditionally independent, but it is possible
+    ## for the user to specify the same node twice
+    if (any(duplicated(rownames(likelihood_mean))))
+        warning("Duplicate node names found.")
+
+    
     raw <- list("likelihood_mean"=likelihood_mean, "loglikelihood_var"=loglikelihood_var)
     if (trace) {
         raw <- c(raw, list(loglikelihood_trace = loglikelihood_trace))
