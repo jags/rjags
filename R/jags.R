@@ -382,18 +382,25 @@ parse.varnames <- function(varnames)
 {
   names <- character(length(varnames))
   lower <- upper <- vector("list", length(varnames))
+  ## Reserved names start with an underscore and are not valid variable names in JAGS
+  isreserved <- grepl("_([a-zA-Z]+)([a-zA-Z0-9]*)_", varnames)
   for (i in seq(along=varnames)) {
-    y <- parse.varname(varnames[i])
-    if (is.null(y)) {
-      stop(paste("Invalid variable subset", varnames[i]))
-    }
-    names[i] <- y$name
-    if (!is.null(y$lower)) {
-      lower[[i]] <- y$lower
-    }
-    if (!is.null(y$upper)) {
-      upper[[i]] <- y$upper
-    }
+      if (isreserved[i]) {
+          names[i] <- varnames[i]
+      }
+      else {
+          y <- parse.varname(varnames[i])
+          if (is.null(y)) {
+              stop(paste("Invalid variable subset", varnames[i]))
+          }
+          names[i] <- y$name
+          if (!is.null(y$lower)) {
+              lower[[i]] <- y$lower
+          }
+          if (!is.null(y$upper)) {
+              upper[[i]] <- y$upper
+          }
+      }
   }
   return(list(names=names, lower=lower, upper=upper))
 }
