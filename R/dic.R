@@ -122,9 +122,9 @@ get_flat_monitors <- function(model, stat, summary)
     out <- do.call(rbind, mlist)
 
     ## Set dim tags
-    dimtags <- attr(mlist[[1]], "dimtags")
-    if (!is.null(dimtags) && length(dimtags) == 2) {
-        attr(out, "dimtags") <- dimtags
+    tags <- dimtags(mlist[[1]])
+    if (!is.null(tags) && length(tags) == 2) {
+        dimtags(out) <- tags
     }
     
     ## Set the value names attribute

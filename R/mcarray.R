@@ -16,40 +16,39 @@
 
 print.mcarray <- function(x, ...)
 {
-    if (is.null(dim(x)) || is.null(attr(x, "dimtags"))) {
+    if (is.null(dim(x)) || is.null(dimtags(x))) {
         NextMethod()
     }
-    print(summary(x, mean))
+
+    cat(sprintf("mcarray: "),
+        sprintf("stat = %s, ", attr(x, "stat")), 
+        sprintf("summary = %s\n", attr(x, "summary")), "\n")
+
+    print(summary.mcarray(x, mean))
+
+    tags <- dimtags(x)
+    drop.dims <- tags %in% c("iteration","chain")
+    if (any(drop.dims)) {
+        cat("\nMarginalizing over:",
+            paste(tags[drop.dims], "(", dim(x)[drop.dims],")" ,
+                  sep="", collapse=", "),
+            "\n")
+    }
+
+    invisible(x)
 }
 
 summary.mcarray <- function(object, FUN, ...)
 {
-    if (is.null(dim(object)) || is.null(attr(object, "dimtags"))) {
+    if (is.null(dim(object)) || is.null(dimtags(object))) {
         NextMethod()
     }
-
-    dimtags <- attr(object, "dimtags")
-    if (length(dimtags) != length(dim(object))) {
+    
+    tags <- dimtags(object)
+    if (length(tags) != length(dim(object))) {
         stop("length mismatch between dimtags and dim")
     }
-    drop.dims <- dimtags %in% c("iteration","chain")
-
-    ans <- list("stat" = apply(object, which(!drop.dims), FUN, ...),
-                "drop.dims" = dim(object)[drop.dims])
-    class(ans) <- "summary.mcarray"
-
-    return(ans)
-}
-
-print.summary.mcarray <- function(x, ...)
-{
-    cat("mcarray:\n")
-    print(x$stat,...)
-    if (length(x$drop.dims) > 0) {
-        cat("\nMarginalizing over:",
-            paste(paste(names(x$drop.dims), "(", x$drop.dims,")" , sep=""),
-                  collapse=","),"\n")
-    }
+    apply(object, which(tags == "value"), FUN, ...)
 }
 
 make.coda.names <- function(basename, dim)
@@ -66,31 +65,48 @@ make.coda.names <- function(basename, dim)
     }
 }
 
-checkdimtags <- function(tags)
+dimtags <- function(x)
 {
-    if(is.null(tags)) {
+    attr(x, "dimtags")
+}
+
+`dimtags<-` <- function(x, value)
+{
+    if (is.null(dim(x))) {
+        stop("Cannot set dimtags for object with no dims")
+    }
+    else if (length(dim(x)) != length(value)) {
+        stop("Length mismatch between dimtags and dims")
+    }
+    attr(x, "dimtags") <- value
+    return(x)
+}
+
+checkdimtags <- function(x)
+{
+    tags <- dimtags(x)
+    if (is.null(tags)) {
         return (FALSE)
     }
     else if (!all(tags %in% c("value", "iteration", "chain"))) {
         return (FALSE)
     }
     return(TRUE)
-    
 }
 
 as.mcmc.list.mcarray <- function(x, ...)
 {
-    if (is.null(dim(x)) || !checkdimtags(attr(x, "dimtags"))) {
+    if (is.null(dim(x)) || !checkdimtags(x)) {
         NextMethod()
     }
 
     xdim <- dim(x)
     ndim <- length(xdim)
-    dimtags <- attr(x, "dimtags")
+    tags <- dimtags(x)
 
-    which.val <- which(dimtags == "value")
+    which.val <- which(tags == "value")
 
-    which.iter <- which(dimtags == "iteration")
+    which.iter <- which(tags == "iteration")
     if (length(which.iter) == 0) {
         stop("mcarray has no iteration dimension")
     }
@@ -98,7 +114,7 @@ as.mcmc.list.mcarray <- function(x, ...)
         stop("Multiple iteration dimensions in mcarray")
     }
 
-    which.chain <- which(dimtags == "chain")
+    which.chain <- which(tags == "chain")
     if (length(which.chain) > 1) {
         stop("Multiple chain dimensions in mcarray")
     }
