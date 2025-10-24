@@ -20,9 +20,9 @@ print.mcarray <- function(x, ...)
         NextMethod()
     }
 
-    cat(sprintf("mcarray: "),
-        sprintf("stat = %s, ", attr(x, "stat")), 
-        sprintf("summary = %s\n", attr(x, "summary")), "\n")
+    cat("mcarray:",
+        sprintf("%s", attr(x, "stat")),
+        sprintf("%s", attr(x, "summary")), "\n\n")
 
     print(summary.mcarray(x, mean))
 
@@ -67,7 +67,17 @@ make.coda.names <- function(basename, dim)
 
 dimtags <- function(x)
 {
-    attr(x, "dimtags")
+    tags <- attr(x, "dimtags")
+    if (is.null(tags)) {
+        ## Back-compatibility: In rjags < 5 dimtags were stored as the
+        ## names attribute of the dim attribute
+        tags <- names(dim(x))
+        if (any(nchar(tags)==0)) {
+            ## Value dimensions were implicitly represented by empty strings
+            tags[nchar(tags) == 0] <- "value"
+        }
+    }
+    return(tags)
 }
 
 `dimtags<-` <- function(x, value)
