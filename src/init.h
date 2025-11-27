@@ -21,6 +21,7 @@ extern "C" {
     extern SEXP get_monitored_values(SEXP, SEXP, SEXP);
     extern SEXP get_monitored_values_flat(SEXP, SEXP, SEXP);
     extern SEXP get_nchain(SEXP);
+    extern SEXP get_nthread(SEXP);
     extern SEXP get_samplers(SEXP);
     extern SEXP get_state(SEXP);
     extern SEXP get_variable_names(SEXP);
@@ -39,7 +40,8 @@ extern "C" {
     extern SEXP set_seed(SEXP); 
     extern SEXP unload_module(SEXP);
     extern SEXP update(SEXP, SEXP);
-
+    extern SEXP set_nthread(SEXP, SEXP);
+    
 #ifdef __cplusplus
 }
 #endif

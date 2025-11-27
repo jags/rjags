@@ -25,7 +25,9 @@ export (
   read.bugsdata,
   parallel.seeds,
   jags.seed,
-  jags.version
+  jags.version,
+  nthread,
+  "nthread<-"
 #  Might be exported when it is more than a stub:
 #  observed.stochastic.nodes,
 #  node.names,

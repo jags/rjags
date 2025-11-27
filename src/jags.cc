@@ -387,6 +387,27 @@ extern "C" {
 	R_RegisterCFinalizer(ptr, (R_CFinalizer_t) clear_console);
 	return ptr;
     }
+
+    SEXP get_nthread(SEXP ptr) {
+	return Rf_ScalarInteger(ptrArg(ptr)->nthread());
+    }
+    
+    SEXP set_nthread(SEXP ptr, SEXP nthread)
+    {
+	if (!Rf_isNumeric(nthread)) {
+	    Rf_error("nthread must be numeric");
+	}
+
+	int n = intArg(nthread);
+	if (n < 1) {
+	    Rf_warning("ignoring nthread < 1");
+	}
+	else {
+	    bool status = ptrArg(ptr)->setNThread(intArg(nthread));
+	    printMessages(status);
+	}
+	return R_NilValue;
+    }  
   
     SEXP check_model(SEXP ptr, SEXP name)
     {
@@ -418,8 +439,7 @@ extern "C" {
 
 	map<string, SArray> table;
 	writeDataTable(data, table);
-	bool status = ptrArg(ptr)->compile(table, intArg(nchain),
-					   boolArg(gendata));
+	bool status = ptrArg(ptr)->compile(table, intArg(nchain), boolArg(gendata));
 	printMessages(status);
 	return R_NilValue;
     }

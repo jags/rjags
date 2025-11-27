@@ -40,7 +40,8 @@ print.jags <- function(x, ...)
 }
 
 jags.model <- function(file, data=NULL, inits,
-                       n.chains = 1, n.adapt=1000, quiet=FALSE)
+                       n.chains = 1, n.adapt=1000, quiet = FALSE,
+                       n.threads = n.chains)
 {
     if (missing(file)) {
         stop("Model file name missing")
@@ -139,7 +140,8 @@ jags.model <- function(file, data=NULL, inits,
     }
 
     .Call("compile", p, data, as.integer(n.chains), TRUE, PACKAGE="rjags")
-
+    .Call("set_nthread", p, as.integer(n.threads), PACKAGE="rjags")
+    
 ### Setting initial values
 
     if (!missing(inits) && !is.null(inits))  {
@@ -581,6 +583,22 @@ nchain <- function(model)
       stop("Invalid JAGS model object in nchain")
 
     .Call("get_nchain", model$ptr(), PACKAGE="rjags")
+}
+
+nthread <- function(model)
+{
+    if (!inherits(model, "jags"))
+        stop("Invalid JAGS model object in nchain")
+    
+    .Call("get_nthread", model$ptr(), PACKAGE="rjags")
+}
+
+`nthread<-` <- function(model, value)
+{
+    if (!inherits(model, "jags"))
+        stop("Invalid JAGS model object in nthread")
+
+    .Call("set_nthread", model$ptr(), as.integer(value), PACKAGE="rjags")
 }
 
 coda.samples <- function(model, variable.names=NULL, n.iter, thin=1,

@@ -7,8 +7,8 @@
   of the prior distribution, and a set of data.
 }
 \usage{
- jags.model(file, data, inits,
-            n.chains = 1, n.adapt=1000, quiet=FALSE)
+ jags.model(file, data=NULL, inits, n.chains = 1, n.adapt=1000,
+            quiet=FALSE, n.threads = n.chains)
 }
 \arguments{
   \item{file}{the name of the file containing a description of the model in the
@@ -30,6 +30,7 @@
     adaptation takes place.}
   \item{quiet}{if \code{TRUE} then messages generated during compilation
     will be suppressed, as well as the progress bar during adaptation.}
+  \item{n.threads}{the number of threads to use for parallel updating}
 }
 \value{
   \code{jags.model} returns an object inheriting from class \code{jags}
