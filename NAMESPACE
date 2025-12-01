@@ -27,7 +27,10 @@ export (
   jags.seed,
   jags.version,
   nthread,
-  "nthread<-"
+  "nthread<-",
+  dimtags,
+  "dimtags<-",
+  collapse
 #  Might be exported when it is more than a stub:
 #  observed.stochastic.nodes,
 #  node.names,
@@ -39,7 +42,6 @@ S3method(update, jags)
 S3method(variable.names, jags)
 S3method(print, mcarray)
 S3method(summary, mcarray)
-S3method(print, mcarray)
 S3method(as.mcmc.list, mcarray)
 S3method("-", dic)
 S3method(print, dic)

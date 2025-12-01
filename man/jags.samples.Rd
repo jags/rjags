@@ -7,7 +7,7 @@
 }
 \usage{
 jags.samples(model, variable.names, n.iter, thin = 1,
-             stat="value", summary = "trace", force.list=FALSE, ...)
+             stat="value", summary = "trace", simplify=FALSE, ...)
 }
 \arguments{
   \item{model}{A jags model object}
@@ -17,7 +17,7 @@ jags.samples(model, variable.names, n.iter, thin = 1,
   \item{thin}{thinning interval for monitors}
   \item{stat}{character vector of statistics to be monitored}
   \item{summary}{character vector of summaries}
-  \item{force.list}{option to consistently return a named list of monitor
+  \item{simplify}{option to consistently return a named list of monitor
     types even if a single monitor type is requested}
   \item{...}{optional arguments passed to the update method for jags
     model objects}
@@ -28,27 +28,41 @@ jags.samples(model, variable.names, n.iter, thin = 1,
   the monitored samples.
 }
 \value{
+
   A recursive list of \code{mcarray} objects is returned.  The top level
   denotes the requested stat, the second level the summary, and the
-  third level the monitored variable. Individual \code{mcarray} objects can be
-  extrected with \code{samples$stat$summary$variable}. If only a single
-  stat/summary/variable combination is monitored then a single
-  \code{mcarray} object is returned directly unless the option
-  \code{force.list=TRUE} is used.
+  third level the monitored variable. Individual \code{mcarray} objects
+  can be extrected with \code{samples$stat$summary$variable}.
+
+  If \code{simplify=TRUE} then the list will be recursively simplified
+  so that any top level with only one element is suppressed. This is most
+  useful when only a single stat/summary/variable combination is
+  monitored. In this case \code{simplify=TRUE} returns a single
+  \code{mcarray} object.
+
 }
 \examples{
   data(LINE)
   LINE$recompile()
+  ## With simplify=FALSE the output is a recursive list of depth 3
   LINE.samples <- jags.samples(LINE, c("alpha","beta","sigma"),
-  n.iter=1000)
-  LINE.samples
+                               n.iter=1000, simplify=FALSE)
+  ## Access the value trace monitor for node alpha
+  LINE.samples$value$trace$alpha
+
+  ## With simplify=TRUE, the top 2 levels of the list are removed
+  ## because all monitors are of stat type "value" and summary type "trace"
   LINE.samples <- jags.samples(LINE, c("alpha","beta","sigma"),
-  force.list=TRUE, n.iter=1000)
-  LINE.samples
-  LINE.samples <- jags.samples(LINE, "alpha",
-  n.iter=1000, summary=c("trace","mean"))
-  LINE.samples$trace
-  LINE.samples$mean
+                               n.iter=1000, simplify=TRUE)
+  ## Simpler access to the value trace monitor for alpha
+  LINE.samples$alpha
+
+  ## If we have monitors of the same stat type but different summary
+  ## types then simplify will only remove the top level of the list
+  LINE.samples <- jags.samples(LINE, "alpha",  n.iter=1000,
+                               summary=c("mean","var"),
+                               simplify=TRUE)
+  LINE.samples$mean$alpha
 }
 \author{Martyn Plummer}
 \seealso{\code{\link{jags.model}}, \code{\link{coda.samples}}}

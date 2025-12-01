@@ -16,39 +16,37 @@
 
 print.mcarray <- function(x, ...)
 {
-    if (is.null(dim(x)) || is.null(dimtags(x))) {
+    if (!checkdimtags(x)) {
         NextMethod()
     }
+    else {
+        cat("mcarray:",
+            sprintf("%s", attr(x, "stat")),
+            sprintf("%s", attr(x, "summary")), "\n\n")
+        
+        print(collapse(x, keep.tags="value", FUN=mean))
 
-    cat("mcarray:",
-        sprintf("%s", attr(x, "stat")),
-        sprintf("%s", attr(x, "summary")), "\n\n")
-
-    print(summary.mcarray(x, mean))
-
-    tags <- dimtags(x)
-    drop.dims <- tags %in% c("iteration","chain")
-    if (any(drop.dims)) {
-        cat("\nMarginalizing over:",
-            paste(tags[drop.dims], "(", dim(x)[drop.dims],")" ,
-                  sep="", collapse=", "),
-            "\n")
+        tags <- dimtags(x)
+        drop.dims <- tags %in% c("iteration","chain")
+        if (any(drop.dims)) {
+            cat("\nMarginalizing over:",
+                paste(tags[drop.dims], "(", dim(x)[drop.dims],")" ,
+                      sep="", collapse=", "),
+                "\n")
+        }
+        
+        invisible(x)
     }
-
-    invisible(x)
 }
 
 summary.mcarray <- function(object, FUN, ...)
 {
-    if (is.null(dim(object)) || is.null(dimtags(object))) {
+    if (!checkdimtags(object)) {
         NextMethod()
     }
-    
-    tags <- dimtags(object)
-    if (length(tags) != length(dim(object))) {
-        stop("length mismatch between dimtags and dim")
+    else {
+        collapse(object, keep.tags="value", FUN=FUN, ...)
     }
-    apply(object, which(tags == "value"), FUN, ...)
 }
 
 make.coda.names <- function(basename, dim)
@@ -65,33 +63,6 @@ make.coda.names <- function(basename, dim)
     }
 }
 
-dimtags <- function(x)
-{
-    tags <- attr(x, "dimtags")
-    if (is.null(tags)) {
-        ## Back-compatibility: In rjags < 5 dimtags were stored as the
-        ## names attribute of the dim attribute
-        tags <- names(dim(x))
-        if (any(nchar(tags)==0)) {
-            ## Value dimensions were implicitly represented by empty strings
-            tags[nchar(tags) == 0] <- "value"
-        }
-    }
-    return(tags)
-}
-
-`dimtags<-` <- function(x, value)
-{
-    if (is.null(dim(x))) {
-        stop("Cannot set dimtags for object with no dims")
-    }
-    else if (length(dim(x)) != length(value)) {
-        stop("Length mismatch between dimtags and dims")
-    }
-    attr(x, "dimtags") <- value
-    return(x)
-}
-
 checkdimtags <- function(x)
 {
     tags <- dimtags(x)
@@ -104,16 +75,25 @@ checkdimtags <- function(x)
     return(TRUE)
 }
 
-as.mcmc.list.mcarray <- function(x, ...)
+as.mcmc.list.mcarray <- function(x, na.rm=TRUE, ...)
 {
     if (is.null(dim(x)) || !checkdimtags(x)) {
-        NextMethod()
+        stop("Cannot convert object without dimtags")
     }
 
     xdim <- dim(x)
     ndim <- length(xdim)
     tags <- dimtags(x)
 
+    mcp <- attr(x, "mcpar")
+    if (is.null(mcp)) {
+        start <- thin <- 1
+    }
+    else {
+        start <- mcp[1]
+        thin <- mcp[3]
+    }
+    
     which.val <- which(tags == "value")
 
     which.iter <- which(tags == "iteration")
@@ -133,7 +113,7 @@ as.mcmc.list.mcarray <- function(x, ...)
     if (length(which.chain) == 0) {
         perm <- c(which.val, which.iter)
         y <- matrix(aperm(x, perm), nrow=niter, byrow=TRUE)
-        ans <- mcmc.list(mcmc(y))
+        ans <- mcmc.list(mcmc(y, start=start, thin=thin))
     }
     else {
         nchain <- xdim[which.chain]
@@ -141,8 +121,10 @@ as.mcmc.list.mcarray <- function(x, ...)
         len <- prod(xdim[-which.chain])
         perm <- c(which.val, which.iter, which.chain)
         y <- aperm(x,perm)
+
         for (i in 1:nchain) {
-            ans[[i]] <- mcmc(matrix(y[1:len + (i-1)*len], nrow=niter, byrow=TRUE))
+            ans[[i]] <- mcmc(matrix(y[1:len + (i-1)*len], nrow=niter, byrow=TRUE),
+                             start=start, thin=thin)
         }
         ans <- mcmc.list(ans)
     }
@@ -157,10 +139,11 @@ as.mcmc.list.mcarray <- function(x, ...)
     }
     else {
         ## Set default value names based on the varname attribute, if
-        ## set. Failing that fall back to "x" as a generic variable
-        ## name
+        ## set. Ignore it it contains square brackets indicating that
+        ## it is already a subset.  Fall back to "x" as a generic
+        ## variable name
         varname <- attr(x, "varname", exact=TRUE)
-        if (is.null(varname)) {
+        if (is.null(varname) || grepl("\\[", varname)) {
             varname <- "x"
         }
         val.names <-  make.coda.names(varname, xdim[which.val])
@@ -171,6 +154,18 @@ as.mcmc.list.mcarray <- function(x, ...)
         for (i in 1:nchain) {
             colnames(ans[[i]]) <- val.names
         }
+    }
+
+    if (isTRUE(na.rm)) {
+        ## Drop missing values if required
+        all.missing <- sapply(ans, function(x) {apply(is.na(x), 2, all)})
+        drop.vars <- if (is.matrix(all.missing)) {
+                         apply(all.missing, 1, any)
+                     }
+                     else {
+                         any(all.missing)
+                     }
+        ans <- lapply(ans, function(x) x[, !drop.vars, drop=FALSE])
     }
     
     return(ans)

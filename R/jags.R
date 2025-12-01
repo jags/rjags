@@ -409,7 +409,7 @@ parse.varnames <- function(varnames)
 
 
 jags.samples <-
-  function(model, variable.names, n.iter, thin=1, stat="value", summary="trace", force.list=FALSE, ...)
+  function(model, variable.names, n.iter, thin=1, stat="value", summary="trace", simplify=FALSE, ...)
 {
     if (!inherits(model, "jags"))
         stop("Invalid JAGS model")
@@ -474,18 +474,8 @@ jags.samples <-
                     dim(ans[[k]]) <- curdim
                 }
                 
-                ## If this is a deviance-related monitor type where variables are NOT pooled:
-                ##if(tname=='deviance' && !grepl('_total', t, fixed=TRUE) && !t=='trace'){
-                ##    attr(ans[[i]], "elementnames") <- observed.stochastic.nodes(model, curdim[1])
-                ##}else
-                ## If a partial node array then extract the precise element names:
-                if (!tname %in% node.names(model)){
-                    attr(ans[[k]], "elementnames") <- expand.varname(tname, dim(ans[[k]])[1])
-                    ## Otherwise just set the varname as the whole array:
-                } else {
-                    attr(ans[[k]], "varname") <- tname
-                }
                 class(ans[[k]]) <- "mcarray"
+                attr(ans[[k]], "varname") <- tname
                 attr(ans[[k]], "stat") <- s
                 attr(ans[[k]], "summary") <- t
                 attr(ans[[k]], "iterations") <- c(start=startiter+thin, end=startiter+n.iter, thin=thin)
@@ -502,11 +492,12 @@ jags.samples <-
     
     ##  Remove any that are empty:
     ##allans <- allans[lapply(allans, length) > 0]
-	
-    ##  And if all monitors are of the same type and !force.list then return 
-    ##  just a single element for back compatibility with rjags 4
-    if(!force.list && length(val)==1 && length(val[[1]]) == 1)
-        val <- val[[1]][[1]]
+
+    if (simplify) {
+        while(is.list(val) && length(val) == 1) {
+            val <- val[[1]]
+        }
+    }
     
     return(val)
 }
@@ -605,8 +596,9 @@ coda.samples <- function(model, variable.names=NULL, n.iter, thin=1,
                          na.rm = TRUE, ...)
 {
     start <- model$iter() + thin
-    out <- jags.samples(model, variable.names, n.iter, thin, stat="value", summary="trace", ...)
-
+    out <- jags.samples(model, variable.names, n.iter, thin, stat="value", summary="trace",
+                        simplify=FALSE, ...)$value$trace
+    
     ans <- vector("list", nchain(model))
     for (ch in 1:nchain(model)) {
         ans.ch <- vector("list", length(out))
