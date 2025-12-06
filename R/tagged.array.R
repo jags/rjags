@@ -42,7 +42,7 @@ collapse <- function(object, drop.tags, keep.tags, FUN, tag.result=FALSE, ...)
     else if (!missing(keep.tags)) {
         keep.dims <- tags %in% keep.tags
     }
-    else if (!missing(drop)) {
+    else if (!missing(drop.tags)) {
         keep.dims <- !(tags %in% drop.tags)
     }
     else {
