@@ -25,8 +25,6 @@
     if (!is.numeric(n.iter) || length(n.iter) != 1 || n.iter <= 0)
       stop("n.iter must be a positive integer")
 
-    load.module("diag", quiet=TRUE)
-
     pdtype <- match.arg(type, c("pD","popt"))
     penalty_stat <- if (pdtype == "pD") {"leverage"} else {"loo_leverage"}
 
@@ -156,8 +154,6 @@ get_flat_monitors <- function(model, stat, summary)
     }
     nnames <- length(pn$names)
     
-    load.module("diag", quiet=TRUE)
-
     status1 <- .Call("set_monitors", model$ptr(), pn$names, pn$lower, pn$upper, 
                      as.integer(thin), rep("likelihood", nnames), rep("mean", nnames), PACKAGE="rjags")
     if (!all(unlist(status1))) stop("Failed to set a necessary monitor")

@@ -9,7 +9,8 @@
     }
     load.module("basemod", quiet=TRUE)
     load.module("bugs", quiet=TRUE)
-
+    load.module("diag", quiet=TRUE)
+    
     ## Set progress bar type
     if (is.null(getOption("jags.pb"))) {
         options("jags.pb"="text")
