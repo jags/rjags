@@ -113,12 +113,14 @@ as.mcmc.list.mcarray <- function(x, na.rm=TRUE, ...)
     if (length(which.chain) == 0) {
         perm <- c(which.val, which.iter)
         y <- matrix(aperm(x, perm), nrow=niter, byrow=TRUE)
-        ans <- mcmc.list(mcmc(y, start=start, thin=thin))
+        nvar <- ncol(y)
+        ans <- list(mcmc(y, start=start, thin=thin))
     }
     else {
         nchain <- xdim[which.chain]
         ans <- vector("list", nchain)
         len <- prod(xdim[-which.chain])
+        nvar <- prod(xdim[which.val])
         perm <- c(which.val, which.iter, which.chain)
         y <- aperm(x,perm)
 
@@ -126,15 +128,14 @@ as.mcmc.list.mcarray <- function(x, na.rm=TRUE, ...)
             ans[[i]] <- mcmc(matrix(y[1:len + (i-1)*len], nrow=niter, byrow=TRUE),
                              start=start, thin=thin)
         }
-        ans <- mcmc.list(ans)
     }
     
     val.names <- NULL
     if (!is.null(attr(x, 'valuenames', exact=TRUE))) {
         ## If valuenames attribute is set then use this
         val.names <- attr(x, 'valuenames')
-        if (length(val.names) != nvar(ans)){
-            stop(paste0('The length of the valuenames attr (', length(val.names), ') does not match the number of variables (', nvar(ans), ')'))
+        if (length(val.names) != nvar){
+            stop(paste0('The length of the valuenames attr (', length(val.names), ') does not match the number of variables (', nvar, ')'))
         }
     }
     else {
@@ -150,7 +151,6 @@ as.mcmc.list.mcarray <- function(x, na.rm=TRUE, ...)
     }
     
     if (!is.null(val.names)) {
-        ## Work around bug in coda::varnames<-
         for (i in 1:nchain) {
             colnames(ans[[i]]) <- val.names
         }
@@ -168,6 +168,6 @@ as.mcmc.list.mcarray <- function(x, na.rm=TRUE, ...)
         ans <- lapply(ans, function(x) x[, !drop.vars, drop=FALSE])
     }
     
-    return(ans)
+    return(mcmc.list(ans))
 }
 
