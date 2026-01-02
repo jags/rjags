@@ -7,7 +7,8 @@
 }
 \usage{
 jags.samples(model, variable.names, n.iter, thin = 1,
-             stat="value", summary = "trace", simplify=FALSE, ...)
+             stat="value", summary = "trace", simplify=TRUE,
+             force.list=FALSE, ...)
 }
 \arguments{
   \item{model}{A jags model object}
@@ -17,8 +18,10 @@ jags.samples(model, variable.names, n.iter, thin = 1,
   \item{thin}{thinning interval for monitors}
   \item{stat}{character vector of statistics to be monitored}
   \item{summary}{character vector of summaries}
-  \item{simplify}{option to consistently return a named list of monitor
-    types even if a single monitor type is requested}
+  \item{simplify}{logical flag. If TRUE then the return value will
+    be recursively simplified. See Details below.}
+  \item{force.list}{logical flag. If TRUE then the return value will
+    never be simplified beyond the first two levels. See Details below.}
   \item{...}{optional arguments passed to the update method for jags
     model objects}
 }
@@ -32,13 +35,19 @@ jags.samples(model, variable.names, n.iter, thin = 1,
   A recursive list of \code{mcarray} objects is returned.  The top level
   denotes the requested stat, the second level the summary, and the
   third level the monitored variable. Individual \code{mcarray} objects
-  can be extrected with \code{samples$stat$summary$variable}.
+  can be extrected with \code{samples$stat$summary$variable}
+  substituting appropriate names for \code{stat}, \code{summary}, and
+  \code{variable}.
 
   If \code{simplify=TRUE} then the list will be recursively simplified
-  so that any top level with only one element is suppressed. This is most
-  useful when only a single stat/summary/variable combination is
+  so that any top level with only one element is suppressed. This is
+  most useful when only a single stat/summary/variable combination is
   monitored. In this case \code{simplify=TRUE} returns a single
-  \code{mcarray} object.
+  \code{mcarray} object. This behaviour can be modified by specifying
+  \code{force.list=TRUE}, in which case the return value will never be
+  be simplified at the variable level. If only a single
+  stat/summary/variable combination is monitored then the return value
+  will be a list containing a single \code{mcarray} object.
 
 }
 \examples{
