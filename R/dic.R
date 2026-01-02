@@ -1,5 +1,4 @@
-
-                                        #  R package rjags file R/dic.R
+#  R package rjags file R/dic.R
 #  Copyright (C) 2009-2025 Martyn Plummer and Matt Denwood
 #
 #  This program is free software; you can redistribute it and/or
@@ -15,8 +14,7 @@
 #  http://www.r-project.org/Licenses/
 #
 
-"dic.samples" <-
-  function(model, n.iter, thin=1, type="pD", ...)
+"dic.samples" <- function(model, n.iter, thin=1, type="pD", ...)
 {
     if (nchain(model) == 1) {
         stop("2 or more parallel chains required")
@@ -27,34 +25,25 @@
     if (!is.numeric(n.iter) || length(n.iter) != 1 || n.iter <= 0)
       stop("n.iter must be a positive integer")
 
-    load.module("dic", quiet=TRUE)
+    load.module("diag", quiet=TRUE)
 
-    limits <- vector("list", 2)
     pdtype <- match.arg(type, c("pD","popt"))
-    status <- .Call("set_monitors", model$ptr(), c("deviance", pdtype),
-                    limits, limits, as.integer(thin), "mean", PACKAGE="rjags")
-    if (!any(status)) {
-      stop("Failed to set monitors")
+    penalty_stat <- if (pdtype == "pD") {"leverage"} else {"loo_leverage"}
+
+    samples <- jags.samples(model, variable.names="_observed_",
+                            stat=c("deviance", penalty_stat),
+                            summary="mean",
+                            n.iter=n.iter, thin=thin)
+    
+    deviance <- collapse(samples[["deviance"]][["mean"]][[1]], keep.tags="value", FUN=mean)
+    penalty <- collapse(samples[[penalty_stat]][["mean"]][[1]], keep.tags="value", FUN=mean)
+    if (pdtype == "popt") {
+        penalty <- 2 * penalty
     }
     
-    update(model, n.iter = as.integer(n.iter), ...)
-    dev <- .Call("get_monitored_values_flat", model$ptr(), "mean",
-                 PACKAGE="rjags")
-    for (i in seq(along=dev)) {
-        class(dev[[i]]) <- "mcarray"
-    }
-
-    if (status[1]) {
-        .Call("clear_monitor", model$ptr(), "deviance", NULL, NULL, "mean",
-              PACKAGE="rjags")
-    }
-    if (status[2]) {
-        .Call("clear_monitor", model$ptr(), pdtype, NULL, NULL, "mean",
-              PACKAGE="rjags")
-    }
-
-    ans <- list("deviance" = dev$deviance, "penalty" = dev[[type]],
-                "type" = type)
+    ans <- list("deviance" = deviance,
+                "penalty" = penalty,
+                "type" = pdtype)
     class(ans) <- "dic"
     return(ans)
 }
@@ -62,10 +51,10 @@
 "print.dic" <- function(x, digits= max(3, getOption("digits") - 3), ...)
 {
     deviance <- sum(x$deviance)
-    cat("Mean deviance: ", format(deviance, digits=digits), "\n")
+    cat("Mean deviance: ", format(deviance, digits=digits), "\n", sep="")
     psum <- sum(x[[2]])
-    cat(names(x)[[2]], format(mean(psum), digits=digits), "\n")
-    cat("Penalized deviance:", format(deviance + psum, digits=digits), "\n")
+    cat(names(x)[[2]], ": ", format(mean(psum), digits=digits), "\n", sep="")
+    cat("Penalized deviance: ", format(deviance + psum, digits=digits), "\n", sep="")
     invisible(x)
 }
 
