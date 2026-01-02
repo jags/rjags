@@ -409,14 +409,13 @@ parse.varnames <- function(varnames)
 
 
 jags.samples <-
-  function(model, variable.names, n.iter, thin=1, stat="value", summary="trace", simplify=FALSE, ...)
+  function(model, variable.names, n.iter, thin=1, stat="value", summary="trace", simplify=TRUE, force.list=FALSE, ...)
 {
     if (!inherits(model, "jags"))
         stop("Invalid JAGS model")
 
     if (!is.character(variable.names) || length(variable.names) == 0)
-        stop("variable.names must be a character vector")
-
+        stop("'variable.names' must be a character vector")
     if (!is.numeric(n.iter) || length(n.iter) != 1 || n.iter <= 0)
         stop("n.iter must be a positive integer")
     if (!is.numeric(thin) || length(thin) != 1 || thin <= 0)
@@ -425,8 +424,6 @@ jags.samples <-
         stop("'stat' must be a character vector")
     if (!is.character(summary) || length(summary) == 0)
         stop("'summary' must be a character vector")
-    if (!is.character(variable.names) || length(variable.names) == 0)
-        stop("'variable.names' must be a character vector")
     
     ##  Allow vectorisation of arguments stat, summary, and variable.names
     Nmon <- max(length(stat), length(summary), length(variable.names))
@@ -494,8 +491,14 @@ jags.samples <-
     ##allans <- allans[lapply(allans, length) > 0]
 
     if (simplify) {
-        while(is.list(val) && length(val) == 1) {
-            val <- val[[1]]
+        max.depth <- ifelse(isTRUE(force.list), 2, 3)
+        for (i in 1:max.depth) {
+            if (length(val) == 1) {
+                val <- val[[1]]
+            }
+            else {
+                break
+            }
         }
     }
     
