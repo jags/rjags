@@ -409,7 +409,7 @@ parse.varnames <- function(varnames)
 
 
 jags.samples <-
-  function(model, variable.names, n.iter, thin=1, stat="value", summary="trace", simplify=TRUE, force.list=FALSE, ...)
+  function(model, variable.names, n.iter, thin=1, stat="value", summary="trace", simplify=2, ...)
 {
     if (!inherits(model, "jags"))
         stop("Invalid JAGS model")
@@ -424,7 +424,11 @@ jags.samples <-
         stop("'stat' must be a character vector")
     if (!is.character(summary) || length(summary) == 0)
         stop("'summary' must be a character vector")
-    
+    if (length(simplify) != 1)
+        stop("'simplify' must be a scalar")
+    if (!is.logical(simplify) && !is.numeric(simplify)) 
+        stop("'simplify' must be numeric or logical")
+
     ##  Allow vectorisation of arguments stat, summary, and variable.names
     Nmon <- max(length(stat), length(summary), length(variable.names))
     if (Nmon > 1) {
@@ -490,9 +494,13 @@ jags.samples <-
     ##  Remove any that are empty:
     ##allans <- allans[lapply(allans, length) > 0]
 
-    if (simplify) {
-        max.depth <- ifelse(isTRUE(force.list), 2, 3)
-        for (i in 1:max.depth) {
+    if (is.logical(simplify)) {
+        simplify <- if (simplify) 3 else 0
+    }
+    if (simplify > 0) {
+        ## Recursively simplify the return value up to max depth
+        ## determinined by the 'simplify' parameter
+        for (i in 1:min(simplify, 3)) {
             if (length(val) == 1) {
                 val <- val[[1]]
             }
