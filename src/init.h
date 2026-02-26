@@ -28,6 +28,7 @@ extern "C" {
     extern SEXP get_obs_stoch_names(SEXP);
     extern SEXP get_version();
     extern SEXP initialize(SEXP);
+    extern SEXP initialize3(SEXP, SEXP, SEXP);
     extern SEXP is_adapting(SEXP);
     extern SEXP load_module(SEXP);
     extern SEXP make_console();

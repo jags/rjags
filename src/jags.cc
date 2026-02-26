@@ -462,10 +462,18 @@ extern "C" {
   
     SEXP initialize(SEXP ptr)
     {
-	bool status = ptrArg(ptr)->initialize();
+	bool status = ptrArg(ptr)->initialize(1UL, 1UL);
 	printMessages(status);
 	return R_NilValue;
     }
+
+    SEXP initialize3(SEXP ptr, SEXP nrep1, SEXP nrep2)
+    {
+	bool status = ptrArg(ptr)->initialize(intArg(nrep1), intArg(nrep2));
+	printMessages(status);
+	return R_NilValue;
+    }
+
 
     SEXP check_adaptation(SEXP ptr)
     {

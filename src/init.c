@@ -31,6 +31,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"get_obs_stoch_names",       (DL_FUNC) &get_obs_stoch_names,       1},
     {"get_version",               (DL_FUNC) &get_version,               0},
     {"initialize",                (DL_FUNC) &initialize,                1},
+    {"initialize3",               (DL_FUNC) &initialize,                3},
     {"is_adapting",               (DL_FUNC) &is_adapting,               1},
     {"load_module",               (DL_FUNC) &load_module,               1},
     {"make_console",              (DL_FUNC) &make_console,              0},

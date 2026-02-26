@@ -41,7 +41,7 @@ print.jags <- function(x, ...)
 
 jags.model <- function(file, data=NULL, inits,
                        n.chains = 1, n.adapt=1000, quiet = FALSE,
-                       n.threads = n.chains)
+                       n.threads = n.chains, initrep=10000)
 {
     if (missing(file)) {
         stop("Model file name missing")
@@ -132,11 +132,11 @@ jags.model <- function(file, data=NULL, inits,
         }
     }
     
-    ## Reject any non-numeric data
+    ## Warn about non-numeric data
     num_vals <- sapply(data, is.numeric)
     if (any(!num_vals)) {
-        stop(paste("Non-numeric data values supplied for variable(s) ",
-                   paste(names(data)[!num_vals], collapse=", "), sep=""))
+        warning(paste("Non-numeric data values supplied for variable(s) ",
+                      paste(names(data)[!num_vals], collapse=", "), sep=""))
     }
 
     .Call("compile", p, data, as.integer(n.chains), TRUE, PACKAGE="rjags")
@@ -251,7 +251,21 @@ jags.model <- function(file, data=NULL, inits,
         }
     }
 
-    .Call("initialize", p, PACKAGE="rjags")
+    initrep <- as.integer(initrep)
+    if (length(initrep) == 0 || any(initrep < 0) || any(!is.finite(initrep))) {
+        initrep <- 10000
+        warning("Ignoring invalid intrep argument")
+    }
+    if (length(initrep) == 1) {
+        nrep1 <- nrep2 <- initrep
+    }
+    else {
+        nrep1 <- as.integer(initrep[1])
+        nrep2 <- as.integer(initrep[2])
+        if (length(initrep) > 2)
+            warning("Using only the first two elements of initrep")
+    }
+    .Call("initialize3", p, nrep1, nrep2, PACKAGE="rjags")
 
     model.state <- .Call("get_state", p, PACKAGE="rjags")
     model.data <- .Call("get_data", p, PACKAGE="rjags")
