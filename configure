@@ -2154,13 +2154,13 @@ fi
 
 
 if test  -n "${PKG_CONFIG}"  ; then
-   if `${PKG_CONFIG} --exists jags`; then
+   if `${PKG_CONFIG} --exists jags` || `${PKG_CONFIG} --with-path=/opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig --exists jags`; then
        if `${PKG_CONFIG} --exists --atleast-version=${PACKAGE_VERSION}.0.0 jags` &&
           `${PKG_CONFIG} --exists --max-version=${PACKAGE_VERSION}.99.99 jags`; then
          JAGS_LIBS=`${PKG_CONFIG} --libs jags`
          JAGS_CFLAGS=`${PKG_CONFIG} --cflags jags`
          JAGS_LIBDIR=`${PKG_CONFIG} --variable libdir jags`
-         if test  -z "${JAGS_LIBS}" || -z "${JAGS_CFLAGS}"  ; then
+         if test -z "${JAGS_LIBS}" || test -z "${JAGS_CFLAGS}" ; then
             as_fn_error $? "Cannot get information about jags ${PACKAGE_VERSION} from pkg-config" "$LINENO" 5
          else
             { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Setting compile and link flags according to pkg-config" >&5
@@ -2170,10 +2170,36 @@ printf "%s\n" "$as_me: Compile flags are $JAGS_CFLAGS" >&6;}
             { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Link flags are $JAGS_LIBS" >&5
 printf "%s\n" "$as_me: Link flags are $JAGS_LIBS" >&6;}
          fi
-      else
-         jags_installed_version=`${PKG_CONFIG} --modversion jags`
-         as_fn_error $? "pkg-config found JAGS ${jags_installed_version} but rjags requires JAGS ${PACKAGE_VERSION}.x.y" "$LINENO" 5
-      fi
+       # If the first jags.pc on the search path is for the wrong version, try the macOS official installation directory:
+       elif `${PKG_CONFIG} --with-path=/opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig --exists --atleast-version=${PACKAGE_VERSION}.0.0 jags` &&
+           `${PKG_CONFIG} --with-path=/opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig --exists --max-version=${PACKAGE_VERSION}.99.99 jags`; then
+         JAGS_LIBS=`${PKG_CONFIG} --with-path=/opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig --libs jags`
+         JAGS_CFLAGS=`${PKG_CONFIG} --with-path=/opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig --cflags jags`
+         JAGS_LIBDIR=`${PKG_CONFIG} --with-path=/opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig --variable libdir jags`
+         if test -z "${JAGS_LIBS}" || test -z "${JAGS_CFLAGS}" ; then
+            as_fn_error $? "Cannot get information about jags ${PACKAGE_VERSION} from pkg-config
+          using /opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig" "$LINENO" 5
+         else
+           { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Setting compile and link flags according to pkg-config
+           using /opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig" >&5
+printf "%s\n" "$as_me: Setting compile and link flags according to pkg-config
+           using /opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig" >&6;}
+           { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Compile flags are $JAGS_CFLAGS" >&5
+printf "%s\n" "$as_me: Compile flags are $JAGS_CFLAGS" >&6;}
+           { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Link flags are $JAGS_LIBS" >&5
+printf "%s\n" "$as_me: Link flags are $JAGS_LIBS" >&6;}
+         fi
+       else
+         if `${PKG_CONFIG} --exists jags`; then
+           jags_installed_version=`${PKG_CONFIG} --modversion jags`
+           as_fn_error $? "pkg-config found JAGS ${jags_installed_version} but rjags requires JAGS ${PACKAGE_VERSION}.x.y" "$LINENO" 5
+         else
+           # Should never happen unless we have a broken macOS official JAGS installation - but just to be safe:
+           jags_installed_version=`${PKG_CONFIG} --with-path=/opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig --modversion jags`
+           as_fn_error $? "pkg-config found JAGS ${jags_installed_version} under /opt/jags/${PACKAGE_VERSION}.x-current but rjags requires JAGS ${PACKAGE_VERSION}.x.y
+           It seems you have a broken macOS official JAGS installation" "$LINENO" 5
+         fi
+       fi
    else
       as_fn_error $? "pkg-config file for jags ${PACKAGE_VERSION} unavailable
                    Try adding the directory containing 'jags.pc'
