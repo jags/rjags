@@ -211,9 +211,9 @@ waic.table <- function(likelihood_mean, loglikelihood_var, scale){
 
     nsample <- nrow(likelihood_mean)
     
-    training_loss <- scale * apply(-log(likelihood_mean), 2, sum)
+    training_loss <- scale * apply(-log(likelihood_mean), 2, sum) / nsample
     p_waic <- apply(loglikelihood_var, 2, sum)
-    waic <- scale * (training_loss + scale * p_waic/nsample)
+    waic <- training_loss + scale * p_waic / nsample
 
     result <- rbind(training_loss, p_waic, waic)
     dimnames(result) <- list(c("training_loss", "p_waic", "waic"), paste0('chain', 1:ncol(result)))
