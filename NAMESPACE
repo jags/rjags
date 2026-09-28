@@ -26,6 +26,7 @@ export (
   parallel.seeds,
   jags.seed,
   jags.version,
+  pkg.compile.flags,
   nthread,
   "nthread<-",
   dimtags,
