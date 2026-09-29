@@ -671,6 +671,43 @@ coda.samples <- function(model, variable.names=NULL, n.iter, thin=1,
     mcmc.list(ans)
 }
 
+load.pkg.module <- function(name, bin.compat, quiet=FALSE)
+{
+  ## Extract the relevant libs folder:
+  path <- system.file(package = name, "libs")
+  stopifnot(length(path)==1L)
+  if (path=="") {
+    stop("Package not found: ", name)
+  }
+  if (.Platform$r_arch!="") {
+    path <- file.path(path, .Platform$r_arch)
+  }
+  if (!file.exists(file.path(path, paste0(name, .Platform$dynlib.ext)))) {
+    stop("File not found: ", file.path(path, paste0(name, .Platform$dynlib.ext)))
+  }
+  
+  ## Check binary compatibility:
+  if (missing(bin.compat) || !is.list(bin.compat) ||
+        !"MAJOR_VERSION"%in%names(bin.compat)) {
+    stop("The bin.compat argument must be provided: this should be
+      saved within the package namespace using a call to
+      rjags:::pkg.compile.flags(\"BINCOMPAT\") at build time")
+  }
+  rjags.bin <- pkg.compile.flags("BINCOMPAT")
+  if (bin.compat[["MAJOR_VERSION"]] != rjags.bin[["MAJOR_VERSION"]]) {
+    stop("Mismatched JAGS major versions:\n\t", name, ": ", bin.compat[["MAJOR_VERSION"]], "\n\trjags: ", rjags.bin[["MAJOR_VERSION"]], "\nThe ", name, " package must either be recompiled or reinstalled following recompilation on CRAN")
+  }
+  
+  ## Try to load the module:
+  tryCatch({
+    load.module(name, path, quiet)
+  }, error = function(x){
+    stop("The ", name, " module failed to load for an unknown reason.\nIt may help to inspect the following PKG_LIB for mismatches:\n\t", name, ": ", bin.compat[["LIBS"]], "\n\trjags: ", rjags.bin[["LIBS"]], "\nEnsure that ", name, " and rjags are compiled against the same build of JAGS.", call.=FALSE)
+  })
+    
+  invisible()  
+}
+
 load.module <- function(name, path, quiet=FALSE)
 {   
     if (name %in% list.modules()) {

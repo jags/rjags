@@ -11,6 +11,7 @@ export (
   jags.samples,
   coda.samples,
   load.module,
+  load.pkg.module,
   unload.module,
   list.modules,
   dic.samples,

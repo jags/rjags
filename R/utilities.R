@@ -20,10 +20,10 @@
 # Required to check availability of new features but also useful to export:
 jags.version <- function(){
     vers <- .Call("get_version", PACKAGE="rjags")
-    ## Work around bug introduced by 5.0.0-beta as package name
-    vers <- sub("-beta$", "", vers)
     ## Remove potential build information:
     vers <- sub(" (.*)$", "", vers)
+    ## Work around bug introduced by 5.0.0-beta as package name
+    vers <- sub("-beta$", "", vers)
     return(numeric_version(vers))	
 }
 

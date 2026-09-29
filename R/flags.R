@@ -14,16 +14,20 @@
 ##  http://www.r-project.org/Licenses/
 ##
 
-pkg.compile.flags <- function(type = c("BINCOMPAT", "CPPFLAGS", "CXXFLAGS", "LIBS"), print=TRUE)
+pkg.compile.flags <- function(type = c("BINCOMPAT", "CPPFLAGS", "CXXFLAGS", "LIBS"), print=type!="BINCOMPAT")
 {
   type <- match.arg(type)
-  value <- switch(type,
-    "BINCOMPAT" = paste0("VERSION: ", as.numeric(jags.version()[,1]), " - LIBS: ", .Call("get_rjags_libs", PACKAGE="rjags")),
+  flags <- list(
     "CPPFLAGS" = .Call("get_rjags_cppflags", PACKAGE="rjags"),
     "CXXFLAGS" = .Call("get_rjags_cxxflags", PACKAGE="rjags"),
     "LIBS" = .Call("get_rjags_libs", PACKAGE="rjags")    
   )
+  value <- c(flags, "BINCOMPAT"=list(c(list("MAJOR_VERSION"=as.numeric(jags.version()[,1])), flags)))[[type]]
   
-  if(isTRUE(print)) cat(value)
-  invisible(value)
+  if(isTRUE(print)){
+    cat(value)
+    invisible(value)
+  }else{
+    return(value)
+  }
 }
