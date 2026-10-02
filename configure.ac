@@ -11,9 +11,10 @@ CPPFLAGS=`"${R_HOME}/bin/R" CMD config CPPFLAGS`
 
 # Use pkg-config to set compiler flags
 
-AC_PATH_PROG([PKG_CONFIG], [pkg-config], [], [$PATH:/usr/local/bin])
+# Note: pkg-config is not installed on vanilla macOS but is provided by the JAGS installers at /opt/jags/versions/pkgconf-lite/current/bin
+AC_PATH_PROG([PKG_CONFIG], [pkg-config], [], [$PATH:/usr/local/bin:/opt/jags/versions/pkgconf-lite/current/bin])
 if test [ -n "${PKG_CONFIG}" ] ; then
-   if `${PKG_CONFIG} --exists jags` || `${PKG_CONFIG} --with-path=/opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig --exists jags`; then
+   if `${PKG_CONFIG} --exists jags` || `${PKG_CONFIG} --with-path=/opt/jags/lib/pkgconfig-${PACKAGE_VERSION} --exists jags`; then
        if `${PKG_CONFIG} --exists --atleast-version=${PACKAGE_VERSION}.0.0 jags` &&
           `${PKG_CONFIG} --exists --max-version=${PACKAGE_VERSION}.99.99 jags`; then
          JAGS_LIBS=`${PKG_CONFIG} --libs jags`
@@ -27,11 +28,11 @@ if test [ -n "${PKG_CONFIG}" ] ; then
             AC_MSG_NOTICE([Link flags are $JAGS_LIBS])
          fi
        # If the first jags.pc on the search path is for the wrong version, try the macOS official installation directory:
-       elif `${PKG_CONFIG} --with-path=/opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig --exists --atleast-version=${PACKAGE_VERSION}.0.0 jags` &&
-           `${PKG_CONFIG} --with-path=/opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig --exists --max-version=${PACKAGE_VERSION}.99.99 jags`; then
-         JAGS_LIBS=`${PKG_CONFIG} --with-path=/opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig --libs jags`
-         JAGS_CFLAGS=`${PKG_CONFIG} --with-path=/opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig --cflags jags`
-         JAGS_LIBDIR=`${PKG_CONFIG} --with-path=/opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig --variable libdir jags`
+       elif `${PKG_CONFIG} --with-path=/opt/jags/lib/pkgconfig-${PACKAGE_VERSION} --exists --atleast-version=${PACKAGE_VERSION}.0.0 jags` &&
+           `${PKG_CONFIG} --with-path=/opt/jags/lib/pkgconfig-${PACKAGE_VERSION} --exists --max-version=${PACKAGE_VERSION}.99.99 jags`; then
+         JAGS_LIBS=`${PKG_CONFIG} --with-path=/opt/jags/lib/pkgconfig-${PACKAGE_VERSION} --libs jags`
+         JAGS_CFLAGS=`${PKG_CONFIG} --with-path=/opt/jags/lib/pkgconfig-${PACKAGE_VERSION} --cflags jags`
+         JAGS_LIBDIR=`${PKG_CONFIG} --with-path=/opt/jags/lib/pkgconfig-${PACKAGE_VERSION} --variable libdir jags`
          if test -z "${JAGS_LIBS}" || test -z "${JAGS_CFLAGS}" ; then
             AC_MSG_ERROR([Cannot get information about jags ${PACKAGE_VERSION} from pkg-config]
           [using /opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig])
@@ -47,8 +48,8 @@ if test [ -n "${PKG_CONFIG}" ] ; then
            AC_MSG_ERROR([pkg-config found JAGS ${jags_installed_version} but rjags requires JAGS ${PACKAGE_VERSION}.x.y])
          else
            # Should never happen unless we have a broken macOS official JAGS installation - but just to be safe:
-           jags_installed_version=`${PKG_CONFIG} --with-path=/opt/jags/${PACKAGE_VERSION}.x-current/lib/pkgconfig --modversion jags`
-           AC_MSG_ERROR([pkg-config found JAGS ${jags_installed_version} under /opt/jags/${PACKAGE_VERSION}.x-current but rjags requires JAGS ${PACKAGE_VERSION}.x.y]
+           jags_installed_version=`${PKG_CONFIG} --with-path=/opt/jags/lib/pkgconfig-${PACKAGE_VERSION} --modversion jags`
+           AC_MSG_ERROR([pkg-config found JAGS ${jags_installed_version} under /opt/jags/lib/pkgconfig-${PACKAGE_VERSION} but rjags requires JAGS ${PACKAGE_VERSION}.x.y]
            [It seems you have a broken macOS official JAGS installation])
          fi
        fi

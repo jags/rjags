@@ -1,5 +1,6 @@
 \name{jags.module}
 \alias{load.module}
+\alias{load.pkg.module}
 \alias{unload.module}
 \alias{list.modules}
 \title{Dynamically load JAGS modules}
