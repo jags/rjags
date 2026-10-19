@@ -1,8 +1,8 @@
 if(.Platform$OS.type == "windows") {
     importFrom(utils, readRegistry, winProgressBar, setWinProgressBar,
-               packageVersion, file_test)
+               file_test)
 }
-importFrom(utils, txtProgressBar, setTxtProgressBar)
+importFrom(utils, txtProgressBar, setTxtProgressBar, packageVersion)
 importFrom(stats, variable.names, sd, update)
 importFrom(coda, as.mcmc.list, as.mcmc, mcmc.list, mcmc, spectrum0,
            nvar, "varnames<-")
@@ -11,7 +11,6 @@ export (
   jags.samples,
   coda.samples,
   load.module,
-  load.pkg.module,
   unload.module,
   list.modules,
   dic.samples,
@@ -28,6 +27,7 @@ export (
   jags.seed,
   jags.version,
   pkg.compile.flags,
+  load.pkg.module,
   nthread,
   "nthread<-",
   dimtags,

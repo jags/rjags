@@ -10,6 +10,7 @@ Contents:
 1 Windows
 2 Unix/Linux: pkg-config
 3 Unix/Linux: runtime linkage
+4 macOS
 
 1 Windows
 ---------
@@ -94,3 +95,27 @@ You may also consider:
    set every time you load the rjags package, not just at compile
    time. Thus it is best to set this in the file .bash_profile (or
    the equivalent file if you using another shell).
+
+4 macOS
+-----------------------------
+
+Installation on macOS is similar to the case on Unix/Linux, although
+the process is streamlined for compatibility with the official macOS
+installer of JAGS as follows:
+
+- The "full" installer (JAGS-5.x.y-universal.pkg) also contains
+  pkgconf-lite, which is used by the rjags configure script if
+  pkg-config is not installed on the system (which is the case
+  on vanilla installations of macOS).
+  
+- If a valid installation of JAGS (matching the correct version
+  number) is not found under the default PKG_CONFIG_PATH, then
+  the rjags configure script checks under the versioned /opt/jags
+  subdirectory for a suitable JAGS installation.
+
+This allows rjags to be installed on macOS without the need for
+any additional dependencies or setting any environmental variables.
+It also allows for switching between installations of different
+major versions of rjags (e.g. between rjags_4-x and rjags_5-x)
+without needing to re-install JAGS, assuming that the official macOS
+installer is used.

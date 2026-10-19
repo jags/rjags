@@ -33,6 +33,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"get_rjags_cppflags",        (DL_FUNC) &get_rjags_cppflags,        0},
     {"get_rjags_cxxflags",        (DL_FUNC) &get_rjags_cxxflags,        0},
     {"get_rjags_libs",            (DL_FUNC) &get_rjags_libs,            0},
+    {"get_jags_root",             (DL_FUNC) &get_jags_root,             0},
     {"initialize",                (DL_FUNC) &initialize,                1},
     {"initialize3",               (DL_FUNC) &initialize3,               3},
     {"is_adapting",               (DL_FUNC) &is_adapting,               1},

@@ -20,13 +20,16 @@
 
 // These should be injected by Makevars:
 #ifndef RJAGS_CPPFLAGS
-#error "Compilation failed: RJAGS_CPPFLAGS udefined"
+#error "Compilation failed: RJAGS_CPPFLAGS undefined"
 #endif
 #ifndef RJAGS_CXXFLAGS
-#error "Compilation failed: RJAGS_CXXFLAGS udefined"
+#error "Compilation failed: RJAGS_CXXFLAGS undefined"
 #endif
 #ifndef RJAGS_LIBS
-#error "Compilation failed: RJAGS_LIBS udefined"
+#error "Compilation failed: RJAGS_LIBS undefined"
+#endif
+#ifndef JAGS_ROOT
+#error "Compilation failed: JAGS_ROOT undefined"
 #endif
 
 #define STRINGIFY(x) #x
@@ -42,4 +45,8 @@ SEXP get_rjags_cxxflags() {
 
 SEXP get_rjags_libs() {  
   return Rf_mkString(SHIM_STRING(RJAGS_LIBS));
+}
+
+SEXP get_jags_root() {  
+  return Rf_mkString(SHIM_STRING(JAGS_ROOT));
 }
