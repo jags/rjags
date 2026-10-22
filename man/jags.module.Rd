@@ -16,7 +16,8 @@
 }
 \usage{
 load.module(name, path, quiet=FALSE)
-load.pkg.module(pkgname, libname, bin.compat, quiet=FALSE, check.only=FALSE)
+load.pkg.module(pkgname, libname, bin.compat, quiet=FALSE,
+  check.only=FALSE)
 unload.module(name, quiet=FALSE)
 list.modules()
 }

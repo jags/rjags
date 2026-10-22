@@ -32,11 +32,10 @@ export (
   "nthread<-",
   dimtags,
   "dimtags<-",
-  collapse
-#  Might be exported when it is more than a stub:
-#  observed.stochastic.nodes,
-#  node.names,
-#  expand.varname
+  collapse,
+  observed.stochastic.nodes,
+  node.names,
+  expand.name
 )
 S3method(print, jags)
 S3method(coef, jags)
