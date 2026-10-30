@@ -1,4 +1,4 @@
-JAGS_ROOT ?= "/c/progra~1/JAGS/JAGS-4.3.0"
+JAGS_ROOT ?= "/c/progra~1/JAGS/JAGS-4.3.2"
 
 # Remove internal quotes and convert any backslashes:
 JAGS_ROOT_SUBST := $(subst ",,$(subst \,/,$(JAGS_ROOT)))
