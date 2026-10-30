@@ -129,16 +129,17 @@
       stop("An unexpected error occured while linking to the JAGS installation at\n\t", jags.home, "\n\tMake sure that you have a JAGS ", jags.major, ".x.y installation that is binary\n\tcompatible with your R installation (your current R platform is\n\t", R.Version()$platform, ").\n\n\tThe error returned from library.dynam(...) was:\n\t", conditionMessage(e), call.=FALSE)
     })
 
-### Set the module directory, if the option jags.moddir is not already set
+### Set the module directory:
 
     if (is.null(getOption("jags.moddir"))) {
-        .rjags_env$NULL_MODDIR <- TRUE
-        options("jags.moddir" = file.path(jags.home, .Platform$r_arch,
-                "modules"))
+      .rjags_env$DEFAULT_MODDIR <- file.path(jags.home, .Platform$r_arch,
+                                             "modules")
+    } else {
+      .rjags_env$DEFAULT_MODDIR <- getOption("jags.moddir")
     }
 
 ### Check that the module directory actually exists
-    moddir <- getOption("jags.moddir")
+    moddir <- .rjags_env$DEFAULT_MODDIR
     if (!file.exists(moddir)) {
         stop(moddir, " not found\n\n",
              "rjags is looking for the JAGS modules in\n", moddir,
@@ -173,17 +174,13 @@
 .onUnload <- function(libpath)
 {
     library.dynam.unload("rjags", libpath)
-    ## Remove the jags.moddir option if we set this at package load
-    if(isTRUE(.rjags_env$NULL_MODDIR)) {
-      options("jags.moddir" = NULL)
-    }
 }
 
 
 ### Helper function and package env for pkg.compile.flags
 .rjags_env <- new.env(parent = emptyenv())
 .rjags_env$JAGS_ROOT <- character(0)
-.rjags_env$NULL_MODDIR <- FALSE
+.rjags_env$DEFAULT_MODDIR <- character(0)
 
 get.compile.flags <- function(){
   jags_root_compile <- .Call("get_jags_root", PACKAGE="rjags")

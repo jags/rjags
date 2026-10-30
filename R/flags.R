@@ -52,7 +52,7 @@ load.pkg.module <- function(pkgname, libname, bin.compat,
     stop("Mismatched JAGS major versions:\n\t", pkgname, ": ", maj.vers.pkg, "\n\trjags: ", maj.vers.rjags, "\n\nThe ", pkgname, " package must either be recompiled or reinstalled\nfollowing recompilation on CRAN.", call.=FALSE)
   }
 
-  ### JAGS_ROOT must match on unix (but not on Windows)
+  ### JAGS_ROOT should match on unix (but not on Windows)
   if (.Platform$OS.type=="unix") {
     jags.root.pkg <- bin.compat[["JAGS_ROOT"]]
     jags.root.rjags <- bin.rjags[["JAGS_ROOT"]]
@@ -60,7 +60,7 @@ load.pkg.module <- function(pkgname, libname, bin.compat,
               !is.na(jags.root.pkg),
               length(jags.root.pkg)==1L)
     if (jags.root.pkg != jags.root.rjags) {
-      stop("Mismatched JAGS_ROOT variables:\n\t", pkgname, ": ", jags.root.pkg, "\n\trjags: ", jags.root.rjags, "\n\nThe ", pkgname, " package must either be recompiled or reinstalled\nfollowing recompilation on CRAN.", call.=FALSE)
+      warning("Mismatched JAGS_ROOT variables:\n\t", pkgname, ": ", jags.root.pkg, "\n\trjags: ", jags.root.rjags, "\n\nLoading duplicate symbols may lead to undefined behaviour.\nThe ", pkgname, " package should probably either be recompiled or\nreinstalled following recompilation on CRAN.", call.=FALSE)
     }
   }
 
