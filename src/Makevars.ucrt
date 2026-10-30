@@ -1,7 +1,7 @@
 JAGS_ROOT ?= /C/PROGRA~1/JAGS/JAGS~5~1.0
 
 # Remove internal quotes and convert any backslashes:
-JAGS_ROOT_SUBST := $(subst ",,$(subst \\,/,$(JAGS_ROOT)))
+JAGS_ROOT_SUBST := $(subst ",,$(subst \,/,$(JAGS_ROOT)))
 
 PKG_LIBS = -L"$(JAGS_ROOT_SUBST)/${R_ARCH}/bin" -ljags-5
 PKG_CXXFLAGS = 
