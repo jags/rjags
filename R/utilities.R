@@ -23,5 +23,5 @@ jags.version <- function(){
     vers <- sub(" (.*)$", "", vers)
     ## Work around bug introduced by 5.0.0-beta as package name
     vers <- sub("-beta$", "", vers)
-    return(numeric_version(vers))	
+    return(package_version(vers))
 }
