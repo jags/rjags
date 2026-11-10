@@ -26,9 +26,17 @@ line such as
 
 JAGS_HOME=c:/Progra~1/JAGS/JAGS-5.0.0
 
+or more simply
+
+JAGS_HOME=c:/Progra~1/JAGS/
+
 to the file HOME/.R/Makevars.win, where HOME is the default starting
 directory for an R session launched from the start menu (typically
-your Documents folder).
+your Documents folder). This is optional if you have a default
+installation of JAGS in C:/Program Files/JAGS or 
+C:/Program Files (x86)/JAGS in which case the rjags configure.win
+script will automatically detect the latest version of JAGS (with
+the correct major version number) installed at that location.
 
 2 Unix/Linux: pkg-config
 ------------------------
