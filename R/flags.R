@@ -48,7 +48,9 @@ load.pkg.module <- function(pkgname, libname, bin.compat,
   stopifnot(!is.na(maj.vers.pkg),
             length(maj.vers.pkg)==1L,
             !is.na(maj.vers.pkg))
-  if (maj.vers.pkg != maj.vers.rjags) {
+  if (maj.vers.pkg > maj.vers.rjags) {
+    stop("Mismatched JAGS major versions:\n\t", pkgname, ": ", maj.vers.pkg, "\n\trjags: ", maj.vers.rjags, "\n\nYou should either try installing an updated version of the rjags\npackage, or re-compile the ", pkgname, " pacakge.", call.=FALSE)
+  }else if(maj.vers.pkg != maj.vers.rjags) {
     stop("Mismatched JAGS major versions:\n\t", pkgname, ": ", maj.vers.pkg, "\n\trjags: ", maj.vers.rjags, "\n\nThe ", pkgname, " package must either be recompiled or reinstalled\nfollowing recompilation on CRAN.", call.=FALSE)
   }
 
