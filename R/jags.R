@@ -726,7 +726,7 @@ unload.module <- function(name, quiet=FALSE)
         warning(paste("module", name, "not loaded"))
     }
     else if (!quiet) {
-        message("module", name, "unloaded\n", sep=" ")
+        message("module ", name, " unloaded\n", sep=" ")
     }
     invisible()
 }
