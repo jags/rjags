@@ -454,7 +454,13 @@ jags.samples <-
         stop("non-matching lengths of monitor stat, summary, and variable.names")
     
     ## Catch equivalent var and variance types:
-    summary[stat=="variance"] <- "var"
+    summary[summary=="variance"] <- "var"
+	
+    ## Catch bug in JAGS <= 5.0.1 with loo_leverage and leverage_total:
+    if (jags.version() <= "5.0.1" && 
+        any(c("loo_leverage","leverage_total") %in% stat)) {
+      stop("The loo_leverage and leverage_total statistics require JAGS 5.0.2 or later")
+    }    
 	
     ##  set_monitors must be called for each relevant monitor type
     pn <- parse.varnames(variable.names)

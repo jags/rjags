@@ -26,6 +26,11 @@
       stop("n.iter must be a positive integer")
 
     pdtype <- match.arg(type, c("pD","popt"))
+    ## Catch bug in JAGS <= 5.0.1 with loo_leverage:
+    if (jags.version() <= "5.0.1" && 
+        pdtype=="popt") {
+      stop("The popt penalty type requires JAGS 5.0.2 or later")
+    }    
     penalty_stat <- if (pdtype == "pD") {"leverage"} else {"loo_leverage"}
 
     samples <- jags.samples(model, variable.names="_observed_",
