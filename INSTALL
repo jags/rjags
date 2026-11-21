@@ -21,14 +21,14 @@ Alternatively, you can specify the location of JAGS by setting the
 environment variable JAGS_HOME.
 
 If you are compiling the rjags package from source on Windows then you must
-supply the location of JAGS using the make variable JAGS_HOME, by adding a
+supply the location of JAGS using the make variable JAGS_ROOT, by adding a
 line such as
 
-JAGS_HOME=c:/Progra~1/JAGS/JAGS-5.0.0
+JAGS_ROOT=c:/Progra~1/JAGS/JAGS-5.0.0
 
 or more simply
 
-JAGS_HOME=c:/Progra~1/JAGS/
+JAGS_ROOT=c:/Progra~1/JAGS/
 
 to the file HOME/.R/Makevars.win, where HOME is the default starting
 directory for an R session launched from the start menu (typically
