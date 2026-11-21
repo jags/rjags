@@ -1,5 +1,5 @@
 /*
- *  R package rjags file inst/include/jags_version.h
+ *  R package rjags file inst/include/rjags.h
  *  Copyright (C) 2006-2026 Martyn Plummer and Matt Denwood
  *
  *  This small header is intended to be included by all R
@@ -24,8 +24,8 @@
  *  http://www.r-project.org/Licenses/
  */
 
-#ifndef JAGS_VERSION_H_
-#define JAGS_VERSION_H_
+#ifndef RJAGS_H_
+#define RJAGS_H_
 
 // Provide an informative error message if passing compiler
 // flags from rjags::pkg.compile.flags() failed:
@@ -42,4 +42,4 @@
 // with breaking API changes.
 #include <version.h>
 
-#endif /* JAGS_VERSION_H_ */
+#endif /* RJAGS_H_ */
