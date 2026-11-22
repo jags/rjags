@@ -101,7 +101,7 @@ OLDFLAGS=${LDFLAGS}
 OCXXFLAGS=${CXXFLAGS}
 AC_LANG_PUSH(C++)
 CXXFLAGS=${JAGS_CFLAGS}
-LDFLAGS="-L${JAGS_LIBDIR} ${JAGS_RPATH}"
+LDFLAGS="${JAGS_LIBS} ${JAGS_RPATH}"
 # Can we link to the library?
 AC_CHECK_LIB(jags, jags_version, [],
              [AC_MSG_ERROR("cannot link to JAGS library in ${JAGS_LIBDIR}.")])
