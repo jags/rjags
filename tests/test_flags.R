@@ -22,3 +22,10 @@ if (.Platform$OS.type=="unix") {
   }
   options(warn=cw$warn)
 }
+
+## Regression test:
+libs <- pkg.compile.flags("LIBS", print=FALSE)
+stopifnot(
+  "LIBS must have -ljags" = grepl("-ljags", libs, fixed=TRUE),
+  "LIBS must have -ljrmath" = grepl("-ljrmath", libs, fixed=TRUE)
+)
